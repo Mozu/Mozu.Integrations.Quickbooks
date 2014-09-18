@@ -8,6 +8,7 @@ import java.util.List;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.utils.SingleTask;
 
 /**
@@ -140,5 +141,22 @@ public interface QuickbooksService {
 	 */
 	void saveOrderInQuickbooks(Order order, CustomerAccount customerAccount,
 			Integer tenantId, Integer siteId);
+	
+	/**
+	 * Save general settings from 2nd tab or update if already saved.
+	 * @param generalSettings
+	 * @param tenantId
+	 * @return
+	 */
+	GeneralSettings saveOrUpdateSettingsInEntityList(GeneralSettings generalSettings,
+			Integer tenantId);
+	
+	/**
+	 * Get the general settings while populating the 2nd tab on click
+	 * 
+	 * @param tenantId
+	 * @return
+	 */
+	GeneralSettings getSettingsFromEntityList(Integer tenantId);
 
 }
