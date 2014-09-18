@@ -29,7 +29,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	private static final Logger logger = LoggerFactory
 			.getLogger(ApplicationEventHandlerImpl.class);
 
-	private static final String APP_NAMESPACE = "Ignitiv";
+	private String appNamespace;
 
 	private static final String CUST_ENTITY = "QB_CUSTOMER";
 
@@ -48,6 +48,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	@PostConstruct
 	public void initialize() {
 		EventManager.getInstance().registerHandler(this);
+		appNamespace = ApplicationUtils.getAppNamespace();
 		logger.info("Application event handler initialized");
 	}
 
@@ -134,7 +135,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	 */
 	private void installCustomerSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
-		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(CUST_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("custEmail", "string"));
@@ -148,7 +149,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityListResource entityListResource = new EntityListResource(
 				new MozuApiContext(tenantId));
 		EntityList existing = null;
-		String mapName = CUST_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = CUST_ENTITY + "@" + appNamespace;
 		try {
 			// entityListResource.deleteEntityList(mapName);
 			existing = entityListResource.getEntityList(mapName);
@@ -173,7 +174,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	 */
 	private void installProductSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
-		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(PRODUCT_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("productCode", "string"));
@@ -184,13 +185,13 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = PRODUCT_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = PRODUCT_ENTITY + "@" + appNamespace;
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
 	private void installGenSettingsSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
-		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(SETTINGS_ENTITY);
 		entityList
@@ -200,14 +201,14 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = SETTINGS_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = SETTINGS_ENTITY + "@" + appNamespace;
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}
 
 	private void installOrdersSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
-		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_ENTITY);
 		entityList
@@ -224,7 +225,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = ORDERS_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = ORDERS_ENTITY + "@" + appNamespace;
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}
