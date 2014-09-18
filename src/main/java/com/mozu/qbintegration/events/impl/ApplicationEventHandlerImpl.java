@@ -23,6 +23,7 @@ import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.qbintegration.handlers.ConfigHandler;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.ApplicationUtils;
+import com.mozu.qbintegration.utils.EntityHelper;
 
 @Component
 public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
@@ -31,13 +32,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 
 	private String appNamespace;
 
-	private static final String CUST_ENTITY = "QB_CUSTOMER";
-
-	private static final String PRODUCT_ENTITY = "QB_PRODUCT";
-
-	private static final String SETTINGS_ENTITY = "QB_SETTINGS";
-
-	private static final String ORDERS_ENTITY = "QB_ORDERS";
+	
 
 	@Autowired
 	private QuickbooksService quickbooksService;
@@ -73,6 +68,8 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			status.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			status.setMessage("Could not install schema on tenant " + tenantId
 					+ ", terminating.");
+			
+			logger.error(e.getMessage(), e);
 		}
 		return status;
 	}
@@ -123,6 +120,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		} catch (Exception e) {
 			status = new EventHandlerStatus(e.getMessage(),
 					HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			logger.error(e.getMessage(), e);
 		}
 		return status;
 	}
@@ -137,7 +135,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
-		entityList.setName(CUST_ENTITY);
+		entityList.setName(EntityHelper.CUST_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("custEmail", "string"));
 		entityList.setIndexA(getIndexedProperty("custQBListID", "string"));
 		entityList.setIndexB(getIndexedProperty("custName", "string"));
@@ -149,7 +147,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityListResource entityListResource = new EntityListResource(
 				new MozuApiContext(tenantId));
 		EntityList existing = null;
-		String mapName = CUST_ENTITY + "@" + appNamespace;
+		String mapName = EntityHelper.getCustomerEntityName();
 		try {
 			// entityListResource.deleteEntityList(mapName);
 			existing = entityListResource.getEntityList(mapName);
@@ -176,7 +174,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
-		entityList.setName(PRODUCT_ENTITY);
+		entityList.setName(EntityHelper.PRODUCT_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("productCode", "string"));
 		entityList.setIndexA(getIndexedProperty("qbProdustListID", "string"));
 		entityList.setIndexB(getIndexedProperty("productName", "string"));
@@ -185,7 +183,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = PRODUCT_ENTITY + "@" + appNamespace;
+		String mapName = EntityHelper.getProductEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
@@ -193,7 +191,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
-		entityList.setName(SETTINGS_ENTITY);
+		entityList.setName(EntityHelper.SETTINGS_ENTITY);
 		entityList
 				.setIdProperty(getIndexedProperty("generalsettings", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
@@ -201,7 +199,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = SETTINGS_ENTITY + "@" + appNamespace;
+		String mapName = EntityHelper.getSettingEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}
@@ -210,7 +208,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
-		entityList.setName(ORDERS_ENTITY);
+		entityList.setName(EntityHelper.ORDERS_ENTITY);
 		entityList
 				.setIdProperty(getIndexedProperty("mozuOrderNumber", "string"));
 		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId",
@@ -225,7 +223,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = ORDERS_ENTITY + "@" + appNamespace;
+		String mapName = EntityHelper.ORDERS_ENTITY;
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}
