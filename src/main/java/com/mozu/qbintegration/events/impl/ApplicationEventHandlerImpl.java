@@ -32,8 +32,12 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	private static final String APP_NAMESPACE = "Ignitiv";
 
 	private static final String CUST_ENTITY = "QB_CUSTOMER";
-	
+
 	private static final String PRODUCT_ENTITY = "QB_PRODUCT";
+
+	private static final String SETTINGS_ENTITY = "QB_SETTINGS";
+
+	private static final String ORDERS_ENTITY = "QB_ORDERS";
 
 	@Autowired
 	private QuickbooksService quickbooksService;
@@ -61,10 +65,13 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		try {
 			installCustomerSchema(tenantId);
 			installProductSchema(tenantId);
+			installGenSettingsSchema(tenantId);
+			installOrdersSchema(tenantId);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			status.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			status.setMessage("Could not install schema on tenant " + tenantId + ", terminating.");
+			status.setMessage("Could not install schema on tenant " + tenantId
+					+ ", terminating.");
 		}
 		return status;
 	}
@@ -121,6 +128,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 
 	/**
 	 * Install the customer schema in entity list
+	 * 
 	 * @param tenantId
 	 * @throws Exception
 	 */
@@ -142,9 +150,9 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList existing = null;
 		String mapName = CUST_ENTITY + "@" + APP_NAMESPACE;
 		try {
-			//entityListResource.deleteEntityList(mapName);
+			// entityListResource.deleteEntityList(mapName);
 			existing = entityListResource.getEntityList(mapName);
-			
+
 		} catch (ApiException ae) {
 			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND"))
@@ -156,11 +164,12 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			entityListResource.updateEntityList(entityList, mapName);
 		}
 	}
-	
+
 	/**
 	 * Install the product schema in entity list
+	 * 
 	 * @param tenantId
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	private void installProductSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
@@ -175,12 +184,61 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
+		String mapName = PRODUCT_ENTITY + "@" + APP_NAMESPACE;
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+
+	private void installGenSettingsSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setContextLevel("tenant");
+		entityList.setName(SETTINGS_ENTITY);
+		entityList
+				.setIdProperty(getIndexedProperty("generalsettings", "string"));
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = SETTINGS_ENTITY + "@" + APP_NAMESPACE;
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+
+	}
+
+	private void installOrdersSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(APP_NAMESPACE);
+		entityList.setContextLevel("tenant");
+		entityList.setName(ORDERS_ENTITY);
+		entityList
+				.setIdProperty(getIndexedProperty("mozuOrderNumber", "string"));
+		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId",
+				"string"));
+		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED,
+																			// POSTED,
+																			// ERRORED,
+																			// UPDATED
+		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = ORDERS_ENTITY + "@" + APP_NAMESPACE;
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+
+	}
+
+	/*
+	 * Create or update entity list
+	 */
+	private void createOrUpdateEntityList(Integer tenantId,
+			EntityList entityList, String mapName) throws Exception {
+		EntityList existing = null;
 		EntityListResource entityListResource = new EntityListResource(
 				new MozuApiContext(tenantId));
-		EntityList existing = null;
-		String mapName = PRODUCT_ENTITY + "@" + APP_NAMESPACE;
 		try {
-			//entityListResource.deleteEntityList(mapName);
+			// entityListResource.deleteEntityList(mapName);
 			existing = entityListResource.getEntityList(mapName);
 		} catch (ApiException ae) {
 			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
@@ -192,7 +250,6 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		} else {
 			entityListResource.updateEntityList(entityList, mapName);
 		}
-		
 	}
 
 	private IndexedProperty getIndexedProperty(String name, String type) {

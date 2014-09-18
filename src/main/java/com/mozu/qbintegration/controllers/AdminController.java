@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -40,7 +41,7 @@ public class AdminController {
     String sharedSecret;
 
     @RequestMapping(method = RequestMethod.POST)
-    public String index(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
+    public String index(HttpServletRequest httpRequest, HttpServletResponse httpResponse, ModelMap modelMap)
         throws IOException {
 
         String body = IOUtils.toString(httpRequest.getInputStream());
@@ -76,6 +77,7 @@ public class AdminController {
             return "unauthorized";
         }
         
+        modelMap.addAttribute("tenantId", tenantId);
         return "index";
     }
 }
