@@ -6,7 +6,7 @@ apply plugin: 'jetty'
 
 sourceCompatibility = 1.7
 
-tomcatHome='D:/Akshay/Softwares/Apache Tomcat 7.0.41'
+//tomcatHome='D:/Akshay/Softwares/Apache Tomcat 7.0.41'
 archivesBaseName='quickbooks-integration'
 group='wars'
 httpPort=8002
@@ -101,10 +101,10 @@ test {
     systemProperties 'property': 'value'
 }
 
-task deployToTomcat(type: Copy) {
-    from war
-    into "${tomcatHome}/webapps"
-}
+//task deployToTomcat(type: Copy) {
+//    from war
+//    into "${tomcatHome}/webapps"
+//}
 
 uploadArchives {
     repositories {
