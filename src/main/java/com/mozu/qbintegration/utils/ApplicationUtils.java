@@ -9,12 +9,18 @@ import com.mozu.api.ApiException;
 import com.mozu.api.contracts.sitesettings.application.Application;
 import com.mozu.api.contracts.sitesettings.application.Capability;
 import com.mozu.api.resources.commerce.settings.ApplicationResource;
+import com.mozu.api.security.AppAuthenticator;
 
 public class ApplicationUtils {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationUtils.class);
     
     public static final String VALIDATE_ORDER_CAPABILITY = "OrderValidator";
 
+    public static String getAppNamespace(){
+        String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
+        return appId.substring(0, appId.indexOf('.'));
+    }
+    
     public static final void setApplicationToInitialized(ApiContext apiContext) throws Exception {
         String errorMsg = null;
         
