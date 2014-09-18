@@ -2,8 +2,8 @@ proxy.host=
 proxy.port=
 
 # dev
-ApplicationId={{QB_QA_APP_ID}}
-SharedSecret={{QB_QA_SHARED_SECRET}}
+ApplicationId={{QB_QACS_APP_ID}}
+SharedSecret={{QB_QACS_SHARED_SECRET}}
 BaseAuthAppUrl=https://home.mozu.com
 
 #Mongo connection
