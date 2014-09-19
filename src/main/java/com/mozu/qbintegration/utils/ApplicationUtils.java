@@ -17,8 +17,9 @@ public class ApplicationUtils {
     public static final String VALIDATE_ORDER_CAPABILITY = "OrderValidator";
 
     public static String getAppNamespace(){
-        String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
-        return appId.substring(0, appId.indexOf('.'));
+//        String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
+//        return appId.substring(0, appId.indexOf('.'));
+    	return EntityHelper.NAMESPACE;
     }
     
     public static final void setApplicationToInitialized(ApiContext apiContext) throws Exception {

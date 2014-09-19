@@ -10,6 +10,10 @@ public class EntityHelper {
 	
 	public static final String ORDERS_ENTITY = "QB_ORDERS";
 	
+	public static final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
+
+	public static final String NAMESPACE = "Ignitiv";
+	
 	public static String getCustomerEntityName() {
 		return EntityHelper.CUST_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
@@ -25,5 +29,9 @@ public class EntityHelper {
 	
 	public static String getSettingEntityName() {
 		return EntityHelper.SETTINGS_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+	}
+	
+	public static String getTaskqueueEntityName() {
+		return EntityHelper.TASKQUEUE_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
 }

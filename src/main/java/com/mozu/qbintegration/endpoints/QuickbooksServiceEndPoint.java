@@ -13,6 +13,7 @@ import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.utils.SingleTask;
 import com.mozu.quickbooks.generated.ArrayOfString;
 import com.mozu.quickbooks.generated.Authenticate;
 import com.mozu.quickbooks.generated.AuthenticateResponse;
@@ -38,8 +39,7 @@ public class QuickbooksServiceEndPoint {
 
 	private static final Log logger = LogFactory
 			.getLog(QuickbooksServiceEndPoint.class);
-	private static final String NAMESPACE_URI = "http://developer.intuit.com/";
-
+	
 	@Autowired
 	private QuickbooksService qbService;
 
@@ -51,7 +51,7 @@ public class QuickbooksServiceEndPoint {
 	public ClientVersionResponse clientVersion(
 			@RequestPayload ClientVersion clientVersion)
 			throws java.rmi.RemoteException {
-		System.out.println(clientVersion.getStrVersion());
+		logger.debug(clientVersion.getStrVersion());
 		ClientVersionResponse response = new ClientVersionResponse();
 		response.setClientVersionResult("");
 		return response;
@@ -62,7 +62,7 @@ public class QuickbooksServiceEndPoint {
 	public AuthenticateResponse authenticate(
 			@RequestPayload Authenticate authRequest)
 			throws java.rmi.RemoteException {
-		System.out.println(authRequest.getStrUserName() + " "
+		logger.debug(authRequest.getStrUserName() + " "
 				+ authRequest.getStrPassword());
 		AuthenticateResponse response = new AuthenticateResponse();
 
@@ -91,8 +91,12 @@ public class QuickbooksServiceEndPoint {
 			throws java.rmi.RemoteException {
 
 		SendRequestXMLResponse response = new SendRequestXMLResponse();
-		response.setSendRequestXMLResult(qbService.getNextPayload()
-				.getRequest());
+		if (null != qbService.getNextPayload()) {
+			response.setSendRequestXMLResult(qbService.getNextPayload()
+					.getRequest());
+		} else {
+			response.setSendRequestXMLResult("NoOp"); //nothing to do - come back after 5 sconds
+		}
 		return response;
 	}
 
@@ -100,12 +104,15 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(
 			ReceiveResponseXML responseXML) throws java.rmi.RemoteException {
-		System.out.println(responseXML.getHresult());
-		System.out.println(responseXML.getMessage());
-		qbService.getNextPayload().setResponse(responseXML.getResponse());
-		qbService.getNextPayload().setIsRetry(Boolean.FALSE);
-		
-		qbService.doneWithWork(); //TODO save this task in a map to read from.
+		logger.debug(responseXML.getHresult());
+		logger.debug(responseXML.getMessage());
+		SingleTask task = qbService.getNextPayload();
+		if (null != task) {
+			task.setResponse(responseXML.getResponse());
+			task.setIsRetry(Boolean.FALSE);
+			//TODO put decision making code call here that will decide the next task
+			qbService.doneWithWork();
+		}
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
 		responseToResponse.setReceiveResponseXMLResult(1);
 		return responseToResponse;
@@ -115,7 +122,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ConnectionErrorResponse connectionError(ConnectionError connError)
 			throws java.rmi.RemoteException {
-		System.out.println(connError.getMessage());
+		logger.debug(connError.getMessage());
 		ConnectionErrorResponse errorResponse = new ConnectionErrorResponse();
 		errorResponse.setConnectionErrorResult("");
 		return errorResponse;
@@ -125,7 +132,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public GetLastErrorResponse getLastError(GetLastError lastError)
 			throws java.rmi.RemoteException {
-		System.out.println(lastError.getTicket());
+		logger.debug(lastError.getTicket());
 		GetLastErrorResponse response = new GetLastErrorResponse();
 		response.setGetLastErrorResult("");
 		return response;
@@ -135,7 +142,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public CloseConnectionResponse closeConnection(
 			CloseConnection closeConnection) throws java.rmi.RemoteException {
-		System.out.println(closeConnection.getTicket());
+		logger.debug(closeConnection.getTicket());
 		CloseConnectionResponse response = new CloseConnectionResponse();
 		response.setCloseConnectionResult("Thank you for using QB Connector");
 		return response;
