@@ -9,6 +9,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
+import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.utils.SingleTask;
 
 /**
@@ -158,5 +159,20 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	GeneralSettings getSettingsFromEntityList(Integer tenantId);
+	
+	/**
+	 * Save only necessary mozu order information in entity list for processing.
+	 * 
+	 * @param tenantId
+	 * @param order the order to save
+	 */
+	void saveMozuOrderDetails(Integer tenantId, Order order);
+	
+	/**
+	 * Get the orders saved in entity list
+	 * @param tenantId
+	 * @return List<MozuOrderDetails>
+	 */
+	List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId);
 
 }

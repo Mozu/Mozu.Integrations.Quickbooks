@@ -18,6 +18,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +33,10 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
+import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.model.GeneralSettings;
+import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
@@ -55,8 +59,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineAdd;
-import com.mozu.qbintegration.utils.ApplicationUtils;
-import com.mozu.qbintegration.utils.EntityHelper;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.utils.SingleTask;
 
 /**
@@ -69,25 +72,31 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	private static final String QBXML_PREFIX = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 			+ "<?qbxml version=\"13.0\"?>";
 
-	private String appNameSpace;
+	private static final String APP_NAMESPACE = "Ignitiv";
 
+	private static final String CUST_ENTITY = "QB_CUSTOMER";
+
+	private static final String PRODUCT_ENTITY = "QB_PRODUCT";
+
+	private static final String SETTINGS_ENTITY = "QB_SETTINGS";
+
+	private static final String ORDERS_ENTITY = "QB_ORDERS";
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(QuickbooksServiceImpl.class);
 
 	private Queue<SingleTask> taskQueue;
 
-	@Autowired
-	private MongoService mongoService;
-
 	// Heavy object, initialize in constructor
 	private JAXBContext contextObj = null;
 
 	// One time as well
 	Marshaller marshallerObj = null;
+	
+	@Autowired
+	private QueueManagerService queueManagerService;
 
 	public QuickbooksServiceImpl() throws JAXBException {
-		appNameSpace = ApplicationUtils.getAppNamespace();
 		taskQueue = new ArrayBlockingQueue<SingleTask>(1000);
 		contextObj = JAXBContext.newInstance(QBXML.class);
 		marshallerObj = contextObj.createMarshaller();
@@ -124,7 +133,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	public void doneWithWork() {
 		SingleTask task = ((ArrayBlockingQueue<SingleTask>) taskQueue).poll();
 		// update completed task
-		mongoService.updateCompletedTask(task);
 
 		// if this task is retry for any reason, put it back into queue
 		if (task != null && task.getIsRetry()) {
@@ -154,7 +162,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			((ArrayBlockingQueue<SingleTask>) taskQueue).put(singleTask);
 			// Also make an entry in task table
 			singleTask.setTaskId(singleTask.hashCode());
-			mongoService.enterTask(singleTask);
 		} catch (InterruptedException e) {
 			// TODO LOG Error
 			e.printStackTrace();
@@ -262,7 +269,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 					salesOrderLineAdd);
 			counter++;
 		}
-
+		
 		return getMarshalledValue(qbxml);
 	}
 
@@ -292,6 +299,12 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		addRqType.setItemInventoryAdd(inventoryAdd);
 		inventoryAdd.setName(orderItem.getProduct().getProductCode());
 		inventoryAdd.setIsActive("true");
+		
+		//TODO move these to either prop files or get these details from customer
+		SalesTaxCodeRef salesTax = new SalesTaxCodeRef();
+		salesTax.setFullName("goulet sales tax");
+		inventoryAdd.setSalesTaxCodeRef(salesTax);
+		
 		IncomeAccountRef incomeAccount = new IncomeAccountRef(); // TODO get
 																	// client's
 																	// details
@@ -332,11 +345,11 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		return getMarshalledValue(qbxml);
 	}
-
+	
 	@Override
 	public void saveOrderInQuickbooks(Order order, CustomerAccount custAcct,
 			Integer tenantId, Integer siteId) {
-
+		
 		try {
 
 			// customerListId - the PK of this customer saved in quickbooks
@@ -470,7 +483,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 					}
 
 					// Save the item list id in entity list
-					saveProductInEntityList(item, itemListId, tenantId, siteId);
+					 saveProductInEntityList(item, itemListId, tenantId,
+					 siteId);
 
 				}
 				itemListIDs.add(itemListId); // fairly assume we have received
@@ -519,7 +533,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
-		String mapName = EntityHelper.CUST_ENTITY + "@" + appNameSpace;
+		String mapName = CUST_ENTITY + "@" + APP_NAMESPACE;
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		try {
@@ -542,7 +556,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	private String getCustFromEntityList(CustomerAccount custAcct,
 			Integer tenantId, Integer siteId) {
 		String entityIdValue = custAcct.getEmailAddress();
-		String mapName = EntityHelper.CUST_ENTITY + "@" + appNameSpace;
+		String mapName = CUST_ENTITY + "@" + APP_NAMESPACE;
 
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
@@ -574,7 +588,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
-		String mapName = EntityHelper.PRODUCT_ENTITY + "@" + appNameSpace;
+		String mapName = PRODUCT_ENTITY + "@" + APP_NAMESPACE;
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		try {
@@ -597,7 +611,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	private String getProductFromEntityList(OrderItem orderItem,
 			Integer tenantId, Integer siteId) {
 		String entityIdValue = orderItem.getProduct().getProductCode();
-		String mapName = EntityHelper.PRODUCT_ENTITY + "@" + appNameSpace;
+		String mapName = PRODUCT_ENTITY + "@" + APP_NAMESPACE;
 
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
@@ -623,7 +637,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		JsonNode savedEntry = null;
-		String mapName = EntityHelper.SETTINGS_ENTITY + "@" + appNameSpace;
+		String mapName = SETTINGS_ENTITY + "@" + APP_NAMESPACE;
 
 		try {
 			savedEntry = entityResource.getEntity(mapName, "generalsettings");
@@ -676,7 +690,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		JsonNode savedEntry = null;
-		String mapName = EntityHelper.SETTINGS_ENTITY + "@" + appNameSpace;
+		String mapName = SETTINGS_ENTITY + "@" + APP_NAMESPACE;
 
 		try {
 			savedEntry = entityResource.getEntity(mapName, "generalsettings");
@@ -697,6 +711,72 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			savedSettings.setCancelled(retNode.get("cancelled").asBoolean());
 		}
 		return savedSettings;
+	}
+
+	@Override
+	public void saveMozuOrderDetails(Integer tenantId, Order order) {
+		// First get an entity for settings if already present.
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId)); // TODO replace with real - move this code
+		String mapName = ORDERS_ENTITY + "@" + APP_NAMESPACE;
+
+		// Add the mapping entry
+		JsonNode rtnEntry = null;
+		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
+		ObjectNode orderNode = nodeFactory.objectNode();
+
+		orderNode.put("mozuOrderNumber", order.getId());
+		orderNode.put("quickbooksOrderListId", "");
+		orderNode.put("orderStatus", "RECEIVED");
+		orderNode.put("customerId",
+				String.valueOf(order.getCustomerAccountId()));
+		DateTimeFormatter timeFormat = DateTimeFormat
+				.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+		orderNode.put("createdDate",
+				timeFormat.print(order.getAcceptedDate().getMillis()));
+		orderNode.put("amount", String.valueOf(order.getTotal()));
+
+		try {
+			rtnEntry = entityResource.insertEntity(orderNode, mapName);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Error saving settings for tenant id: " + tenantId);
+		}
+		logger.debug("Retrieved entity: " + rtnEntry);
+		logger.debug("Returning");
+
+	}
+
+	@Override
+	public List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId) {
+
+		// First get an entity for settings if already present.
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId)); // TODO replace with real - move this code
+		EntityCollection savedEntry = null;
+		String mapName = SETTINGS_ENTITY + "@" + APP_NAMESPACE;
+
+		List<MozuOrderDetails> mozuOrders = new ArrayList<MozuOrderDetails>();
+		try {
+			savedEntry = entityResource.getEntities(mapName);
+			MozuOrderDetails singleOrdDetail = null;
+			for (JsonNode singleOrder : savedEntry.getItems()) {
+				singleOrdDetail = new MozuOrderDetails();
+				singleOrdDetail.setMozuOrderNumber(singleOrder.get(
+						"mozuOrderNumber").asText());
+				singleOrdDetail.setQuickbooksOrderListId(singleOrder.get(
+						"quickbooksOrderListId").asText());
+				singleOrdDetail.setOrderStatus(singleOrder.get("orderStatus")
+						.asText());
+				singleOrdDetail.setCustomerEmail(singleOrder.get(
+						"customerEmail").asText());
+				mozuOrders.add(singleOrdDetail);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Error saving settings for tenant id: " + tenantId);
+		}
+		return mozuOrders;
 	}
 
 	/**

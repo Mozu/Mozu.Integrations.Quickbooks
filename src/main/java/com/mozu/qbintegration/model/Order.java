@@ -3,9 +3,6 @@
  */
 package com.mozu.qbintegration.model;
 
-import java.util.Date;
-
-import org.joda.time.DateTime;
 
 /**
  * @author Admin

@@ -32,8 +32,6 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 
 	private String appNamespace;
 
-	
-
 	@Autowired
 	private QuickbooksService quickbooksService;
 
@@ -63,13 +61,12 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			installProductSchema(tenantId);
 			installGenSettingsSchema(tenantId);
 			installOrdersSchema(tenantId);
+			installQBTaskQueueSchema(tenantId);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			status.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			status.setMessage("Could not install schema on tenant " + tenantId
 					+ ", terminating.");
-			
-			logger.error(e.getMessage(), e);
 		}
 		return status;
 	}
@@ -149,7 +146,9 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList existing = null;
 		String mapName = EntityHelper.getCustomerEntityName();
 		try {
-			// entityListResource.deleteEntityList(mapName);
+//			 entityListResource.deleteEntityList(mapName);
+//			EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+//			entityResource.deleteEntity(mapName, "Ebenes14@gmail.com");
 			existing = entityListResource.getEntityList(mapName);
 
 		} catch (ApiException ae) {
@@ -226,6 +225,33 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		String mapName = EntityHelper.ORDERS_ENTITY;
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
+	}
+	
+	/**
+	 * Install the entity list which will maintain tasks as they are processed
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	private void installQBTaskQueueSchema(Integer tenantId) throws Exception {
+		
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(EntityHelper.ORDERS_ENTITY);
+		entityList.setContextLevel("tenant");
+		entityList.setName(EntityHelper.TASKQUEUE_ENTITY);
+		entityList
+				.setIdProperty(getIndexedProperty("taskId", "string"));
+		entityList.setIndexA(getIndexedProperty("qbTaskRequest",
+				"string"));
+		entityList.setIndexB(getIndexedProperty("qbTaskResponse", "string")); 
+		entityList.setIndexC(getIndexedProperty("qbTaskStatus", "string"));
+		entityList.setIndexD(getIndexedProperty("qbTaskType", "string"));
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = EntityHelper.getTaskqueueEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
 	/*

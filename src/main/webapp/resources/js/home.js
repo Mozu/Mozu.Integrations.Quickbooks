@@ -73,7 +73,7 @@
 			headers : {
 				'Content-Type' : 'application/javascript'
 			},
-			url : "getOrders",
+			url : "getOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			type : "GET",
 			dataType : "json",
 			success : function(data) {

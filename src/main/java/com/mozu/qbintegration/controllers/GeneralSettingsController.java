@@ -3,11 +3,8 @@
  */
 package com.mozu.qbintegration.controllers;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.StringWriter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +14,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +38,15 @@ public class GeneralSettingsController {
 
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	@Value("${webserviceName}")
+	private String webserviceName;
+	
+	@Value("${webserviceDesc}")
+	private String webserviceDesc;
+	
+	@Value("${wsdlFileName}")
+	private String wsdlFileName;
 
 	@RequestMapping(value = "/getgeneralsettings", method = RequestMethod.GET)
 	public @ResponseBody
@@ -57,21 +64,20 @@ public class GeneralSettingsController {
 	ObjectNode saveGeneralSettings(
 			@RequestParam(value = "tenantId", required = false) Integer tenantId,
 			@RequestBody GeneralSettings generalSettings,
-			HttpServletResponse response) {
+			HttpServletResponse response, HttpServletRequest request) {
 
 		quickbooksService.saveOrUpdateSettingsInEntityList(generalSettings,
 				tenantId);
 		
 		QuickWebConnector quickWebCon = new QuickWebConnector();
 		quickWebCon.setId(100);
-		quickWebCon.setName("HTTPWebService");
+		quickWebCon.setName(webserviceName);
 		quickWebCon.setUrl(generalSettings.getWsURL());
-		quickWebCon.setDescription("A short description for WCWebService1");
+		quickWebCon.setDescription(webserviceDesc);
 		quickWebCon
-				.setSupport("http://localhost:8080/quickbooks-integration-0.0.1-LocalBuild/quickbooks.wsdl");
+				.setSupport(request.getScheme() + "://" + request.getServerName() + request.getContextPath()
+						+ wsdlFileName);
 		quickWebCon.setUserName(generalSettings.getQbAccount());
-		quickWebCon.setFileId("{90A44FB5-33D9-4815-AC85-BC87A7E7D1EB}");
-		quickWebCon.setOwnerId("{57F3B9B1-86F1-4fcc-B1EE-566DE1813D20}");
 		quickWebCon.setQbType("QBFS");
 		Scheduler scheduler = new Scheduler();
 		scheduler.setRun(1);
