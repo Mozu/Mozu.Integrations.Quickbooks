@@ -12,8 +12,6 @@ public class EntityHelper {
 	
 	public static final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
 
-	public static final String NAMESPACE = "Ignitiv";
-	
 	public static String getCustomerEntityName() {
 		return EntityHelper.CUST_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
