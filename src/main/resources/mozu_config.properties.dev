@@ -1,6 +1,7 @@
 proxy.host=
 proxy.port=
 
+# For Jenkins deploy job testing purposes only
 # dev
 ApplicationId={{QB_QA_APP_ID}}
 SharedSecret={{QB_QA_SHARED_SECRET}}
