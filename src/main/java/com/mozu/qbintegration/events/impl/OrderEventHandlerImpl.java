@@ -17,6 +17,7 @@ import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
+import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
 @Component
@@ -26,6 +27,9 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	@Autowired
+	private QueueManagerService queueManagerService;
 
 	@PostConstruct
 	public void initialize() {
