@@ -3,6 +3,8 @@
  */
 package com.mozu.qbintegration.service;
 
+import java.util.List;
+
 import com.mozu.qbintegration.tasks.WorkTask;
 
 /**
@@ -12,15 +14,23 @@ import com.mozu.qbintegration.tasks.WorkTask;
 public interface QueueManagerService {
 	
 	/**
-	 * Get the next task in entered status. Need to get all
-	 * in entered status from entitylist and then just pick the top one for 
-	 * now.
-	 * 
+	 * Get the single next task in given status and other criteria. Get all records
+	 *  and then just pick the top one for now. Status is mandatory
+
 	 * @param tenantId
-	 * @param status
+	 * @param criteria
 	 * @return
 	 */
-	WorkTask getNextTaskWithStatus(final Integer tenantId, final String status);
+	WorkTask getNextTaskWithCriteria(final Integer tenantId, final WorkTask criteria);
+	
+	/**
+	 * Get all tasks matching specified criteria. 
+	 * 
+	 * @param tenantId
+	 * @param criteria
+	 * @return
+	 */
+	List<WorkTask> getAllsTasksWithCriteria(Integer tenantId, WorkTask criteria);
 	
 	/**
 	 * Save a new task - this will be in ENTERED status. On need basis, this task might have

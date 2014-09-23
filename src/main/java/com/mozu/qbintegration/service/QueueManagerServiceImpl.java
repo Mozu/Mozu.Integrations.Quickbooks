@@ -3,6 +3,9 @@
  */
 package com.mozu.qbintegration.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,26 +33,64 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 			.getLogger(QueueManagerServiceImpl.class);
 
 	/* (non-Javadoc)
+	 * @see com.mozu.qbintegration.service.QueueManagerService#getNextTaskForOrderID(java.lang.Integer, java.lang.String)
+	
+	@Override
+	public WorkTask getNextTaskForOrderID(Integer tenantId, String orderId) {
+		return getFilteredTasks(tenantId, "taskId eq " + orderId);
+	} */
+	
+	/* (non-Javadoc)
 	 * @see com.mozu.qbintegration.service.QueueManagerService#getNextTaskWithStatus(java.lang.Integer)
 	 */
 	@Override
-	public WorkTask getNextTaskWithStatus(Integer tenantId, String status) {
+	public WorkTask getNextTaskWithCriteria(Integer tenantId, WorkTask criteria) {
+		List<WorkTask> workTasks = getFilteredTasks(tenantId, criteria);
+		return workTasks.isEmpty() ? null : workTasks.get(0); //get only the first task if any.
+	}
+	
+	public List<WorkTask> getAllsTasksWithCriteria(Integer tenantId, WorkTask criteria) {
+		return getFilteredTasks(tenantId, criteria);
+	}
+	
+	/*
+	 * Return the order entities based on the filter provided. For now, order id or status
+	 */
+	private List<WorkTask> getFilteredTasks(Integer tenantId, WorkTask criteria) {
+		
+		StringBuilder sb = new StringBuilder();
+		//Assuming status will never be null - it is meaningless to filter without it at this point.
+		//TODO throw exception if status is null
+		sb.append("qbTaskStatus eq " + criteria.getQbTaskStatus());
+		
+		if(criteria.getQbTaskType() != null) {
+			sb.append(" and qbTaskType eq " + criteria.getQbTaskType());
+		}
+		
+		if(criteria.getTaskId() != null) {
+			sb.append(" and taskId eq " + criteria.getTaskId());
+		}
+		
 		// Add the mapping entry
-		JsonNode rtnEntry = null;
 		String mapName = TASKQUEUE_ENTITY + "@" + APP_NAMESPACE;
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		
-		EntityCollection workTasks = null;
+		List<WorkTask> workTasks = new ArrayList<WorkTask>();
+		EntityCollection workTasksCollection = null;
 		try {
-			workTasks = entityResource.getEntities(mapName, null, null, "qbTaskStatus eq " + status, "taskId", null);
-			rtnEntry = workTasks.getItems().isEmpty() ? null : workTasks.getItems().get(0);
+			workTasksCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "taskId", null);
+			if(!workTasksCollection.getItems().isEmpty()) {
+				for(JsonNode jsonNode: workTasksCollection.getItems()) {
+					workTasks.add(getPopulatedTask(jsonNode));
+				}
+			}
 		} catch (Exception e) {
 			logger.error("Error getting next unprocessed task from entity list: "
-					+ status);
+					+ sb.toString());
 		}
-		logger.debug("Retrieved entity: " + rtnEntry);
-		return rtnEntry == null ? null : getPopulatedTask(rtnEntry);
+		logger.debug("Retrieved entity: " + workTasks);
+		return workTasks;
 	}
 
 	/* (non-Javadoc)
@@ -85,7 +126,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 			if(isInsert) {
 				rtnEntry = entityResource.insertEntity(taskNode, mapName);
 			} else {
-				rtnEntry = entityResource.updateEntity(taskNode, mapName, workTask.getTaskId());
+				rtnEntry = entityResource.updateEntity(taskNode, mapName, String.valueOf(workTask.getEnteredTime()));
 			}
 		} catch (Exception e) {
 			logger.error("Error saving or updating task queue in entity list: "
@@ -100,11 +141,14 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 
 	private WorkTask getPopulatedTask(JsonNode rtnEntry) {
 		WorkTask workTask = new WorkTask();
+		workTask.setEnteredTime(rtnEntry.get("enteredTime").asLong());
 		workTask.setTaskId(rtnEntry.get("taskId").asText());
 		workTask.setQbTaskRequest(rtnEntry.get("qbTaskRequest").asText());
 		workTask.setQbTaskResponse(rtnEntry.get("qbTaskResponse").asText());
 		workTask.setQbTaskStatus(rtnEntry.get("qbTaskStatus").asText());
 		workTask.setQbTaskType(rtnEntry.get("qbTaskType").asText());
+		workTask.setTenantId(rtnEntry.get("tenantId").asInt());
+		workTask.setSiteId(rtnEntry.get("siteId").asInt());
 		
 		return workTask;
 	}
@@ -113,11 +157,14 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode taskNode = nodeFactory.objectNode();
 
-		taskNode.put("taskId", workTask.getTaskId());
-		taskNode.put("qbTaskRequest", workTask.getQbTaskRequest());
-		taskNode.put("qbTaskResponse",workTask.getQbTaskResponse());
+		taskNode.put("enteredTime", String.valueOf(workTask.getEnteredTime()));
+		taskNode.put("taskId", workTask.getTaskId()); //For item we need to save multiple tasks
+		taskNode.put("tenantId", workTask.getTenantId());
+		taskNode.put("siteId", workTask.getSiteId());
 		taskNode.put("qbTaskStatus", workTask.getQbTaskStatus());
 		taskNode.put("qbTaskType", workTask.getQbTaskType());
+		taskNode.put("qbTaskRequest", workTask.getQbTaskRequest());
+		taskNode.put("qbTaskResponse", workTask.getQbTaskResponse() == null ? "": workTask.getQbTaskResponse());
 		return taskNode;
 	}
 

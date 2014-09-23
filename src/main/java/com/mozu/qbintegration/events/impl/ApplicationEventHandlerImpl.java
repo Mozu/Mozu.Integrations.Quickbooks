@@ -146,9 +146,10 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityList existing = null;
 		String mapName = EntityHelper.getCustomerEntityName();
 		try {
-//			 entityListResource.deleteEntityList(mapName);
-//			EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
-//			entityResource.deleteEntity(mapName, "Ebenes14@gmail.com");
+			// entityListResource.deleteEntityList(mapName);
+			// EntityResource entityResource = new EntityResource(new
+			// MozuApiContext(tenantId));
+			// entityResource.deleteEntity(mapName, "Ebenes14@gmail.com");
 			existing = entityListResource.getEntityList(mapName);
 
 		} catch (ApiException ae) {
@@ -226,25 +227,25 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}
-	
+
 	/**
 	 * Install the entity list which will maintain tasks as they are processed
+	 * 
 	 * @param tenantId
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	private void installQBTaskQueueSchema(Integer tenantId) throws Exception {
-		
+
 		EntityList entityList = new EntityList();
-		entityList.setNameSpace(EntityHelper.ORDERS_ENTITY);
+		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(EntityHelper.TASKQUEUE_ENTITY);
-		entityList
-				.setIdProperty(getIndexedProperty("taskId", "string"));
-		entityList.setIndexA(getIndexedProperty("qbTaskRequest",
-				"string"));
-		entityList.setIndexB(getIndexedProperty("qbTaskResponse", "string")); 
+		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
+		entityList.setIndexA(getIndexedProperty("taskId", "string"));
+		entityList.setIndexB(getIndexedProperty("tenantId", "string"));
 		entityList.setIndexC(getIndexedProperty("qbTaskStatus", "string"));
 		entityList.setIndexD(getIndexedProperty("qbTaskType", "string"));
+
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -263,17 +264,27 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		EntityListResource entityListResource = new EntityListResource(
 				new MozuApiContext(tenantId));
 		try {
-			// entityListResource.deleteEntityList(mapName);
 			existing = entityListResource.getEntityList(mapName);
+			//TODO comment
+//			EntityResource entityResource = new EntityResource(
+//					new MozuApiContext(tenantId));
+//			EntityCollection collection = entityResource.getEntities(mapName);
+//			for (JsonNode jsonNode: collection.getItems()) {
+//				entityResource.deleteEntity(EntityHelper.getTaskqueueEntityName(), jsonNode.get("enteredTime").asText());
+//			}
 		} catch (ApiException ae) {
 			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND"))
 				throw ae;
 		}
-		if (existing == null) {
-			entityListResource.createEntityList(entityList);
-		} else {
-			entityListResource.updateEntityList(entityList, mapName);
+		try {
+			if (existing == null) {
+				entityListResource.createEntityList(entityList);
+			} else {
+				entityListResource.updateEntityList(entityList, mapName);
+			}
+		} catch (ApiException ae) {
+			ae.printStackTrace();
 		}
 	}
 

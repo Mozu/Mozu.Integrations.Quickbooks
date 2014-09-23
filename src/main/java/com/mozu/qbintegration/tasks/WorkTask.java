@@ -10,6 +10,8 @@ package com.mozu.qbintegration.tasks;
 public class WorkTask {
 
 	private String qbTaskType;
+	
+	private Long enteredTime;
 
 	private String taskId;
 
@@ -18,6 +20,10 @@ public class WorkTask {
 	private String qbTaskResponse;
 
 	private String qbTaskStatus;
+	
+	private Integer tenantId;
+	
+	private Integer siteId;
 
 	/**
 	 * @return the qbTaskType
@@ -31,6 +37,20 @@ public class WorkTask {
 	 */
 	public void setQbTaskType(String qbTaskType) {
 		this.qbTaskType = qbTaskType;
+	}
+
+	/**
+	 * @return the enteredTime
+	 */
+	public Long getEnteredTime() {
+		return enteredTime;
+	}
+
+	/**
+	 * @param enteredTime the enteredTime to set
+	 */
+	public void setEnteredTime(Long enteredTime) {
+		this.enteredTime = enteredTime;
 	}
 
 	/**
@@ -87,6 +107,22 @@ public class WorkTask {
 	 */
 	public void setQbTaskStatus(String qbTaskStatus) {
 		this.qbTaskStatus = qbTaskStatus;
+	}
+
+	public Integer getTenantId() {
+		return tenantId;
+	}
+
+	public void setTenantId(Integer tenantId) {
+		this.tenantId = tenantId;
+	}
+
+	public Integer getSiteId() {
+		return siteId;
+	}
+
+	public void setSiteId(Integer siteId) {
+		this.siteId = siteId;
 	}
 
 }
