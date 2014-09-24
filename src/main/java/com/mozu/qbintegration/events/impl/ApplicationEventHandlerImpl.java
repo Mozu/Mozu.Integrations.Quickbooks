@@ -20,7 +20,7 @@ import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.ApplicationEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.platform.EntityListResource;
-import com.mozu.qbintegration.handlers.ConfigHandler;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
@@ -35,8 +35,6 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	@Autowired
 	private QuickbooksService quickbooksService;
 
-	@Autowired
-	ConfigHandler configHandler;
 
 	@PostConstruct
 	public void initialize() {
@@ -53,27 +51,14 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	@Override
 	public EventHandlerStatus enabled(ApiContext apiContext, Event event) {
 		logger.debug("Application enabled event");
-		logger.debug("Installing entity list schema");
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
-		Integer tenantId = apiContext.getTenantId();
-		try {
-			installCustomerSchema(tenantId);
-			installProductSchema(tenantId);
-			installGenSettingsSchema(tenantId);
-			installOrdersSchema(tenantId);
-			installQBTaskQueueSchema(tenantId);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			status.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			status.setMessage("Could not install schema on tenant " + tenantId
-					+ ", terminating.");
-		}
 		return status;
 	}
 
 	@Override
 	public EventHandlerStatus installed(ApiContext apiContext, Event event) {
 		logger.debug("Application installed event");
+
 		return enableApplication(apiContext);
 	}
 
@@ -102,18 +87,16 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 
 		// Only set initialized if there are valid values in the settings
 		try {
-			if (configHandler.getTenantSetting(apiContext.getTenantId()) != null) {
-				logger.debug("tenant settings retrieved");
-				try {
-					ApplicationUtils.setApplicationToInitialized(apiContext);
-					status = new EventHandlerStatus(HttpStatus.SC_OK);
-				} catch (Exception e) {
-					logger.warn("Exception intializing application: "
-							+ e.getMessage());
-					status = new EventHandlerStatus(e.getMessage(),
-							HttpStatus.SC_INTERNAL_SERVER_ERROR);
-				}
+			GeneralSettings settings = quickbooksService.getSettingsFromEntityList(apiContext.getTenantId());
+			installGenSettingsSchema(apiContext.getTenantId());
+			installCustomerSchema(apiContext.getTenantId());
+			installProductSchema(apiContext.getTenantId());
+			installOrdersSchema(apiContext.getTenantId());
+			installQBTaskQueueSchema(apiContext.getTenantId());
+			if (settings != null && StringUtils.isNotEmpty(settings.getQbAccount()) && StringUtils.isNoneEmpty(settings.getQbPassword())) {
+				ApplicationUtils.setApplicationToInitialized(apiContext);
 			}
+			
 		} catch (Exception e) {
 			status = new EventHandlerStatus(e.getMessage(),
 					HttpStatus.SC_INTERNAL_SERVER_ERROR);
@@ -141,27 +124,8 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		EntityListResource entityListResource = new EntityListResource(
-				new MozuApiContext(tenantId));
-		EntityList existing = null;
 		String mapName = EntityHelper.getCustomerEntityName();
-		try {
-			// entityListResource.deleteEntityList(mapName);
-			// EntityResource entityResource = new EntityResource(new
-			// MozuApiContext(tenantId));
-			// entityResource.deleteEntity(mapName, "Ebenes14@gmail.com");
-			existing = entityListResource.getEntityList(mapName);
-
-		} catch (ApiException ae) {
-			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
-					"ITEM_NOT_FOUND"))
-				throw ae;
-		}
-		if (existing == null) {
-			entityListResource.createEntityList(entityList);
-		} else {
-			entityListResource.updateEntityList(entityList, mapName);
-		}
+		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
 	/**
@@ -192,8 +156,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(EntityHelper.SETTINGS_ENTITY);
-		entityList
-				.setIdProperty(getIndexedProperty("generalsettings", "string"));
+		entityList.setIdProperty(getIndexedProperty("id", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -223,7 +186,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = EntityHelper.ORDERS_ENTITY;
+		String mapName = EntityHelper.getOrderEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}

@@ -119,17 +119,19 @@ public interface QuickbooksService {
 	 * @param generalSettings
 	 * @param tenantId
 	 * @return
+	 * @throws Exception 
 	 */
 	GeneralSettings saveOrUpdateSettingsInEntityList(GeneralSettings generalSettings,
-			Integer tenantId);
+			Integer tenantId) throws Exception;
 	
 	/**
 	 * Get the general settings while populating the 2nd tab on click
 	 * 
 	 * @param tenantId
 	 * @return
+	 * @throws Exception 
 	 */
-	GeneralSettings getSettingsFromEntityList(Integer tenantId);
+	GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception;
 	
 	/**
 	 * Save only necessary mozu order information in entity list for processing.

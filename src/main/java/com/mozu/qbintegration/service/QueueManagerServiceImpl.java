@@ -17,6 +17,7 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.tasks.WorkTask;
+import com.mozu.qbintegration.utils.EntityHelper;
 
 /**
  * @author Akshay
@@ -25,9 +26,6 @@ import com.mozu.qbintegration.tasks.WorkTask;
 @Service
 public class QueueManagerServiceImpl implements QueueManagerService {
 	
-	private static final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
-	
-	private static final String APP_NAMESPACE = "Ignitiv";
 	
 	private static final Logger logger = LoggerFactory
 			.getLogger(QueueManagerServiceImpl.class);
@@ -72,7 +70,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		}
 		
 		// Add the mapping entry
-		String mapName = TASKQUEUE_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = EntityHelper.getTaskqueueEntityName();
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		
@@ -119,7 +117,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
-		String mapName = TASKQUEUE_ENTITY + "@" + APP_NAMESPACE;
+		String mapName = EntityHelper.getTaskqueueEntityName();
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); // TODO replace with real - move this code
 		try {
