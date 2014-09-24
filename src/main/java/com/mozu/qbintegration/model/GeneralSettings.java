@@ -2,6 +2,8 @@ package com.mozu.qbintegration.model;
 
 public class GeneralSettings {
 	
+	private String id;
+	
 	private String wsURL;
 	
 	private String qbAccount;
@@ -97,5 +99,22 @@ public class GeneralSettings {
 	public void setCancelled(Boolean cancelled) {
 		this.cancelled = cancelled;
 	}
+
+	/**
+	 * @return get id
+	 */
+	public String getId() {
+		return id;
+	}
+	
+
+	/**
+	 * @param set id
+	 */
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	
     
 }

@@ -1,4 +1,4 @@
-﻿var homeViewModel = function() {
+var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 
@@ -47,7 +47,6 @@
 					form.submit();
 				},
 				error : function() {
-					alert("hide");
 				}
 			});
 		}

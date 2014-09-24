@@ -7,7 +7,7 @@ apply plugin: 'jetty'
 sourceCompatibility = 1.7
 
 //tomcatHome='E:/Akshay/quickbooks install/Apache Tomcat 7.0.41'
-archivesBaseName='quickbooks'
+archivesBaseName='Quickbooks'
 group='wars'
 httpPort=8002
 

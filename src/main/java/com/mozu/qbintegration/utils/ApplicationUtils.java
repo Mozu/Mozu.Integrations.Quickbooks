@@ -14,8 +14,6 @@ import com.mozu.api.security.AppAuthenticator;
 public class ApplicationUtils {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationUtils.class);
     
-    public static final String VALIDATE_ORDER_CAPABILITY = "OrderValidator";
-
     public static String getAppNamespace(){
         String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
         return appId.substring(0, appId.indexOf('.'));
@@ -53,13 +51,6 @@ public class ApplicationUtils {
         
         // Set the app to initialized
         application.setInitialized(true);
-        
-        // Set the ValidateOrder capability to initialized
-        for (Capability capability: application.getCapabilities()) {
-            if (capability.getCapabilityType().equals(VALIDATE_ORDER_CAPABILITY)) {
-                capability.setInitialized(true);
-            }
-        }
         
         try {
             appResource.thirdPartyUpdateApplication(application);
