@@ -17,6 +17,7 @@ import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
+import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
 @Component
@@ -26,6 +27,9 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	@Autowired
+	private QueueManagerService queueManagerService;
 
 	@PostConstruct
 	public void initialize() {
@@ -53,21 +57,26 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	}
 
 	@Override
-	public EventHandlerStatus opened(ApiContext apiContext, Event event) {
+	public EventHandlerStatus opened(final ApiContext apiContext, Event event) {
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
 		final Integer tenantId = apiContext.getTenantId();
 		final Integer siteId = apiContext.getSiteId();
-		String orderId = event.getEntityId();
+		final String orderId = event.getEntityId();
 		try {
-			OrderResource orderResource = new OrderResource(apiContext);
-			final Order order = orderResource.getOrder(orderId);
-			CustomerAccountResource accountResource = new CustomerAccountResource(apiContext);
-			final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
-			
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
+					OrderResource orderResource = new OrderResource(apiContext);
+					Order order = null;
+					try {
+						order = orderResource.getOrder(orderId);
+						CustomerAccountResource accountResource = new CustomerAccountResource(apiContext);
+						final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
+						quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
 				}
 			}).start();
 			
