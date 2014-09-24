@@ -22,17 +22,17 @@
 	
 	<!-- Processes application requests -->
 	<servlet>
-		<servlet-name>MozuIntegrationTemplateServlet</servlet-name>
+		<servlet-name>quickbooksservlet</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<init-param>
 			<param-name>contextConfigLocation</param-name>
-			<param-value>/WEB-INF/spring/MozuIntegrationTemplateServlet/servlet-context.xml</param-value>
+			<param-value>/WEB-INF/spring/quickbooks/servlet-context.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 		
 	<servlet-mapping>
-		<servlet-name>MozuIntegrationTemplateServlet</servlet-name>
+		<servlet-name>quickbooksservlet</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
 	
@@ -42,7 +42,7 @@
 	    <servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
 	    <init-param>
 	      <param-name>contextConfigLocation</param-name>
-	      <param-value>/WEB-INF/spring/MozuIntegrationTemplateServlet/spring-ws-config.xml</param-value>
+	      <param-value>/WEB-INF/spring/quickbooks/spring-ws-config.xml</param-value>
 	    </init-param>
 	    <init-param>
 	      <param-name>transformWsdlLocations</param-name>

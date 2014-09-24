@@ -32,19 +32,7 @@
 
 	<!-- Include the services component scan here -->
 	<context:component-scan base-package="com.mozu.qbintegration.service" />
+	
 
-	<context:property-placeholder
-		location="classpath:mozu_config.properties, file:${catalina.home}/conf/Kount/mozu_config.properties"
-		ignore-resource-not-found="true" />
-
-	<!-- Factory bean that creates the Mongo instance -->
-	<bean id="mongoclient" class="com.mongodb.MongoClient">
-		<constructor-arg value="${mongo.localhost}" />
-		<constructor-arg value="${mongo.port}" />
-	</bean>
-	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-		<constructor-arg name="mongo" ref="mongoclient" />
-		<constructor-arg name="databaseName" value="${mongo.db}" />
-	</bean>
 
 </beans>

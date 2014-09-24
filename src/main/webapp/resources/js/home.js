@@ -1,4 +1,4 @@
-﻿var homeViewModel = function() {
+var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 
@@ -22,22 +22,31 @@
 			dataObj.completed = $("#completedCb").prop('checked');
 			dataObj.cancelled = $("#cancelledCb").prop('checked');
 			
-			console.log(dataObj);
-			alert(dataObj);
-			
 			$.ajax({
-				headers : {
-					'Content-Type' : 'application/json'
-				},
-				url : "generalsettings",
+				contentType: 'application/json; charset=UTF-8',
+				url : "generalsettings?tenantId=" + $("#tenantIdHdn").text(),
 				type : "POST",
 				dataType : "json",
-				data: dataObj,
+				data: JSON.stringify(dataObj),
 				success : function(data) {
-					console.log(data);
+					//data.qbxml has the xml string - to be sent to download
+					
+					var form = $("<form>");
+					var element1 = $("<input>");
+					form.attr("method", "POST");
+					form.attr("action", "download");
+
+					element1.attr("id", "qwcfilestr");
+					element1.attr("name", "qwcfilestr");
+					element1.attr("type", "hidden");
+					element1.attr("value", data.qbxml);
+					
+					form.append(element1);
+					var body = $(document.body);
+					body.append(form);
+					form.submit();
 				},
 				error : function() {
-					alert("hide");
 				}
 			});
 		}
@@ -63,7 +72,7 @@
 			headers : {
 				'Content-Type' : 'application/javascript'
 			},
-			url : "getOrders",
+			url : "getOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			type : "GET",
 			dataType : "json",
 			success : function(data) {
@@ -166,6 +175,26 @@ $(function() {
 			$("#saveBtn").hide();
 		} else {
 			$("#saveBtn").show();
+		}
+		//For general settings, load the settings
+		if("generalTab" === newTabId) {
+			$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").text(),
+				type : "GET",
+				dataType : "json",
+				success : function(dataObj) {
+					$("#wsUrl").val(dataObj.wsURL);
+					$("#qbUsername").val(dataObj.qbAccount);
+					$("#qbPassword").val(dataObj.qbPassword);
+					$("#acceptedCb").prop('checked', dataObj.accepted);
+					$("#completedCb").prop('checked', dataObj.completed);
+					$("#cancelledCb").prop('checked', dataObj.cancelled);
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});
 		}
 	});
 

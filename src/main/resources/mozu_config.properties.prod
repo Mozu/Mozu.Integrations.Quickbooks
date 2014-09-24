@@ -1,12 +1,4 @@
-proxy.host=
-proxy.port=
-
 # prod
 ApplicationId={{QB_PROD_APP_ID}}
 SharedSecret={{QB_PROD_SHARED_SECRET}}
 BaseAuthAppUrl=https://home.mozu.com
-
-#Mongo connection
-mongo.localhost=localhost
-mongo.port=27017
-mongo.db=quickbooksdb
