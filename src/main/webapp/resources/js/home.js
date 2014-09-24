@@ -1,7 +1,8 @@
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
-
+	self.settings = ko.mapping.fromJS(new Object());;
+	
 	self.save = function() {
 		//identify which is the active tab
 		
@@ -14,20 +15,14 @@ var homeViewModel = function() {
 
 		if("generalTab" === selectedTab) {
 			
-			var dataObj = {};
-			dataObj.wsURL = $("#wsUrl").val();
-			dataObj.qbAccount = $("#qbUsername").val();
-			dataObj.qbPassword = $("#qbPassword").val();
-			dataObj.accepted = $("#acceptedCb").prop('checked');
-			dataObj.completed = $("#completedCb").prop('checked');
-			dataObj.cancelled = $("#cancelledCb").prop('checked');
+			
 			
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
 				url : "generalsettings?tenantId=" + $("#tenantIdHdn").text(),
 				type : "POST",
 				dataType : "json",
-				data: JSON.stringify(dataObj),
+				data:  ko.mapping.toJSON(self.settings),
 				success : function(data) {
 					//data.qbxml has the xml string - to be sent to download
 					
@@ -104,19 +99,39 @@ var homeViewModel = function() {
 				$("#content").hide();
 			}
 		});
-
-	}
-
-	ko.bindingHandlers.chosen = {
-		update : function(element) {
-			$(element).chosen({
-				width : "95%"
-			});
-			$(element).trigger('liszt:updated');
+		
+	
 		}
+		
+	self.getSettings = function() {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").text(),
+				type : "GET",
+				dataType : "json",
+				success : function(data) {
+					/*$("#wsUrl").val(dataObj.wsURL);
+					$("#qbUsername").val(dataObj.qbAccount);
+					$("#qbPassword").val(dataObj.qbPassword);
+					$("#acceptedCb").prop('checked', dataObj.accepted);
+					$("#completedCb").prop('checked', dataObj.completed);
+					$("#cancelledCb").prop('checked', dataObj.cancelled);*/
+					ko.mapping.fromJS(data, self.settings);
+					ko.applyBindings(window.homeViewModel);
+	
+					window.homeViewModel.getVersion();
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
 	};
 
-	$(document).ajaxError(function(event, jqxhr, settings, exception) {
+
+	self.getSettings();
+}
+
+$(document).ajaxError(function(event, jqxhr, settings, exception) {
 		console.log(exception);
 		console.log(event);
 		console.log(settings);
@@ -133,13 +148,13 @@ var homeViewModel = function() {
 		$("#serverError").show();
 	});
 
+
+$(function() {
+
+	
 	function closeError() {
 		$("#serverError").hide();
 	}
-
-}
-
-$(function() {
 
 	$.ajaxPrefilter(function(options, originalOptions, jqXHR) {
 		console.log(originalOptions);
@@ -176,31 +191,10 @@ $(function() {
 		} else {
 			$("#saveBtn").show();
 		}
-		//For general settings, load the settings
-		if("generalTab" === newTabId) {
-			$.ajax({
-				contentType: 'application/json; charset=UTF-8',
-				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").text(),
-				type : "GET",
-				dataType : "json",
-				success : function(dataObj) {
-					$("#wsUrl").val(dataObj.wsURL);
-					$("#qbUsername").val(dataObj.qbAccount);
-					$("#qbPassword").val(dataObj.qbPassword);
-					$("#acceptedCb").prop('checked', dataObj.accepted);
-					$("#completedCb").prop('checked', dataObj.completed);
-					$("#cancelledCb").prop('checked', dataObj.cancelled);
-				},
-				error : function() {
-					$("#content").hide();
-				}
-			});
-		}
+		
 	});
 
 	window.homeViewModel = new homeViewModel();
-	ko.applyBindings(window.homeViewModel);
-
-	window.homeViewModel.getVersion();
+	
 
 });
