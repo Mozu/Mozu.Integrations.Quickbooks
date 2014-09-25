@@ -223,7 +223,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
-		String mapName = EntityHelper.ORDERS_ENTITY;
+		String mapName = EntityHelper.getOrderEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 
 	}

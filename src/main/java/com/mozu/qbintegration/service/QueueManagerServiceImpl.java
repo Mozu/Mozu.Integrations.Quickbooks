@@ -33,14 +33,6 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 			.getLogger(QueueManagerServiceImpl.class);
 
 	/* (non-Javadoc)
-	 * @see com.mozu.qbintegration.service.QueueManagerService#getNextTaskForOrderID(java.lang.Integer, java.lang.String)
-	
-	@Override
-	public WorkTask getNextTaskForOrderID(Integer tenantId, String orderId) {
-		return getFilteredTasks(tenantId, "taskId eq " + orderId);
-	} */
-	
-	/* (non-Javadoc)
 	 * @see com.mozu.qbintegration.service.QueueManagerService#getNextTaskWithStatus(java.lang.Integer)
 	 */
 	@Override

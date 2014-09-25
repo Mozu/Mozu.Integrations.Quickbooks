@@ -7,6 +7,8 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -17,6 +19,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
@@ -24,6 +27,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -251,7 +255,8 @@ public class QuickbooksServiceEndPoint {
 				if (500 == itemSearchResponse.getStatusCode().intValue()
 						&& "warn".equalsIgnoreCase(itemSearchResponse
 								.getStatusSeverity())) {
-					// TODO this is error scenario. So hold on
+					// TODO this is error scenario. So hold on.
+					//Log the not found product in error conflict 
 
 				} else {
 
@@ -331,6 +336,16 @@ public class QuickbooksServiceEndPoint {
 						.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 						.get(0);
 
+				//Make an entry in the order entity list with posted status
+				String orderId = workTask.getTaskId(); // this gets the order id
+				Order order = qbService.getMozuOrder(orderId, tenantId,
+						workTask.getSiteId());
+				CustomerAccount custAcct = qbService.getMozuCustomer(order,
+						tenantId, workTask.getSiteId());
+				
+				MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "POSTED", salesOrderResponse, custAcct);
+				qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
+				
 				logger.debug((new StringBuilder())
 						.append("Processed order with id: ")
 						.append(workTask.getTaskId())
@@ -349,11 +364,38 @@ public class QuickbooksServiceEndPoint {
 			// Any exception, just make the task as entered for now
 			workTask.setQbTaskStatus("ERRORED");
 			queueManagerService.updateTask(workTask, tenantId);
+			//Make an entry in the order entity list with posted status
+			String orderId = workTask.getTaskId(); // this gets the order id
+			Order order = qbService.getMozuOrder(orderId, tenantId,
+					workTask.getSiteId());
+			CustomerAccount custAcct = qbService.getMozuCustomer(order,
+					tenantId, workTask.getSiteId());
+			MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
+			qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
 		responseToResponse.setReceiveResponseXMLResult(1);
 		return responseToResponse;
+	}
+
+	private MozuOrderDetails populateMozuOrderDetails(Order order, String status, 
+			SalesOrderAddRsType salesOrderResponse, CustomerAccount custAcct) {
+		MozuOrderDetails orderDetails = new MozuOrderDetails();
+		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
+		orderDetails.setQuickbooksOrderListId(salesOrderResponse == null ? 
+				"" : salesOrderResponse.getSalesOrderRet().getTxnID());
+		orderDetails.setOrderStatus(status);
+		orderDetails.setCustomerEmail(custAcct.getEmailAddress());
+		
+		DateTimeFormatter timeFormat = DateTimeFormat
+				.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+		
+		orderDetails.setOrderDate(timeFormat.print(order.getAcceptedDate().getMillis()));
+		orderDetails.setOrderUpdatedDate(timeFormat.print(order.getAcceptedDate().getMillis()));
+		orderDetails.setConflictReason("");
+		orderDetails.setAmount(String.valueOf(order.getSubtotal()));
+		return orderDetails;
 	}
 
 	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse, Integer tenantId, Integer siteId) {
