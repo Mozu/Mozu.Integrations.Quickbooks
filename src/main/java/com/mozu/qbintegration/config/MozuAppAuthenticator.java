@@ -18,7 +18,7 @@ public class MozuAppAuthenticator {
 	
 	@Value("${ApplicationId}")
 	String applicationId;
-    @Value("${sharedSecret}")
+    @Value("${SharedSecret}")
     String sharedSecret;
     @Value("${BaseAuthAppUrl}")
     String baseAppAuthUrl;
