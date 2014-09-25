@@ -2,11 +2,13 @@ package com.mozu.qbintegration.config;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.mozu.api.MozuConfig;
 import com.mozu.api.contracts.appdev.AppAuthInfo;
 import com.mozu.api.security.AppAuthenticator;
 
@@ -30,6 +32,8 @@ public class MozuAppAuthenticator {
 			AppAuthInfo appAuthInfo = new AppAuthInfo();
 			appAuthInfo.setApplicationId(applicationId);
 			appAuthInfo.setSharedSecret(sharerdSecret);
+			if (StringUtils.isNotEmpty(baseAppAuthUrl))
+				MozuConfig.setBaseUrl(baseAppAuthUrl);
 			//AppAuthenticator.initialize(appAuthInfo, baseAppAuthUrl);
 			AppAuthenticator.initialize(appAuthInfo);
 			logger.info("Auth ticket : "+AppAuthenticator.getInstance().getAppAuthTicket().getAccessToken());

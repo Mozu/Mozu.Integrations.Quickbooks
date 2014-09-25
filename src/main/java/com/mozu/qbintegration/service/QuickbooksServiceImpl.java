@@ -16,14 +16,19 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
@@ -33,6 +38,7 @@ import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
+import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
@@ -54,6 +60,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.tasks.WorkTask;
+import com.mozu.qbintegration.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
 
 /**
@@ -69,6 +76,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(QuickbooksServiceImpl.class);
 
+	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
+	
 	// Heavy object, initialize in constructor
 	private JAXBContext contextObj = null;
 
@@ -472,61 +481,44 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public GeneralSettings saveOrUpdateSettingsInEntityList(
-			GeneralSettings generalSettings, Integer tenantId) {
+			GeneralSettings generalSettings, Integer tenantId) throws Exception {
 
 		// First get an entity for settings if already present.
-		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
-		JsonNode savedEntry = null;
+		MozuApiContext context =new MozuApiContext(tenantId); 
+		EntityResource entityResource = new EntityResource(context); // TODO replace with real - move this code
 		String mapName = EntityHelper.getSettingEntityName();
+		generalSettings.setId("generalsettings");
+		boolean isUpdate = false;
 
 		try {
-			savedEntry = entityResource.getEntity(mapName, "generalsettings");
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Error saving settings for tenant id: " + tenantId);
+			entityResource.getEntity(mapName, generalSettings.getId());
+			isUpdate = true;
+		} catch (ApiException e) {
+			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
+				logger.error(e.getMessage(),e);
+				throw e;
+			}
 		}
 
-		GeneralSettings savedSettings = null;
-		boolean isUpdate = true;
-
-		if (savedEntry == null) { // true only for first time for the tenant.
-			isUpdate = false;
-		}
-
-		// Add the mapping entry
-		JsonNode rtnEntry = null;
-		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
-		ObjectNode custNode = nodeFactory.objectNode();
-
-		custNode.put("generalsettings", "generalsettings");
-		custNode.put("wsURL", generalSettings.getWsURL());
-		custNode.put("qbAccount", generalSettings.getQbAccount());
-		custNode.put("qbPassword", generalSettings.getQbPassword());
-		custNode.put("accepted", generalSettings.getAccepted());
-		custNode.put("completed", generalSettings.getCompleted());
-		custNode.put("cancelled", generalSettings.getCancelled());
-
+		JsonNode custNode = mapper.valueToTree(generalSettings);
 		try {
 			if (!isUpdate) { // insert scenario.
-				rtnEntry = entityResource.insertEntity(custNode, mapName);
+				custNode = entityResource.insertEntity(custNode, mapName);
 			} else {
-				rtnEntry = entityResource.updateEntity(custNode, mapName,
-						"generalsettings");
+				custNode = entityResource.updateEntity(custNode, mapName,generalSettings.getId());
 			}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Error saving settings for tenant id: " + tenantId);
+			ApplicationUtils.setApplicationToInitialized(context);
+		} catch (ApiException e) {
+			logger.error("Error saving settings for tenant id: " + tenantId, e);
+			throw e;
 		}
-		logger.debug("Retrieved entity: " + rtnEntry);
-		logger.debug("Returning");
 
-		return savedSettings;
+		return generalSettings;
 	}
 
 	@Override
-	public GeneralSettings getSettingsFromEntityList(Integer tenantId) {
+	public GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
@@ -536,21 +528,22 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		try {
 			savedEntry = entityResource.getEntity(mapName, "generalsettings");
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Error saving settings for tenant id: " + tenantId);
+		} catch (ApiException e) {
+			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND"))
+				throw e;
 		}
 
 		GeneralSettings savedSettings = null;
 		if (savedEntry != null) {
-			ObjectNode retNode = (ObjectNode) savedEntry;
+			/*ObjectNode retNode = (ObjectNode) savedEntry;
 			savedSettings = new GeneralSettings();
 			savedSettings.setWsURL(retNode.get("wsURL").asText());
 			savedSettings.setQbAccount(retNode.get("qbAccount").asText());
 			savedSettings.setQbPassword(retNode.get("qbPassword").asText());
 			savedSettings.setAccepted(retNode.get("accepted").asBoolean());
 			savedSettings.setCompleted(retNode.get("completed").asBoolean());
-			savedSettings.setCancelled(retNode.get("cancelled").asBoolean());
+			savedSettings.setCancelled(retNode.get("cancelled").asBoolean());*/
+			savedSettings = mapper.readValue(savedEntry.toString(), GeneralSettings.class);
 		}
 		return savedSettings;
 	}

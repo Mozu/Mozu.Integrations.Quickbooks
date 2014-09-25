@@ -10,9 +10,9 @@
 
 		<div class="secondrow">
 			<form>
-				<label class="label-medium" style="width: 30%;" th:text="#{label.URL}"></label>: <input type="text" id="wsUrl" size="50"/>
-				<label class="label-medium" style="width: 30%;" th:text="#{label.username}"></label>: <input type="text" id="qbUsername" size="50" />
-				<label class="label-medium" style="width: 30%;" th:text="#{label.password}"></label>: <input type="password" id="qbPassword" size="50"/>
+				<label class="label-medium" style="width: 30%;" th:text="#{label.URL}"></label><input type="text" id="wsUrl" size="50" readonly="true" data-bind="value : settings.wsURL"/>
+				<label class="label-medium" style="width: 30%;" th:text="#{label.username}"></label><input type="text" id="qbUsername" size="50" data-bind="value : settings.qbAccount"/>
+				<label class="label-medium" style="width: 30%;" th:text="#{label.password}"></label><input type="password" id="qbPassword" size="50" data-bind="value : settings.qbPassword"/>
 			</form>
 		</div>
 
@@ -21,9 +21,9 @@
 
 			<div><label th:text="#{label.downloadtext}"></label></div>
 
-			<p><input type="checkbox" class="orderfilter" id="acceptedCb"/> <label th:text="#{label.accepted}"></label></p>
-			<p><input type="checkbox" class="orderfilter" id="completedCb"/> <label th:text="#{label.completed}"></label></p>
-			<p><input type="checkbox" class="orderfilter" id="cancelledCb"/> <label th:text="#{label.cancelled}"></label></p>
+			<p><input type="checkbox" class="orderfilter" id="acceptedCb" data-bind="checked: settings.accepted"/> <label th:text="#{label.accepted}"></label></p>
+			<p><input type="checkbox" class="orderfilter" id="completedCb"  data-bind="checked: settings.completed"/> <label th:text="#{label.completed}"></label></p>
+			<p><input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"/> <label th:text="#{label.cancelled}"></label></p>
 
 		</div>
 	</div>

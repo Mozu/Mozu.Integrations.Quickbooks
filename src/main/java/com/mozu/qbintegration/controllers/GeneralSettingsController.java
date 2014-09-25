@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.ServletContextAware;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,7 +37,7 @@ import com.mozu.qbintegration.service.QuickbooksService;
  * 
  */
 @Controller
-public class GeneralSettingsController {
+public class GeneralSettingsController implements ServletContextAware {
 
 	@Autowired
 	private QuickbooksService quickbooksService;
@@ -48,35 +51,53 @@ public class GeneralSettingsController {
 	@Value("${wsdlFileName}")
 	private String wsdlFileName;
 
+	 private ServletContext context;
+	    
+    @Override
+    public void setServletContext(ServletContext servletContext) {
+        this.context = servletContext;
+    }
+	
 	@RequestMapping(value = "/getgeneralsettings", method = RequestMethod.GET)
 	public @ResponseBody
-	GeneralSettings getGeneralSettings(
-			@RequestParam(value = "tenantId", required = false) Integer tenantId) {
+	GeneralSettings getGeneralSettings(@RequestParam(value = "tenantId", required = false) Integer tenantId, final HttpServletRequest request) throws Exception {
 
 		GeneralSettings generalSettings = quickbooksService
 				.getSettingsFromEntityList(tenantId);
+		
+		if (generalSettings == null)
+			generalSettings = new GeneralSettings();
+		
+		if (StringUtils.isEmpty(generalSettings.getWsURL())) 
+				generalSettings.setWsURL( getSoapUrl(request) );
 		return generalSettings;
 
 	}
 
+	private String getSoapUrl(HttpServletRequest request) {
+		return "https://"+request.getServerName()+":"+request.getServerPort()+ context.getContextPath()+"/soap/QuickBooksService";
+	}
+	
 	@RequestMapping(value = "/generalsettings", method = RequestMethod.POST)
 	public @ResponseBody
 	ObjectNode saveGeneralSettings(
 			@RequestParam(value = "tenantId", required = false) Integer tenantId,
 			@RequestBody GeneralSettings generalSettings,
-			HttpServletResponse response, HttpServletRequest request) {
+			HttpServletResponse response, HttpServletRequest request) throws Exception {
 
+		generalSettings.setWsURL( getSoapUrl(request) );
 		quickbooksService.saveOrUpdateSettingsInEntityList(generalSettings,
 				tenantId);
+		
 		
 		QuickWebConnector quickWebCon = new QuickWebConnector();
 		quickWebCon.setId(100);
 		quickWebCon.setName(webserviceName);
 		quickWebCon.setUrl(generalSettings.getWsURL());
 		quickWebCon.setDescription(webserviceDesc);
-		quickWebCon
-				.setSupport(request.getScheme() + "://" + request.getServerName() + request.getContextPath()
-						+ wsdlFileName);
+		quickWebCon.setSupport(request.getScheme() + "://" + request.getServerName() + request.getContextPath()+ wsdlFileName);
+		quickWebCon.setOwnerId("{"+java.util.UUID.randomUUID()+"}");
+		quickWebCon.setFileId("{"+java.util.UUID.randomUUID()+"}");
 		quickWebCon.setUserName(generalSettings.getQbAccount());
 		quickWebCon.setQbType("QBFS");
 		Scheduler scheduler = new Scheduler();

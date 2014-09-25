@@ -1,2 +1,3 @@
-ApplicationId={{QBE_APP_ID}}
-SharedSecret={{QBE_SHARED_SECRET}}
+ApplicationId={{QB_QA_APP_ID}}
+SharedSecret={{QB_QA_SHARED_SECRET}}
+BaseAuthAppUrl=https://home.mozu-qa.com

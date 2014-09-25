@@ -11,6 +11,7 @@ public class EntityHelper {
 	public static final String ORDERS_ENTITY = "QB_ORDERS";
 	
 	public static final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
+	
 
 	public static String getCustomerEntityName() {
 		return EntityHelper.CUST_ENTITY + "@" + ApplicationUtils.getAppNamespace();
