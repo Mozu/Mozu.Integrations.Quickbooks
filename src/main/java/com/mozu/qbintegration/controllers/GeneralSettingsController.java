@@ -75,7 +75,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	}
 
 	private String getSoapUrl(HttpServletRequest request) {
-		return "https://"+request.getServerName()+":"+request.getServerPort()+ context.getContextPath()+"/soap/QuickBooksService";
+		//return "https://"+request.getServerName()+ context.getContextPath()+"/soap/QuickBooksService";
+		return "https://"+request.getServerName()+ context.getContextPath()+ wsdlFileName;
 	}
 	
 	@RequestMapping(value = "/generalsettings", method = RequestMethod.POST)
