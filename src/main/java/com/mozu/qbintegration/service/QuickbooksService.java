@@ -10,6 +10,7 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.tasks.WorkTask;
 
 /**
@@ -25,7 +26,8 @@ public interface QuickbooksService {
 	 * 
 	 * @return marshalled string representation of QB CustomerAdd request.
 	 */
-	String getQBCustomerSaveXML(final Order order, final CustomerAccount customerAccount);
+	String getQBCustomerSaveXML(final Order order,
+			final CustomerAccount customerAccount);
 
 	/**
 	 * This method accepts mozu customer and returns the customer update qbXML
@@ -34,7 +36,8 @@ public interface QuickbooksService {
 	 * 
 	 * @return marshalled string representation of QB CustomerUpdate request.
 	 */
-	String getQBCustomerUpdateXML(final Order order, final CustomerAccount customerAccount);
+	String getQBCustomerUpdateXML(final Order order,
+			final CustomerAccount customerAccount);
 
 	/**
 	 * This method accepts mozu customer and returns the customer GET qbXML.
@@ -46,7 +49,8 @@ public interface QuickbooksService {
 	 * 
 	 * @return marshalled string representation of QB CustomerGet request.
 	 */
-	String getQBCustomerGetXML(final Order order, final CustomerAccount orderingCustomer);
+	String getQBCustomerGetXML(final Order order,
+			final CustomerAccount orderingCustomer);
 
 	/**
 	 * This method accepts mozu Order and returns the sales order insert qbXML
@@ -66,7 +70,8 @@ public interface QuickbooksService {
 	 * 
 	 * @return marshalled string representation of QB SalesOrderUpdate request.
 	 */
-	String getQBOrderUpdateXML(final Order order, final CustomerAccount customerAccount);
+	String getQBOrderUpdateXML(final Order order,
+			final CustomerAccount customerAccount);
 
 	/**
 	 * This method accepts mozu order and returns the order GET qbXML. This
@@ -116,29 +121,32 @@ public interface QuickbooksService {
 
 	/**
 	 * Save general settings from 2nd tab or update if already saved.
+	 * 
 	 * @param generalSettings
 	 * @param tenantId
 	 * @return
 	 */
-	GeneralSettings saveOrUpdateSettingsInEntityList(GeneralSettings generalSettings,
-			Integer tenantId) throws Exception;
+	GeneralSettings saveOrUpdateSettingsInEntityList(
+			GeneralSettings generalSettings, Integer tenantId) throws Exception;
 
 	/**
 	 * Get the general settings while populating the 2nd tab on click
 	 * 
 	 * @param tenantId
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception;
+	GeneralSettings getSettingsFromEntityList(Integer tenantId)
+			throws Exception;
 
 	/**
 	 * Get the orders saved in entity list
+	 * 
 	 * @param tenantId
 	 * @param mozuOrderDetails
 	 * @return List<MozuOrderDetails>
 	 */
-	List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId, 
+	List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId,
 			MozuOrderDetails mozuOrderDetails);
 
 	/**
@@ -154,8 +162,8 @@ public interface QuickbooksService {
 	 */
 	Order getMozuOrder(String orderId, Integer tenantId, Integer siteId);
 
-	void saveCustInEntityList(CustomerAccount custAcct,
-			String customerListId, Integer tenantId, Integer siteId);
+	void saveCustInEntityList(CustomerAccount custAcct, String customerListId,
+			Integer tenantId, Integer siteId);
 
 	/**
 	 * Get the customer based on the email address
@@ -163,11 +171,17 @@ public interface QuickbooksService {
 	 * @param custAcct
 	 * @return
 	 */
-	String getCustFromEntityList(CustomerAccount custAcct,
-			Integer tenantId, Integer siteId);
+	String getCustFromEntityList(CustomerAccount custAcct, Integer tenantId,
+			Integer siteId);
 
-	void saveProductInEntityList(OrderItem orderItem,
-			String qbProdustListID, Integer tenantId, Integer siteId);
+	/**
+	 * @param orderItem
+	 * @param qbProdustListID
+	 * @param tenantId
+	 * @param siteId
+	 */
+	void saveProductInEntityList(OrderItem orderItem, String qbProdustListID,
+			Integer tenantId, Integer siteId);
 
 	/**
 	 * Get the product quickbooks list id based on product code
@@ -175,8 +189,8 @@ public interface QuickbooksService {
 	 * @param orderItem
 	 * @return
 	 */
-	String getProductFromEntityList(OrderItem orderItem,
-			Integer tenantId, Integer siteId);
+	String getProductFromEntityList(OrderItem orderItem, Integer tenantId,
+			Integer siteId);
 
 	/**
 	 * @param order
@@ -227,7 +241,7 @@ public interface QuickbooksService {
 	 */
 	void saveOrderInEntityList(MozuOrderDetails mozuOrderDetails,
 			CustomerAccount custAccount, Integer tenantId, Integer siteId);
-	
+
 	/**
 	 * @param mozuOrderDetails
 	 * @param custAccount
@@ -236,4 +250,19 @@ public interface QuickbooksService {
 	 */
 	void updateOrderInEntityList(MozuOrderDetails mozuOrderDetails,
 			CustomerAccount custAccount, Integer tenantId, Integer siteId);
+
+	/**
+	 * @param tenantId
+	 * @param mozuOrderNumber
+	 * @param conflictReasons
+	 */
+	void saveConflictInEntityList(Integer tenantId, Integer mozuOrderNumber,
+			List<OrderConflictDetail> conflictReasons);
+
+	/**
+	 * @param tenantId
+	 * @param orderId
+	 * @return
+	 */
+	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId);
 }

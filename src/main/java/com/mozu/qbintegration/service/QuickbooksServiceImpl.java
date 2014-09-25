@@ -41,6 +41,7 @@ import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
@@ -487,7 +488,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		MozuApiContext context =new MozuApiContext(tenantId); 
 		EntityResource entityResource = new EntityResource(context); // TODO replace with real - move this code
 		String mapName = EntityHelper.getSettingEntityName();
-		generalSettings.setId("generalsettings");
+		generalSettings.setId("generalsettings-new");
 		boolean isUpdate = false;
 
 		try {
@@ -527,7 +528,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		String mapName = EntityHelper.getSettingEntityName();
 
 		try {
-			savedEntry = entityResource.getEntity(mapName, "generalsettings");
+			savedEntry = entityResource.getEntity(mapName, "generalsettings-new");
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND"))
 				throw e;
@@ -824,6 +825,63 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		return mozuOrders;
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see com.mozu.qbintegration.service.QuickbooksService#saveConflictInEntityList(java.lang.Integer, java.lang.String, java.util.List)
+	 */
+	@Override
+	public void saveConflictInEntityList(Integer tenantId, Integer mozuOrderNumber,
+			List<OrderConflictDetail> conflictReasons) {
+		// First get an entity for settings if already present.
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId)); // TODO replace with real - move this code
+		String mapName = EntityHelper.getOrderConflictEntityName();
+		
+		for(OrderConflictDetail reason: conflictReasons) {
+			ObjectNode conflictNode = mapper.valueToTree(reason);
+			conflictNode.put("enteredTime", String.valueOf(System.currentTimeMillis()));
+			conflictNode.put("mozuOrderId", reason.getMozuOrderNumber());
+			
+			JsonNode rtnEntry = null;
+			try {
+				rtnEntry = entityResource.insertEntity(conflictNode, mapName);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				logger.error("Error saving order conflict details for order id: " + mozuOrderNumber);
+			}
+			logger.info("RtnEntry: " + rtnEntry);
+		}
+	}
+
+	@Override
+	public List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId) {
+		// First get an entity for settings if already present.
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId)); // TODO replace with real - move this code
+		String mapName = EntityHelper.getOrderConflictEntityName();
+		
+		EntityCollection orderConflictCollection = null;
+		
+		List<OrderConflictDetail> conflictDetails = new ArrayList<OrderConflictDetail>();
+		try {
+			orderConflictCollection = entityResource.getEntities(mapName, null, null, 
+					"mozuOrderId eq " + orderId, null, null);
+			
+			if (null != orderConflictCollection) {
+				for (JsonNode singleOrderConflict : orderConflictCollection.getItems()) {
+					conflictDetails.add(mapper.readValue(singleOrderConflict.toString(), OrderConflictDetail.class));
+				}
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.error("Error getting order conflict details for order id: " + orderId);
+		}
+		
+		return conflictDetails;
 	}
 
 }

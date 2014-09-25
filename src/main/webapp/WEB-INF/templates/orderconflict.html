@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+<script src="js/home.js" type="text/javascript"></script>
+<title>Order Conflicts</title>
+</head>
+<body>
+
+	<div th:fragment="content">
+
+		<div class="container">
+			<div class="divBorder">
+				<h3 class="title">Order Conflicts</h3><br/>
+			</div>
+			<div class="ordConflictError" id="ordConflictError"
+				style="display: none;">
+				<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
+				<br/>
+				<p id="exampleDisplay"></p>
+				</div>
+			<div id="ordConflict">
+				<table width="100%"
+					style="border: 3px; background: rgb(243, 244, 248);">
+					<tr>
+						<td>
+							<table id="orderConflictsTable" class="display">
+								<thead>
+									<tr>
+										<th>
+											<input type="checkbox" />
+										</th>
+										<th><p th:text="#{label.order}"></p></th>
+										<th><p th:text="#{label.quickbooksOrderListId}"></p></th>
+										<th><p th:text="#{label.customerName}"></p></th>
+										<th><p th:text="#{label.createdDate}"></p></th>
+										<th><p th:text="#{label.updatedDate}"></p></th>
+										<th><p th:text="#{label.amount}"></p></th>
+										<th><p th:text="#{label.conflictReason}"></p></th>
+										<th><p th:text="#{label.action}"></p></th>
+
+									</tr>
+								</thead>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</div>
+
+		</div>
+	</div>
+</body>
+
+</html>

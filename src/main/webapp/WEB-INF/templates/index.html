@@ -38,7 +38,10 @@
 				<div class="tabs">
 					<a class="button tab active" data-toggle="tab" data-tab-id="aboutTab" data-hide-save="true">Info</a> 
 					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Settings</a>
-					<a href="#" data-bind="click: getOrders" class="button tab" data-toggle="tab" data-tab-id="ordersTab" data-hide-save="false">Orders Posted</a>   
+					<a href="#" data-bind="click: getOrders" class="button tab" data-toggle="tab" 
+						data-tab-id="ordersTab" data-hide-save="false">Orders Posted</a>   
+					<a href="#" data-bind="click: getOrderConflicts" class="button tab" data-toggle="tab" 
+						data-tab-id="orderConflictsTab" data-hide-save="false">Order Conflicts</a>   
 				</div>
 				
 				<div class="tab-view">
@@ -49,7 +52,10 @@
 						<div th:include="generalsettings :: content"></div>
 					</div>
 					<div class="tab-section template" style="display: none" id="ordersTab">
-						<div th:include="sample :: content"></div>
+						<div th:include="orderposted :: content"></div>
+					</div>
+					<div class="tab-section template" style="display: none" id="orderConflictsTab">
+						<div th:include="orderconflict :: content"></div>
 					</div>
 				</div>
 

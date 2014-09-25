@@ -20,6 +20,7 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
@@ -257,6 +258,25 @@ public class QuickbooksServiceEndPoint {
 								.getStatusSeverity())) {
 					// TODO this is error scenario. So hold on.
 					//Log the not found product in error conflict 
+					String orderId = workTask.getTaskId(); // this gets the order id
+					Order order = qbService.getMozuOrder(orderId, tenantId,
+							workTask.getSiteId());
+					CustomerAccount custAcct = qbService.getMozuCustomer(order,
+							tenantId, workTask.getSiteId());
+					MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
+					qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
+					
+					//Make entry in conflict reason table
+					OrderConflictDetail conflictDetail = new OrderConflictDetail();
+					conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+					conflictDetail.setNatureOfConflict("ITEM_MISSING");
+					conflictDetail.setDataToFix("");
+					conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
+					
+					List<OrderConflictDetail> conflictDetails = new ArrayList<OrderConflictDetail>();
+					conflictDetails.add(conflictDetail);
+					qbService.saveConflictInEntityList(tenantId, order.getOrderNumber(), conflictDetails);
+					logger.debug("Saved conflict for: " + itemSearchResponse.getStatusMessage());
 
 				} else {
 

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -72,28 +73,56 @@ public class OrdersController {
 		}
 		return value;
 	}
+	
+	@RequestMapping(value = "/getConflictOrders", method = RequestMethod.GET)
+	public @ResponseBody
+	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "iDisplayStart") String iDisplayStart,
+			@RequestParam(value = "iDisplayLength") String iDisplayLength,
+			@RequestParam(value = "sSearch") String sSearch) {
 
-	private ArrayNode getOrdersJson(List<MozuOrderDetails> savedOrders)
-			throws JsonProcessingException {
+		final Integer tenantId = Integer.parseInt(httpRequest
+				.getParameter("tenantId"));
+		final Integer siteId = Integer.parseInt(httpRequest
+				.getParameter("siteId")); // TODO do at site level
 
+		MozuOrderDetails criteria = new MozuOrderDetails();
+		criteria.setOrderStatus("CONFLICT");
+		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+				.getMozuOrderDetails(tenantId, criteria);
 		
-		ArrayNode arrayNode = mapper.createArrayNode();
-		for(MozuOrderDetails details: savedOrders) {
-			ObjectNode singleOrder = mapper.createObjectNode();
-			populateSingleOrder(details, singleOrder);
-			arrayNode.add(singleOrder);
+		OrderJsonObject orderJsonObject = new OrderJsonObject();
+		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
+		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
+		orderJsonObject.setAaData(mozuOrderDetails);
+
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(orderJsonObject);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
 		}
-
-		return arrayNode;
+		return value;
 	}
+	
+	@RequestMapping(value = "/getOrderConflictsDetails", method = RequestMethod.GET)
+	public @ResponseBody
+	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {	
 
-	private void populateSingleOrder(MozuOrderDetails details,
-			ObjectNode singleOrder) {
-		singleOrder.put("mozuOrderNumber", details.getMozuOrderNumber());
-		singleOrder.put("quickbooksOrderListId", details.getQuickbooksOrderListId());
-		singleOrder.put("customerEmail", details.getCustomerEmail());
-		singleOrder.put("orderDate", details.getOrderDate());
-		singleOrder.put("orderUpdatedDate", details.getOrderUpdatedDate());
-		singleOrder.put("amount", details.getAmount());
+		List<OrderConflictDetail> conflictDetails = 
+				quickbooksService.getOrderConflictReasons(tenantId, mozuOrderNumber);
+		
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(conflictDetails);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
+		}
+		return value;
 	}
 }
