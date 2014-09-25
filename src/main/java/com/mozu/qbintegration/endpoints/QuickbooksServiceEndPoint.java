@@ -167,7 +167,7 @@ public class QuickbooksServiceEndPoint {
 			queueManagerService.updateTask(workTask, tenantId);
 			response.setSendRequestXMLResult(workTask.getQbTaskRequest());
 		} else {
-			response.setSendRequestXMLResult("NoOp"); // nothing to do - come
+			response.setSendRequestXMLResult(null); // nothing to do - come
 														// back after 5 sconds
 		}
 		return response;
@@ -191,7 +191,7 @@ public class QuickbooksServiceEndPoint {
 		if (workTask == null) { // nothing to do but work is not complete so
 								// come back
 			ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
-			responseToResponse.setReceiveResponseXMLResult(1);
+			responseToResponse.setReceiveResponseXMLResult(0);
 			return responseToResponse;
 		}
 
