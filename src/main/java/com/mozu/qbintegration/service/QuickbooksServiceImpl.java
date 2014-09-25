@@ -488,11 +488,11 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		MozuApiContext context =new MozuApiContext(tenantId); 
 		EntityResource entityResource = new EntityResource(context); // TODO replace with real - move this code
 		String mapName = EntityHelper.getSettingEntityName();
-		generalSettings.setId("generalsettings-new");
+		generalSettings.setId(tenantId.toString());
 		boolean isUpdate = false;
 
 		try {
-			entityResource.getEntity(mapName, generalSettings.getId());
+			entityResource.getEntity(mapName, tenantId.toString());
 			isUpdate = true;
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
@@ -528,7 +528,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		String mapName = EntityHelper.getSettingEntityName();
 
 		try {
-			savedEntry = entityResource.getEntity(mapName, "generalsettings-new");
+			savedEntry = entityResource.getEntity(mapName, tenantId.toString());
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND"))
 				throw e;
@@ -536,14 +536,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		GeneralSettings savedSettings = null;
 		if (savedEntry != null) {
-			/*ObjectNode retNode = (ObjectNode) savedEntry;
-			savedSettings = new GeneralSettings();
-			savedSettings.setWsURL(retNode.get("wsURL").asText());
-			savedSettings.setQbAccount(retNode.get("qbAccount").asText());
-			savedSettings.setQbPassword(retNode.get("qbPassword").asText());
-			savedSettings.setAccepted(retNode.get("accepted").asBoolean());
-			savedSettings.setCompleted(retNode.get("completed").asBoolean());
-			savedSettings.setCancelled(retNode.get("cancelled").asBoolean());*/
 			savedSettings = mapper.readValue(savedEntry.toString(), GeneralSettings.class);
 		}
 		return savedSettings;

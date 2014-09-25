@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:th="http://www.thymeleaf.org">
 <body>
@@ -30,36 +29,3 @@
 	</div>
 </body>
 </html>
-=======
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.thymeleaf.org">
-<body>
-
-	<div th:fragment="content" class="row">
-
-		<div class="firstrow border-bottom">
-			<label th:text="#{label.accountmanagement}" class="label-bold"></label>
-		</div>
-
-		<div class="secondrow">
-			<form>
-				<label class="label-medium" style="width: 30%;" th:text="#{label.URL}"></label><input type="text" id="wsUrl" size="50" readonly="true" data-bind="value : settings.wsURL"/>
-				<label class="label-medium" style="width: 30%;" th:text="#{label.username}"></label><input type="text" id="qbUsername" size="50" data-bind="value : settings.qbAccount"/>
-				<label class="label-medium" style="width: 30%;" th:text="#{label.password}"></label><input type="password" id="qbPassword" size="50" data-bind="value : settings.qbPassword"/>
-			</form>
-		</div>
-
-		<div class="thirdrow">
-			<div class="border-bottom"><label th:text="#{label.downloadsettings}" class="label-bold"></label></div>
-
-			<div><label th:text="#{label.downloadtext}"></label></div>
-
-			<p><input type="checkbox" class="orderfilter" id="acceptedCb" data-bind="checked: settings.accepted"/> <label th:text="#{label.accepted}"></label></p>
-			<p><input type="checkbox" class="orderfilter" id="completedCb"  data-bind="checked: settings.completed"/> <label th:text="#{label.completed}"></label></p>
-			<p><input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"/> <label th:text="#{label.cancelled}"></label></p>
-
-		</div>
-	</div>
-</body>
-</html>
->>>>>>> 65d09895b9a0de49fef3c513b9edb88aa725115d
