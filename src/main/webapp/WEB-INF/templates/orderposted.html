@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+<script src="js/home.js" type="text/javascript"></script>
+<title>Orders Posted to Quickbooks</title>
+
+</head>
+<body>
+
+	<div th:fragment="content">
+
+		<div class="container">
+			<div class="divBorder">
+				<p>
+					<h3 class="title">Orders Posted to Quickbooks</h3>
+				</p>
+			</div>
+			<!-- <form action="#" th:action="@{/jobHistory}" method="post"> -->
+
+			<table width="100%"
+				style="border: 3px; font-size: 11px;">
+				<tr>
+					<td>
+						<table id="orderTable" class="display" cellspacing="0"
+							width="100%">
+							<thead>
+								<tr>
+									<th><p th:text="#{label.order}"></p></th>
+									<th><p th:text="#{label.quickbooksOrderListId}"></p></th>
+						            <th><p th:text="#{label.customerName}"></p></th>
+						            <th><p th:text="#{label.createdDate}"></p></th>
+						            <th><p th:text="#{label.updatedDate}"></p></th>					
+						            <th><p th:text="#{label.amount}"></p></th>
+								</tr>
+							</thead>
+						</table>
+					</td>
+				</tr>
+			</table>
+
+			<!-- 	</form> -->
+
+		</div>
+	</div>
+</body>
+
+</html>
