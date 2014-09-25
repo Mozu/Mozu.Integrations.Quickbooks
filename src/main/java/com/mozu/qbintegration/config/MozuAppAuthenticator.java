@@ -19,7 +19,7 @@ public class MozuAppAuthenticator {
 	@Value("${ApplicationId}")
 	String applicationId;
     @Value("${SharedSecret}")
-    String sharerdSecret;
+    String sharedSecret;
     @Value("${BaseAuthAppUrl}")
     String baseAppAuthUrl;
 	
@@ -31,6 +31,7 @@ public class MozuAppAuthenticator {
 			
 			AppAuthInfo appAuthInfo = new AppAuthInfo();
 			appAuthInfo.setApplicationId(applicationId);
+<<<<<<< HEAD
 			appAuthInfo.setSharedSecret(sharerdSecret);
 			if (StringUtils.isNotEmpty(baseAppAuthUrl)) {
 				logger.info("AuthUrl :" +baseAppAuthUrl);
@@ -85,7 +86,13 @@ public class MozuAppAuthenticator {
 			appAuthInfo.setApplicationId(applicationId);
 			appAuthInfo.setSharedSecret(sharerdSecret);
 			if (StringUtils.isNotEmpty(baseAppAuthUrl))
+			appAuthInfo.setSharedSecret(sharedSecret);
+			if (StringUtils.isNotEmpty(baseAppAuthUrl)) {
+				logger.info("AuthUrl :" +baseAppAuthUrl);
+				logger.info("Appid :" +applicationId);
+				logger.info("SharedSecret :" +sharedSecret);
 				MozuConfig.setBaseUrl(baseAppAuthUrl);
+			}
 			//AppAuthenticator.initialize(appAuthInfo, baseAppAuthUrl);
 			AppAuthenticator.initialize(appAuthInfo);
 			logger.info("Auth ticket : "+AppAuthenticator.getInstance().getAppAuthTicket().getAccessToken());

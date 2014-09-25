@@ -42,8 +42,6 @@ var homeViewModel = function() {
 		});
 
 		if("generalTab" === selectedTab) {
-			
-			
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
 				url : "generalsettings?tenantId=" + $("#tenantIdHdn").text(),
