@@ -1,9 +1,17 @@
 package com.mozu.qbintegration.endpoints;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
+import javax.annotation.Resource;
+import javax.servlet.ServletContext;
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +55,8 @@ import com.mozu.quickbooks.generated.ReceiveResponseXML;
 import com.mozu.quickbooks.generated.ReceiveResponseXMLResponse;
 import com.mozu.quickbooks.generated.SendRequestXML;
 import com.mozu.quickbooks.generated.SendRequestXMLResponse;
+import com.mozu.quickbooks.generated.ServerVersion;
+import com.mozu.quickbooks.generated.ServerVersionResponse;
 
 /**
  * @author Akshay
@@ -58,15 +68,42 @@ public class QuickbooksServiceEndPoint {
 	private static final Log logger = LogFactory
 			.getLog(QuickbooksServiceEndPoint.class);
 
+    @Resource
+    private WebServiceContext context;
+	
 	@Autowired
 	private QuickbooksService qbService;
 
 	@Autowired
 	private QueueManagerService queueManagerService;
 
+    
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
+	
 	}
 
+	
+	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "serverVersion")
+	@ResponsePayload
+	public ServerVersionResponse serverVersion(
+			@RequestPayload ServerVersion serverVersion)
+			throws IOException {
+		/*ServletContext servletContext = (ServletContext) context.getMessageContext().get(MessageContext.SERVLET_CONTEXT);		
+		String version = "";
+		InputStream manifestStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");		
+		 if (manifestStream== null) {
+	            version = "Unknown version";
+		 } else {
+	        Manifest manifest = new Manifest(manifestStream);
+	        Attributes attributes = manifest.getMainAttributes();
+	        version = attributes.getValue("Implementation-Version");
+		 }*/
+		ServerVersionResponse response = new ServerVersionResponse();
+
+		response.setServerVersionResult("");
+		return response;
+	}
+	
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "clientVersion")
 	@ResponsePayload
 	public ClientVersionResponse clientVersion(
