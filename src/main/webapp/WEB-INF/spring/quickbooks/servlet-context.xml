@@ -15,7 +15,7 @@
 	<resources mapping="/**" location="/resources/" />
 	
 	<context:property-placeholder
-		location="classpath:mozu_config.properties, file:${catalina.home}/conf/quickbooks/mozu_config.properties"
+		location="classpath:mozu_config.properties, file:${catalina.home}/conf/Quickbooks/mozu_config.properties"
 		ignore-resource-not-found="true" />
 
 	
