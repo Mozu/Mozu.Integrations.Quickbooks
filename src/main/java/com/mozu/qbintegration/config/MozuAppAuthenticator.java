@@ -35,7 +35,7 @@ public class MozuAppAuthenticator {
 			if (StringUtils.isNotEmpty(baseAppAuthUrl)) {
 				logger.info("AuthUrl :" +baseAppAuthUrl);
 				logger.info("Appid :" +applicationId);
-				logger.info("SharedSecret :" +sharedSecret);
+				logger.info("SharedSecret :" +sharerdSecret);
 				MozuConfig.setBaseUrl(baseAppAuthUrl);
 			}	
 			//AppAuthenticator.initialize(appAuthInfo, baseAppAuthUrl);
