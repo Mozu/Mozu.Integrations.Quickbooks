@@ -1,8 +1,36 @@
+function funEdit(orderNumber) {
+	$('#ordConflict').hide().fadeOut(800);
+	$('#ordConflictError').show().fadeIn(800);
+	
+	$.ajax({
+		url : "getOrderConflictsDetails",
+		type : "GET",
+		data : {
+			"mozuOrderNumber" : orderNumber,
+			"tenantId" : $("#tenantIdHdn").text(),
+			"siteId"	: $("#siteIdHdn").text()
+		},
+		dataType : "json",		
+		success : function(data) {
+			console.log(data);
+			console.log(data[0].conflictReason);
+			$("#exampleDisplay").html("<ul><li>" + data[0].conflictReason + "</li></ul>")	
+		},
+		error : function() {
+			$("#content").hide();
+		}
+	});
+}
+
+function showOrderConflict() {
+	$('#ordConflictError').hide().fadeOut(800);
+	$('#ordConflict').show().fadeIn(800);
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());;
-	
 	self.save = function() {
 		//identify which is the active tab
 		
@@ -14,7 +42,6 @@ var homeViewModel = function() {
 		});
 
 		if("generalTab" === selectedTab) {
-			
 			
 			
 			$.ajax({
@@ -63,46 +90,130 @@ var homeViewModel = function() {
 	};
 
 	self.getOrders = function() {
-		$.ajax({
-			headers : {
-				'Content-Type' : 'application/javascript'
+		var $table = $('#orderTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"sort" : "position",
+			"sSearch":true,
+			"sAjaxSource" : "getPostedOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"aoColumns" : [
+
+			{
+				"mData" : "mozuOrderNumber"
+			}, {
+				"mData" : "quickbooksOrderListId"
+			}, {
+				"mData" : "customerEmail"
+			}, {
+				"mData" : "orderDate",
+					 "mRender": function (data, type, row) {
+					   
+					 var myISODate =  new Date(data) ;
+					
+					      return myISODate.getDate()+'-'+
+					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+					      +':'+myISODate.getSeconds();
+					   }
+			}, 
+			{
+				"mData" : "orderUpdatedDate",
+				"mRender": function (data, type, row) {
+				    	
+				 var myISODate =  new Date(data) ;
+			
+				      return myISODate.getDate()+'-'+
+				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+				      +':'+myISODate.getSeconds();
+				   }
 			},
-			url : "getOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
-			type : "GET",
-			dataType : "json",
-			success : function(data) {
-				var dataStr = data.orderListData.substring(1,
-						data.orderListData.length - 1);
-				var orderListJson = $.parseJSON(dataStr);
-				console.log(orderListJson);
-
-				var index = 0;
-				$.each(orderListJson, function(idx, obj) {
-					index = index + 1;
-
-					var trData = $("<tr/>");
-					trData.attr("class", "tempRows");
-					var tdData_1 = $("<td/>");
-					var p_Data1 = $("<p/>");
-					$(p_Data1).html(obj.orderNumber);
-					$(tdData_1).append(p_Data1);
-					$(trData).append(tdData_1);
-
-					$("#dummyRow").remove();
-					$("#orderBody").append(trData);
-
-				});
-
+			{
+				"mData" : "amount"
 			},
-			error : function() {
 
-				$("#content").hide();
-			}
+			]
 		});
 		
 	
-		}
-		
+		$table.fnDraw();
+
+	};
+	
+	self.getOrderConflicts = function() {
+
+		var $table = $('#orderConflictsTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"sort" : "position",
+			"sSearch":true,
+			"sAjaxSource" : "getConflictOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"aoColumns" : [
+
+			               {    
+			            	   "mData": "mozuOrderNumber",
+			            	   "bSearchable": false,
+			            	   "bSortable": false,
+			            	   "mRender": function (data, type, full) {			
+			            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+			            }
+			    },
+			    {
+			    	"mData" : "mozuOrderNumber"
+			    }, 
+			    {
+			    	"mData" : "quickbooksOrderListId"
+				}, 
+				{
+					"mData" : "customerEmail"
+				}, 
+				{
+					"mData" : "orderDate",
+						"mRender": function (data, type, row) {
+					   
+							var myISODate =  new Date(data) ;
+					
+						      return myISODate.getDate()+'-'+
+						      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+						      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+						      +':'+myISODate.getSeconds();
+						}
+				}, 
+				{
+					"mData" : "orderUpdatedDate",
+					"mRender": function (data, type, row) {
+					    	
+					 var myISODate =  new Date(data) ;
+				
+					      return myISODate.getDate()+'-'+
+					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+					      +':'+myISODate.getSeconds();
+					}
+				},
+				{
+					"mData" : "amount"
+				},
+				{
+					"mData" : "conflictReason"
+				},
+				{    
+				   //"mData": "conflictReason",
+				    "mData": "mozuOrderNumber",
+				    "bSearchable": false,
+				    "bSortable": false,
+				    "mRender": function (data, type, row) {
+				    	var dataId = data ;
+				    	return "<a href='javascript:funEdit(" + row.mozuOrderNumber + ")'>Edit</a>";
+				   }
+				 }
+			]
+		});
+		$table.fnDraw();
+	};
+	
 	self.getSettings = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
@@ -110,12 +221,6 @@ var homeViewModel = function() {
 				type : "GET",
 				dataType : "json",
 				success : function(data) {
-					/*$("#wsUrl").val(dataObj.wsURL);
-					$("#qbUsername").val(dataObj.qbAccount);
-					$("#qbPassword").val(dataObj.qbPassword);
-					$("#acceptedCb").prop('checked', dataObj.accepted);
-					$("#completedCb").prop('checked', dataObj.completed);
-					$("#cancelledCb").prop('checked', dataObj.cancelled);*/
 					ko.mapping.fromJS(data, self.settings);
 					ko.applyBindings(window.homeViewModel);
 	
@@ -131,22 +236,23 @@ var homeViewModel = function() {
 	self.getSettings();
 }
 
+
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
-		console.log(exception);
-		console.log(event);
-		console.log(settings);
-		console.log(jqxhr);
-		if (jqxhr.status >= 200 && jqxhr.status <= 300)
-			return;
-		if (jqxhr.responseJSON != null)
-			$("#serverErrorMessage").html(jqxhr.responseJSON.message);
-		else if (jqxhr.responseText != null)
-			$("#serverErrorMessage").html(jqxhr.responseText);
-		else {
-			$("#serverErrorMessage").html(jqxhr.statusText);
-		}
-		$("#serverError").show();
-	});
+	console.log(exception);
+	console.log(event);
+	console.log(settings);
+	console.log(jqxhr);
+	if (jqxhr.status >= 200 && jqxhr.status <= 300)
+		return;
+	if (jqxhr.responseJSON != null)
+		$("#serverErrorMessage").html(jqxhr.responseJSON.message);
+	else if (jqxhr.responseText != null)
+		$("#serverErrorMessage").html(jqxhr.responseText);
+	else {
+		$("#serverErrorMessage").html(jqxhr.statusText);
+	}
+	$("#serverError").show();
+});
 
 
 $(function() {

@@ -14,12 +14,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;
 
 /**
@@ -36,43 +40,89 @@ public class OrdersController {
 
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	final ObjectMapper mapper = new ObjectMapper();
 
-	@RequestMapping(value = "/getOrders", method = RequestMethod.GET)
+	@RequestMapping(value = "/getPostedOrders", method = RequestMethod.GET)
 	public @ResponseBody
-	ObjectNode getOrders(HttpServletRequest httpRequest, ModelMap model) {
+	String getPostedOrders(HttpServletRequest httpRequest, ModelMap model, @RequestParam(value = "iDisplayStart") String iDisplayStart,
+			@RequestParam(value = "iDisplayLength") String iDisplayLength,
+			@RequestParam(value = "sSearch") String sSearch) {
 
 		final Integer tenantId = Integer.parseInt(httpRequest
 				.getParameter("tenantId"));
 		final Integer siteId = Integer.parseInt(httpRequest
-				.getParameter("siteId")); //TODO do at site level
+				.getParameter("siteId")); // TODO do at site level
 
-		ObjectNode returnObj = null;
+		MozuOrderDetails criteria = new MozuOrderDetails();
+		criteria.setOrderStatus("POSTED");
+		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+				.getMozuOrderDetails(tenantId, criteria);
+		
+		OrderJsonObject orderJsonObject = new OrderJsonObject();
+		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
+		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
+		orderJsonObject.setAaData(mozuOrderDetails);
 
+		String value = null;
 		try {
-
-			//TODO this is going to feed the orders posted tab. Work during integration
-			List<MozuOrderDetails> savedOrders = quickbooksService.getMozuOrderDetails(tenantId);
-			returnObj = getOrdersJson(savedOrders);
-
+			value = mapper.writeValueAsString(orderJsonObject);
 		} catch (JsonProcessingException e) {
-			logger.error("Error processing order posted json response: " + e);
-		} catch (Exception ex) {
-			ex.printStackTrace();
+			e.printStackTrace();
+			value = "";
 		}
-
-		return returnObj;
+		return value;
 	}
+	
+	@RequestMapping(value = "/getConflictOrders", method = RequestMethod.GET)
+	public @ResponseBody
+	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "iDisplayStart") String iDisplayStart,
+			@RequestParam(value = "iDisplayLength") String iDisplayLength,
+			@RequestParam(value = "sSearch") String sSearch) {
 
-	private ObjectNode getOrdersJson(List<MozuOrderDetails> savedOrders)
-			throws JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode returnObj = mapper.createObjectNode();
+		final Integer tenantId = Integer.parseInt(httpRequest
+				.getParameter("tenantId"));
+		final Integer siteId = Integer.parseInt(httpRequest
+				.getParameter("siteId")); // TODO do at site level
 
-		String value = (new StringBuilder()).append("'")
-				.append(mapper.writeValueAsString(savedOrders)).append("'")
-				.toString();
-		returnObj.put("orderListData", value);
+		MozuOrderDetails criteria = new MozuOrderDetails();
+		criteria.setOrderStatus("CONFLICT");
+		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+				.getMozuOrderDetails(tenantId, criteria);
+		
+		OrderJsonObject orderJsonObject = new OrderJsonObject();
+		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
+		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
+		orderJsonObject.setAaData(mozuOrderDetails);
 
-		return returnObj;
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(orderJsonObject);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
+		}
+		return value;
+	}
+	
+	@RequestMapping(value = "/getOrderConflictsDetails", method = RequestMethod.GET)
+	public @ResponseBody
+	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {	
+
+		List<OrderConflictDetail> conflictDetails = 
+				quickbooksService.getOrderConflictReasons(tenantId, mozuOrderNumber);
+		
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(conflictDetails);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
+		}
+		return value;
 	}
 }

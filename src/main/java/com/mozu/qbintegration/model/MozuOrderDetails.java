@@ -30,6 +30,82 @@ public class MozuOrderDetails {
 	private String customerEmail;
 
 	/**
+	 * 
+	 */
+	private String orderDate;
+	
+	/**
+	 * 
+	 */
+	private String orderUpdatedDate;
+	
+	/**
+	 * 
+	 */
+	private String conflictReason;
+	
+	/**
+	 * 
+	 */
+	private String amount;
+	
+	/**
+	 * @return the amount
+	 */
+	public String getAmount() {
+		return amount;
+	}
+
+	/**
+	 * @param amount the amount to set
+	 */
+	public void setAmount(String amount) {
+		this.amount = amount;
+	}
+
+	/**
+	 * @return the conflictReason
+	 */
+	public String getConflictReason() {
+		return conflictReason;
+	}
+
+	/**
+	 * @param conflictReason the conflictReason to set
+	 */
+	public void setConflictReason(String conflictReason) {
+		this.conflictReason = conflictReason;
+	}
+
+	/**
+	 * @return the orderUpdatedDate
+	 */
+	public String getOrderUpdatedDate() {
+		return orderUpdatedDate;
+	}
+
+	/**
+	 * @param orderUpdatedDate the orderUpdatedDate to set
+	 */
+	public void setOrderUpdatedDate(String orderUpdatedDate) {
+		this.orderUpdatedDate = orderUpdatedDate;
+	}
+
+	/**
+	 * @return the orderDate
+	 */
+	public String getOrderDate() {
+		return orderDate;
+	}
+
+	/**
+	 * @param orderDate the orderDate to set
+	 */
+	public void setOrderDate(String orderDate) {
+		this.orderDate = orderDate;
+	}
+
+	/**
 	 * @return the mozuOrderNumber
 	 */
 	public String getMozuOrderNumber() {
