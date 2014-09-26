@@ -11,6 +11,7 @@ import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.tasks.WorkTask;
 
 /**
@@ -85,11 +86,10 @@ public interface QuickbooksService {
 	/**
 	 * This method accepts mozu product and returns the QB product insert qbXML
 	 * 
-	 * @param orderItem
-	 * 
+	 * @param productToQuickbooks
 	 * @return marshalled string representation of QB ProductAdd request.
 	 */
-	String getQBProductSaveXML(final Order order, OrderItem orderItem);
+	String getQBProductSaveXML(ProductToQuickbooks productToQuickbooks);
 
 	/**
 	 * This method accepts nothing and returns the QB Product GET qbXML. This
@@ -265,4 +265,13 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId);
+
+	/**
+	 * @param productToQuickbooks
+	 * @param tenantId
+	 * @param siteId
+	 */
+	void saveNewProductToQB(
+			ProductToQuickbooks productToQuickbooks, Integer tenantId,
+			Integer siteId);
 }

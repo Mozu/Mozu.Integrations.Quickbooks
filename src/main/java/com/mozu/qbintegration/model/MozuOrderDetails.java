@@ -17,6 +17,11 @@ public class MozuOrderDetails {
 	/**
 	 * 
 	 */
+	private String mozuOrderId;
+	
+	/**
+	 * 
+	 */
 	private String quickbooksOrderListId;
 	
 	/**
@@ -117,6 +122,20 @@ public class MozuOrderDetails {
 	 */
 	public void setMozuOrderNumber(String mozuOrderNumber) {
 		this.mozuOrderNumber = mozuOrderNumber;
+	}
+
+	/**
+	 * @return the mozuOrderId
+	 */
+	public String getMozuOrderId() {
+		return mozuOrderId;
+	}
+
+	/**
+	 * @param mozuOrderId the mozuOrderId to set
+	 */
+	public void setMozuOrderId(String mozuOrderId) {
+		this.mozuOrderId = mozuOrderId;
 	}
 
 	/**

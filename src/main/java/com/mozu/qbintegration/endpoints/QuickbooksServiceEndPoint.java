@@ -9,9 +9,11 @@ import java.util.jar.Manifest;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletContext;
+import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.WebServiceContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +35,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
@@ -293,6 +296,7 @@ public class QuickbooksServiceEndPoint {
 				if (500 == itemSearchResponse.getStatusCode().intValue()
 						&& "warn".equalsIgnoreCase(itemSearchResponse
 								.getStatusSeverity())) {
+					
 					// TODO this is error scenario. So hold on.
 					//Log the not found product in error conflict 
 					String orderId = workTask.getTaskId(); // this gets the order id
@@ -304,10 +308,16 @@ public class QuickbooksServiceEndPoint {
 					qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
 					
 					//Make entry in conflict reason table
+					//Log the not found product in error conflict 
+					QBXML qbxml2 = (QBXML) qbService
+							.getUnmarshalledValue(workTask.getQbTaskRequest());
+					ItemQueryRqType itemReq = (ItemQueryRqType) qbxml2.getQBXMLMsgsRq().
+							getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().get(0);
+					
 					OrderConflictDetail conflictDetail = new OrderConflictDetail();
 					conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
-					conflictDetail.setNatureOfConflict("ITEM_MISSING");
-					conflictDetail.setDataToFix("");
+					conflictDetail.setNatureOfConflict("Not Found");
+					conflictDetail.setDataToFix(itemReq.getFullName().get(0));
 					conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
 					
 					List<OrderConflictDetail> conflictDetails = new ArrayList<OrderConflictDetail>();
@@ -368,9 +378,13 @@ public class QuickbooksServiceEndPoint {
 				qbService.saveProductInEntityList(item, itemListId, tenantId,
 						workTask.getSiteId());
 
+				logger.debug("Added new product to quickbooks: " + invAddResponse.getItemInventoryRet().getName());
 				// If all items have are in processed status, put the order add
 				// task
 				// in.
+				// We dont need this code anymore. ITEM_ADD wont save the order automatically.
+				// Leaving for today for reference
+				/*
 				String orderId = workTask.getTaskId(); // this gets the order id
 				Order order = qbService.getMozuOrder(orderId, tenantId,
 						workTask.getSiteId());
@@ -383,6 +397,7 @@ public class QuickbooksServiceEndPoint {
 					qbService.addOrderAddTaskToQueue(orderId, tenantId, workTask.getSiteId()
 							, custAcct, order, itemListIds);
 				}
+				*/
 
 			} else if ("ORDER_ADD".equals(workTask.getQbTaskType())) {
 				// Resume with response
@@ -440,6 +455,7 @@ public class QuickbooksServiceEndPoint {
 			SalesOrderAddRsType salesOrderResponse, CustomerAccount custAcct) {
 		MozuOrderDetails orderDetails = new MozuOrderDetails();
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
+		orderDetails.setMozuOrderId(order.getId());
 		orderDetails.setQuickbooksOrderListId(salesOrderResponse == null ? 
 				"" : salesOrderResponse.getSalesOrderRet().getTxnID());
 		orderDetails.setOrderStatus(status);
