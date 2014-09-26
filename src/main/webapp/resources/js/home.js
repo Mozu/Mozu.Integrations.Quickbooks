@@ -1,7 +1,6 @@
 function funEdit(orderNumber) {
 	$('#ordConflict').hide().fadeOut(800);
 	$('#ordConflictError').show().fadeIn(800);
-	
 	$.ajax({
 		url : "getOrderConflictsDetails",
 		type : "GET",
@@ -12,9 +11,12 @@ function funEdit(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			console.log(data);
-			console.log(data[0].conflictReason);
-			$("#exampleDisplay").html("<ul><li>" + data[0].conflictReason + "</li></ul>")	
+			$(data).each(function(index) {
+				alert(data[index]);
+				console.log(data[index]);
+				homeViewModel.orderConflictDetails.push(data[index]);
+			});
+			
 		},
 		error : function() {
 			$("#content").hide();
@@ -30,7 +32,55 @@ function showOrderConflict() {
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
-	self.settings = ko.mapping.fromJS(new Object());;
+	self.settings = ko.mapping.fromJS(new Object());
+	
+	//For the detail section
+	self.orderConflictDetails = ko.observableArray([]);
+	
+	//For the row click on conflict details
+    self.clickedRow = function(item) {
+       alert(item.dataToFix);   
+    }
+    
+    //For saving new item to quickbooks
+    self.availableItemTypes = ko.observableArray(['Inventory Part', 'Non Inventory Part', 'Inventory Assembly']);
+    self.itemNameNumber = ko.observable("");
+    self.itemPurchaseDesc = ko.observable("");
+    self.itemSalesDesc = ko.observable("");
+    self.itemSalesPrice = ko.observable("");
+    self.itemManuPartNum = ko.observable("");
+    self.itemTaxCode = ko.observable("");
+    self.itemExpenseAccount = ko.observable("");
+    self.itemAssetAccount = ko.observable("");
+    self.itemIncomeAccount = ko.observable("");
+    self.selectedChoice = ko.observable();
+    
+    self.saveItemToQuickbooks = function() {
+    	var dataObj = {};
+    	dataObj.itemNameNumber = self.itemNameNumber();
+    	dataObj.itemPurchaseDesc = self.itemPurchaseDesc();
+    	dataObj.itemSalesDesc = self.itemSalesDesc();
+    	dataObj.itemSalesPrice = self.itemSalesPrice();
+    	dataObj.itemManuPartNum = self.itemManuPartNum();
+    	dataObj.itemTaxCode = self.itemTaxCode();
+    	dataObj.itemExpenseAccount = self.itemExpenseAccount();
+    	dataObj.itemAssetAccount = self.itemAssetAccount();
+	    dataObj.itemIncomeAccount = self.itemIncomeAccount();
+	    dataObj.selectedChoice = self.selectedChoice();
+    	console.log(ko.mapping.toJSON(dataObj));
+    	$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			type : "POST",
+			dataType : "json",
+			data:  ko.mapping.toJSON(dataObj),
+			success : function(data) {
+				console.log(data);
+			},
+			error : function() {
+			}
+    	});
+    };
 
 	self.save = function() {
 		//identify which is the active tab
@@ -151,20 +201,17 @@ var homeViewModel = function() {
 			"sAjaxSource" : "getConflictOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			"aoColumns" : [
 
-			               {    
-			            	   "mData": "mozuOrderNumber",
-			            	   "bSearchable": false,
-			            	   "bSortable": false,
-			            	   "mRender": function (data, type, full) {			
-			            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+			            {    
+		            	   "mData": "mozuOrderNumber",
+		            	   "bSearchable": false,
+		            	   "bSortable": false,
+		            	   "mRender": function (data, type, full) {			
+		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
 			            }
 			    },
 			    {
 			    	"mData" : "mozuOrderNumber"
 			    }, 
-			    {
-			    	"mData" : "quickbooksOrderListId"
-				}, 
 				{
 					"mData" : "customerEmail"
 				}, 
@@ -194,9 +241,6 @@ var homeViewModel = function() {
 				},
 				{
 					"mData" : "amount"
-				},
-				{
-					"mData" : "conflictReason"
 				},
 				{    
 				   //"mData": "conflictReason",

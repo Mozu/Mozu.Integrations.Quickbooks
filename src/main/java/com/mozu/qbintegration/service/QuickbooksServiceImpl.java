@@ -42,6 +42,7 @@ import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
@@ -217,48 +218,44 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 	@Override
-	public String getQBProductSaveXML(final Order order, final OrderItem orderItem) {
+	public String getQBProductSaveXML(ProductToQuickbooks productToQuickbooks) {
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		ItemInventoryAddRqType addRqType = new ItemInventoryAddRqType();
 		
-		addRqType.setRequestID(order.getId());
+		addRqType.setRequestID(productToQuickbooks.getItemNameNumber());
 		
 		qbxmlMsgsRqType
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						addRqType);
 		ItemInventoryAdd inventoryAdd = new ItemInventoryAdd();
 		addRqType.setItemInventoryAdd(inventoryAdd);
-		inventoryAdd.setName(orderItem.getProduct().getProductCode());
+		inventoryAdd.setName(productToQuickbooks.getItemNameNumber());
 		inventoryAdd.setIsActive("true");
 
 		// TODO move these to either prop files or get these details from
 		// customer
 		SalesTaxCodeRef salesTax = new SalesTaxCodeRef();
-		salesTax.setFullName("goulet sales tax");
+		salesTax.setFullName(productToQuickbooks.getItemTaxCode()); //Get tax code from user
 		inventoryAdd.setSalesTaxCodeRef(salesTax);
 
-		IncomeAccountRef incomeAccount = new IncomeAccountRef(); // TODO get
-																	// client's
-																	// details
-		incomeAccount.setFullName("Sales - Software");
+		IncomeAccountRef incomeAccount = new IncomeAccountRef(); // TODO get client's details
+		incomeAccount.setFullName(productToQuickbooks.getItemIncomeAccount());
 		inventoryAdd.setIncomeAccountRef(incomeAccount);
-		AssetAccountRef assetAccount = new AssetAccountRef(); // TODO get
-																// client's
-																// details
+		
+		AssetAccountRef assetAccount = new AssetAccountRef(); // TODO get client's details
 		assetAccount.setFullName("Inventory Asset");
 		inventoryAdd.setAssetAccountRef(assetAccount);
+		
 		COGSAccountRef cogsAccountRef = new COGSAccountRef();
-		cogsAccountRef.setFullName("Cost of Goods Sold"); // TODO get client's
-															// details
+		cogsAccountRef.setFullName(productToQuickbooks.getItemExpenseAccount()); // TODO get client's details
 		inventoryAdd.setCOGSAccountRef(cogsAccountRef);
 
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		inventoryAdd.setSalesDesc(orderItem.getProduct().getName());
-		inventoryAdd.setSalesPrice(numberFormat.format(orderItem.getUnitPrice()
-				.getListAmount()));
+		inventoryAdd.setSalesDesc(productToQuickbooks.getItemSalesDesc());
+		inventoryAdd.setSalesPrice(numberFormat.format(Double.valueOf(productToQuickbooks.getItemSalesPrice())));
 
 		return getMarshalledValue(qbxml);
 	}
@@ -757,6 +754,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		ObjectNode taskNode = nodeFactory.objectNode();
 
 		taskNode.put("mozuOrderNumber", orderDetails.getMozuOrderNumber());
+		taskNode.put("mozuOrderId", orderDetails.getMozuOrderNumber());
 		taskNode.put("quickbooksOrderListId", orderDetails.getQuickbooksOrderListId() == null ? 
 				"" : orderDetails.getQuickbooksOrderListId()); //For item we need to save multiple tasks
 		taskNode.put("tenantId", tenantId);
@@ -798,6 +796,9 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			if (null != orderCollection) {
 				for (JsonNode singleOrder : orderCollection.getItems()) {
 					singleOrdDetail = new MozuOrderDetails();
+					singleOrdDetail.setMozuOrderId(singleOrder.get(
+							"mozuOrderId") == null? "" : singleOrder.get(
+									"mozuOrderId").asText());
 					singleOrdDetail.setMozuOrderNumber(singleOrder.get(
 							"mozuOrderNumber").asText());
 					singleOrdDetail.setQuickbooksOrderListId(singleOrder.get(
@@ -882,6 +883,23 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		
 		return conflictDetails;
+	}
+
+	@Override
+	public void saveNewProductToQB(
+			ProductToQuickbooks productToQuickbooks, Integer tenantId,
+			Integer siteId) {
+		String qbXML = getQBProductSaveXML(productToQuickbooks);
+		WorkTask itemQueryTask = new WorkTask();
+		//Just to make it unique
+		itemQueryTask.setEnteredTime(System.currentTimeMillis());
+		itemQueryTask.setTaskId(productToQuickbooks.getItemNameNumber());
+		itemQueryTask.setQbTaskStatus("ENTERED");
+		itemQueryTask.setTenantId(tenantId);
+		itemQueryTask.setSiteId(siteId);
+		itemQueryTask.setQbTaskType("ITEM_ADD");
+		itemQueryTask.setQbTaskRequest(qbXML);
+		queueManagerService.saveTask(itemQueryTask, tenantId);
 	}
 
 }

@@ -182,6 +182,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 																			// ERRORED,
 																			// UPDATED
 		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
