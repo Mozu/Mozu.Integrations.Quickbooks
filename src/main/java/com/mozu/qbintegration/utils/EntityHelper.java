@@ -1,3 +1,4 @@
+
 package com.mozu.qbintegration.utils;
 
 public class EntityHelper {

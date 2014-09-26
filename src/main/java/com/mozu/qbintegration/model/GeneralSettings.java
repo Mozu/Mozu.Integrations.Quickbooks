@@ -114,7 +114,7 @@ public class GeneralSettings {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
-	
-    
 }
+
+    
+

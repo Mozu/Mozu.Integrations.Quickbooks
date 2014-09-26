@@ -1,9 +1,12 @@
 package com.mozu.qbintegration.endpoints;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.ws.WebServiceContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +32,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
-import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
@@ -49,6 +51,8 @@ import com.mozu.quickbooks.generated.ReceiveResponseXML;
 import com.mozu.quickbooks.generated.ReceiveResponseXMLResponse;
 import com.mozu.quickbooks.generated.SendRequestXML;
 import com.mozu.quickbooks.generated.SendRequestXMLResponse;
+import com.mozu.quickbooks.generated.ServerVersion;
+import com.mozu.quickbooks.generated.ServerVersionResponse;
 
 /**
  * @author Akshay
@@ -60,6 +64,9 @@ public class QuickbooksServiceEndPoint {
 	private static final Log logger = LogFactory
 			.getLog(QuickbooksServiceEndPoint.class);
 
+    @Resource
+    private WebServiceContext context;
+	
 	@Autowired
 	private QuickbooksService qbService;
 
@@ -69,6 +76,28 @@ public class QuickbooksServiceEndPoint {
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 	}
 
+	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "serverVersion")
+	@ResponsePayload
+	public ServerVersionResponse serverVersion(
+			@RequestPayload ServerVersion serverVersion)
+			throws IOException {
+		/*ServletContext servletContext = (ServletContext) context.getMessageContext().get(MessageContext.SERVLET_CONTEXT);		
+		String version = "";
+		InputStream manifestStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");		
+		 if (manifestStream== null) {
+	            version = "Unknown version";
+		 } else {
+	        Manifest manifest = new Manifest(manifestStream);
+	        Attributes attributes = manifest.getMainAttributes();
+	        version = attributes.getValue("Implementation-Version");
+		 }*/
+		ServerVersionResponse response = new ServerVersionResponse();
+
+		response.setServerVersionResult("");
+		return response;
+	}
+	
+	
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "clientVersion")
 	@ResponsePayload
 	public ClientVersionResponse clientVersion(
@@ -156,7 +185,7 @@ public class QuickbooksServiceEndPoint {
 		if (workTask == null) { // nothing to do but work is not complete so
 								// come back
 			ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
-			responseToResponse.setReceiveResponseXMLResult(1);
+			responseToResponse.setReceiveResponseXMLResult(0);
 			return responseToResponse;
 		}
 
@@ -260,6 +289,7 @@ public class QuickbooksServiceEndPoint {
 								.getStatusSeverity())) {
 					
 					// TODO this is error scenario. So hold on.
+					//Log the not found product in error conflict 
 					String orderId = workTask.getTaskId(); // this gets the order id
 					Order order = qbService.getMozuOrder(orderId, tenantId,
 							workTask.getSiteId());

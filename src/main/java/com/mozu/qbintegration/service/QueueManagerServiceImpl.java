@@ -19,10 +19,7 @@ import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.tasks.WorkTask;
 import com.mozu.qbintegration.utils.EntityHelper;
 
-/**
- * @author Akshay
- *
- */
+
 @Service
 public class QueueManagerServiceImpl implements QueueManagerService {
 	

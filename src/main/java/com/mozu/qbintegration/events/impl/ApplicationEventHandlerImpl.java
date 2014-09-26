@@ -247,6 +247,13 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 				new MozuApiContext(tenantId));
 		try {
 			existing = entityListResource.getEntityList(mapName);
+			//TODO comment
+//			EntityResource entityResource = new EntityResource(
+//					new MozuApiContext(tenantId));
+//			EntityCollection collection = entityResource.getEntities(mapName);
+//			for (JsonNode jsonNode: collection.getItems()) {
+//				entityResource.deleteEntity(EntityHelper.getTaskqueueEntityName(), jsonNode.get("enteredTime").asText());
+//			}
 		} catch (ApiException ae) {
 			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND"))

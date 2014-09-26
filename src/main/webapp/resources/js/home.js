@@ -264,12 +264,6 @@ var homeViewModel = function() {
 				type : "GET",
 				dataType : "json",
 				success : function(data) {
-					/*$("#wsUrl").val(dataObj.wsURL);
-					$("#qbUsername").val(dataObj.qbAccount);
-					$("#qbPassword").val(dataObj.qbPassword);
-					$("#acceptedCb").prop('checked', dataObj.accepted);
-					$("#completedCb").prop('checked', dataObj.completed);
-					$("#cancelledCb").prop('checked', dataObj.cancelled);*/
 					ko.mapping.fromJS(data, self.settings);
 					ko.applyBindings(window.homeViewModel);
 	
