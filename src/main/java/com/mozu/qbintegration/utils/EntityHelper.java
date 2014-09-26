@@ -1,4 +1,3 @@
-
 package com.mozu.qbintegration.utils;
 
 public class EntityHelper {
@@ -39,3 +38,4 @@ public class EntityHelper {
 		return EntityHelper.ORDER_CONFLICT_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
 }
+

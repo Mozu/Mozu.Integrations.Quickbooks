@@ -93,6 +93,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			installProductSchema(apiContext.getTenantId());
 			installOrdersSchema(apiContext.getTenantId());
 			installQBTaskQueueSchema(apiContext.getTenantId());
+			installOrderConflictSchema(apiContext.getTenantId());
 			if (settings != null && StringUtils.isNotEmpty(settings.getQbAccount()) && StringUtils.isNoneEmpty(settings.getQbPassword())) {
 				ApplicationUtils.setApplicationToInitialized(apiContext);
 			}
@@ -218,6 +219,24 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
+	
+	private void installOrderConflictSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(appNamespace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(EntityHelper.ORDER_CONFLICT_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
+		entityList.setIndexA(getIndexedProperty("mozuOrderId", "string"));
+
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = EntityHelper.getOrderConflictEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+	
 	/*
 	 * Create or update entity list
 	 */

@@ -13,12 +13,7 @@
 			<div class="divBorder">
 				<h3 class="title">Order Conflicts</h3><br/>
 			</div>
-			<div class="ordConflictError" id="ordConflictError"
-				style="display: none;">
-				<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
-				<br/>
-				<p id="exampleDisplay"></p>
-				</div>
+			
 			<div id="ordConflict">
 				<table width="100%"
 					style="border: 3px; background: rgb(243, 244, 248);">
@@ -31,12 +26,10 @@
 											<input type="checkbox" />
 										</th>
 										<th><p th:text="#{label.order}"></p></th>
-										<th><p th:text="#{label.quickbooksOrderListId}"></p></th>
 										<th><p th:text="#{label.customerName}"></p></th>
 										<th><p th:text="#{label.createdDate}"></p></th>
 										<th><p th:text="#{label.updatedDate}"></p></th>
 										<th><p th:text="#{label.amount}"></p></th>
-										<th><p th:text="#{label.conflictReason}"></p></th>
 										<th><p th:text="#{label.action}"></p></th>
 
 									</tr>
@@ -47,7 +40,62 @@
 				</table>
 
 			</div>
-
+			
+			<!-- Error processing div -->
+			<div class="ordConflictError" id="ordConflictError"
+				style="display: none;">
+				<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
+				<br/>
+				<p id="exampleDisplay">
+					<table id="singleErrorDisplay" class="display" style="border: solid gray 1px;">
+						<thead>
+							<tr>
+								<th>Product Code</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody data-bind="foreach: orderConflictDetails">
+					        <tr style="cursor:pointer;" data-bind="click: $root.clickedRow">
+					            <td data-bind="text: dataToFix"></td>
+					            <td data-bind="text: natureOfConflict"></td>
+					        </tr>
+					    </tbody>
+					</table>
+					
+					<div>
+						<span>Item Type</span>:
+							<select data-bind="options: availableItemTypes, value: selectedChoice" size="5"></select>
+							<br/>
+						<span>Item Name/Number</span>: 
+							<input type="text" data-bind="value: itemNameNumber"/>
+							<br/>
+						<span >Item Purchase Info</span>:
+							<input type="text" data-bind="value: itemPurchaseDesc"/>
+							<br/>
+						<span>Item Sales Info</span>:
+							<input type="text" data-bind="value: itemSalesDesc"/>
+							<br/>
+						<span>Sales Price</span>:
+							<input type="text" data-bind="value: itemSalesPrice"/>
+							<br/>
+						<span>Manufacturer Part Number</span>:
+							<input type="text" data-bind="value: itemManuPartNum"/>
+							<br/>
+						<span>Tax Code</span>:
+							<input type="text" data-bind="value: itemTaxCode"/>
+							<br/>
+						<span>Expense Account</span>:
+							<input type="text" data-bind="value: itemExpenseAccount"/>
+							<br/>
+						<span>Income Account</span>:
+							<input type="text" data-bind="value: itemIncomeAccount"/>
+							<br/>
+							
+						<a class="button primary-action" data-bind="click: saveItemToQuickbooks"
+						id="saveBtn">Save Item</a>
+					</div>
+				</p>
+			</div>
 		</div>
 	</div>
 </body>
