@@ -1,11 +1,18 @@
 package com.mozu.qbintegration.endpoints;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletContext;
+import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.WebServiceContext;
 
 import org.apache.commons.logging.Log;
@@ -73,9 +80,12 @@ public class QuickbooksServiceEndPoint {
 	@Autowired
 	private QueueManagerService queueManagerService;
 
+    
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
+	
 	}
 
+	
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "serverVersion")
 	@ResponsePayload
 	public ServerVersionResponse serverVersion(
@@ -96,7 +106,6 @@ public class QuickbooksServiceEndPoint {
 		response.setServerVersionResult("");
 		return response;
 	}
-	
 	
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "clientVersion")
 	@ResponsePayload

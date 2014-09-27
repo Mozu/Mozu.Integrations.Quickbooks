@@ -11,12 +11,14 @@ function funEdit(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			$(data).each(function(index) {
-				alert(data[index]);
+			homeViewModel.orderConflictDetails.removeAll();
+			$(data).each(function(index) {				
 				console.log(data[index]);
 				homeViewModel.orderConflictDetails.push(data[index]);
 			});
 			
+			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+			$table.fnDraw();
 		},
 		error : function() {
 			$("#content").hide();
@@ -29,6 +31,20 @@ function showOrderConflict() {
 	$('#ordConflict').show().fadeIn(800);
 }
 
+var qbItem = function(itemNumber) {
+	var self = this;
+    self.itemNameNumber = ko.observable(itemNumber);
+    self.itemPurchaseDesc = ko.observable("");
+    self.itemSalesDesc = ko.observable("");
+    self.itemSalesPrice = ko.observable("");
+    self.itemManuPartNum = ko.observable("");
+    self.itemTaxCode = ko.observable("");
+    self.itemExpenseAccount = ko.observable("");
+    self.itemAssetAccount = ko.observable("");
+    self.itemIncomeAccount = ko.observable("");
+    self.selectedChoice = ko.observable();
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -39,12 +55,19 @@ var homeViewModel = function() {
 	
 	//For the row click on conflict details
     self.clickedRow = function(item) {
-       alert(item.dataToFix);   
+//       alert(item.dataToFix);   
+       self.itemToFix.itemNameNumber(item.dataToFix);
     }
+    
+    self.itemToFix =  new qbItem("");
+    
+    self.showItemCreate = ko.computed(function() {
+        return self.itemToFix.itemNameNumber() != "" ;
+    }, self);
     
     //For saving new item to quickbooks
     self.availableItemTypes = ko.observableArray(['Inventory Part', 'Non Inventory Part', 'Inventory Assembly']);
-    self.itemNameNumber = ko.observable("");
+    /*self.itemNameNumber = ko.observable("");
     self.itemPurchaseDesc = ko.observable("");
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
@@ -53,10 +76,10 @@ var homeViewModel = function() {
     self.itemExpenseAccount = ko.observable("");
     self.itemAssetAccount = ko.observable("");
     self.itemIncomeAccount = ko.observable("");
-    self.selectedChoice = ko.observable();
+    self.selectedChoice = ko.observable();*/
     
     self.saveItemToQuickbooks = function() {
-    	var dataObj = {};
+    	/*var dataObj = {};
     	dataObj.itemNameNumber = self.itemNameNumber();
     	dataObj.itemPurchaseDesc = self.itemPurchaseDesc();
     	dataObj.itemSalesDesc = self.itemSalesDesc();
@@ -67,13 +90,13 @@ var homeViewModel = function() {
     	dataObj.itemAssetAccount = self.itemAssetAccount();
 	    dataObj.itemIncomeAccount = self.itemIncomeAccount();
 	    dataObj.selectedChoice = self.selectedChoice();
-    	console.log(ko.mapping.toJSON(dataObj));
+    	console.log(ko.mapping.toJSON(dataObj));*/
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
 			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			type : "POST",
 			dataType : "json",
-			data:  ko.mapping.toJSON(dataObj),
+			data:  ko.mapping.toJSON(self.itemToFix),
 			success : function(data) {
 				console.log(data);
 			},
@@ -81,7 +104,6 @@ var homeViewModel = function() {
 			}
     	});
     };
-
 	self.save = function() {
 		//identify which is the active tab
 		
@@ -93,8 +115,6 @@ var homeViewModel = function() {
 		});
 
 		if("generalTab" === selectedTab) {
-			
-			
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
 				url : "generalsettings?tenantId=" + $("#tenantIdHdn").text(),
@@ -186,6 +206,8 @@ var homeViewModel = function() {
 
 			]
 		});
+		
+	
 		$table.fnDraw();
 
 	};
@@ -272,29 +294,30 @@ var homeViewModel = function() {
 				error : function() {
 					$("#content").hide();
 				}
-			});
+			});		
 	};
 
 
-		self.getSettings();
-	}
+	self.getSettings();
+}
 
-	$(document).ajaxError(function(event, jqxhr, settings, exception) {
-		console.log(exception);
-		console.log(event);
-		console.log(settings);
-		console.log(jqxhr);
-		if (jqxhr.status >= 200 && jqxhr.status <= 300)
-			return;
-		if (jqxhr.responseJSON != null)
-			$("#serverErrorMessage").html(jqxhr.responseJSON.message);
-		else if (jqxhr.responseText != null)
-			$("#serverErrorMessage").html(jqxhr.responseText);
-		else {
-			$("#serverErrorMessage").html(jqxhr.statusText);
-		}
-		$("#serverError").show();
-	});
+
+$(document).ajaxError(function(event, jqxhr, settings, exception) {
+	console.log(exception);
+	console.log(event);
+	console.log(settings);
+	console.log(jqxhr);
+	if (jqxhr.status >= 200 && jqxhr.status <= 300)
+		return;
+	if (jqxhr.responseJSON != null)
+		$("#serverErrorMessage").html(jqxhr.responseJSON.message);
+	else if (jqxhr.responseText != null)
+		$("#serverErrorMessage").html(jqxhr.responseText);
+	else {
+		$("#serverErrorMessage").html(jqxhr.statusText);
+	}
+	$("#serverError").show();
+});
 
 
 $(function() {
@@ -340,9 +363,9 @@ $(function() {
 			$("#saveBtn").show();
 		}
 		
-			});
+	});
 
 	window.homeViewModel = new homeViewModel();
-
+	
 
 });

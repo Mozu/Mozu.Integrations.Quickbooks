@@ -1,3 +1,4 @@
+
 package com.mozu.qbintegration.model;
 
 public class GeneralSettings {
@@ -115,6 +116,4 @@ public class GeneralSettings {
 		this.id = id;
 	}
 }
-
-    
 

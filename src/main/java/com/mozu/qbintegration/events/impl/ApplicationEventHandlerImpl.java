@@ -182,7 +182,6 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 																			// ERRORED,
 																			// UPDATED
 		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
-		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -219,6 +218,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		String mapName = EntityHelper.getTaskqueueEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
+
 	
 	private void installOrderConflictSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
@@ -236,7 +236,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		String mapName = EntityHelper.getOrderConflictEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-
+	
 	/*
 	 * Create or update entity list
 	 */
