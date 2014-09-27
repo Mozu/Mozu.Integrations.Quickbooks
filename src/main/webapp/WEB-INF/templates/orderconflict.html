@@ -8,96 +8,131 @@
 <body>
 
 	<div th:fragment="content">
-
-		<div class="container">
-			<div class="divBorder">
-				<h3 class="title">Order Conflicts</h3><br/>
-			</div>
-			
 			<div id="ordConflict">
-				<table width="100%"
-					style="border: 3px; background: rgb(243, 244, 248);">
-					<tr>
-						<td>
-							<table id="orderConflictsTable" class="display">
-								<thead>
-									<tr>
-										<th>
-											<input type="checkbox" />
-										</th>
-										<th><p th:text="#{label.order}"></p></th>
-										<th><p th:text="#{label.customerName}"></p></th>
-										<th><p th:text="#{label.createdDate}"></p></th>
-										<th><p th:text="#{label.updatedDate}"></p></th>
-										<th><p th:text="#{label.amount}"></p></th>
-										<th><p th:text="#{label.action}"></p></th>
-
-									</tr>
-								</thead>
-							</table>
-						</td>
-					</tr>
-				</table>
-
+				<div class="row" >
+					<div class="tab-full-column">
+						<h3 class="title">Order Conflicts</h3><br/>
+					</div>
+				</div>
+				<div class="row">
+					<div class="tab-full-column">	
+						<table width="100%"
+							style="border: 3px; background: rgb(243, 244, 248);">
+							<tr>
+								<td>
+									<table id="orderConflictsTable" class="display">
+										<thead>
+											<tr>
+												<th>
+													<input type="checkbox" />
+												</th>
+												<th><p th:text="#{label.order}"></p></th>
+												<th><p th:text="#{label.customerName}"></p></th>
+												<th><p th:text="#{label.createdDate}"></p></th>
+												<th><p th:text="#{label.updatedDate}"></p></th>
+												<th><p th:text="#{label.amount}"></p></th>
+												<th><p th:text="#{label.action}"></p></th>
+		
+											</tr>
+										</thead>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</div>	
+				</div>
 			</div>
 			
 			<!-- Error processing div -->
-			<div class="ordConflictError" id="ordConflictError"
-				style="display: none;">
-				<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
-				<br/>
-				<p id="exampleDisplay">
-					<table id="singleErrorDisplay" class="display" style="border: solid gray 1px;">
-						<thead>
-							<tr>
-								<th>Product Code</th>
-								<th>Status</th>
-							</tr>
-						</thead>
-						<tbody data-bind="foreach: orderConflictDetails">
-					        <tr style="cursor:pointer;" data-bind="click: $root.clickedRow">
-					            <td data-bind="text: dataToFix"></td>
-					            <td data-bind="text: natureOfConflict"></td>
-					        </tr>
-					    </tbody>
-					</table>
-					
-					<div>
-						<span>Item Type</span>:
-							<select data-bind="options: availableItemTypes, value: selectedChoice" size="5"></select>
-							<br/>
-						<span>Item Name/Number</span>: 
-							<input type="text" data-bind="value: itemNameNumber"/>
-							<br/>
-						<span >Item Purchase Info</span>:
-							<input type="text" data-bind="value: itemPurchaseDesc"/>
-							<br/>
-						<span>Item Sales Info</span>:
-							<input type="text" data-bind="value: itemSalesDesc"/>
-							<br/>
-						<span>Sales Price</span>:
-							<input type="text" data-bind="value: itemSalesPrice"/>
-							<br/>
-						<span>Manufacturer Part Number</span>:
-							<input type="text" data-bind="value: itemManuPartNum"/>
-							<br/>
-						<span>Tax Code</span>:
-							<input type="text" data-bind="value: itemTaxCode"/>
-							<br/>
-						<span>Expense Account</span>:
-							<input type="text" data-bind="value: itemExpenseAccount"/>
-							<br/>
-						<span>Income Account</span>:
-							<input type="text" data-bind="value: itemIncomeAccount"/>
-							<br/>
-							
-						<a class="button primary-action" data-bind="click: saveItemToQuickbooks"
-						id="saveBtn">Save Item</a>
+			<div id="ordConflictError" style="display: none;">
+				<div class="row" >
+					<div class="tab-full-column">
+						<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
 					</div>
-				</p>
+				</div>
+				
+				<div class="row">
+					<div class="tab-full-column">
+						<table id="singleErrorDisplay" width="100%" class="display">
+							<thead>
+								<tr>
+									<th>Product Code</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody data-bind="foreach: orderConflictDetails">
+						        <tr style="cursor:pointer;" data-bind="click: $root.clickedRow">
+						            <td data-bind="text: dataToFix"></td>
+						            <td data-bind="text: natureOfConflict"></td>
+						        </tr>
+						    </tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="tab-full-column" style="margin-top:10px;"></div>
+				</div>
+				<div data-bind="visible: showItemCreate">
+					<div class="row">
+					    <div class="tab-full-column">
+						    <label class="tab-field-label right-align" for="enableCB">Item type</label>
+							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown" style="float: none; margin-left: 10px;"></select>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Item Name/Number</label>
+							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Purchase Info</label>
+							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Sales Info</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Sales Price</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Manufacturer Part Number</label>
+							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Tax Code</label>
+							<input type="text" data-bind="value: itemToFix.itemTaxCode" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Expense Account</label>
+							<input type="text" data-bind="value: itemToFix.itemExpenseAccount" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+							<label class="tab-field-label right-align" for="field">Income Account</label>
+							<input type="text" data-bind="value: itemToFix.itemIncomeAccount" class="tab-field" style="float: none; margin-left: 10px;"/>
+						</div>
+					</div>
+					<div>
+						<a class="button primary-action" data-bind="click: saveItemToQuickbooks">Save Item</a>
+					</div>
+				</div>
 			</div>
 		</div>
-	</div>
 </body>
 
 </html>
