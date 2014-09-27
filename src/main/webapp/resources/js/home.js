@@ -11,12 +11,14 @@ function funEdit(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			$(data).each(function(index) {
-				alert(data[index]);
+			homeViewModel.orderConflictDetails.removeAll();
+			$(data).each(function(index) {				
 				console.log(data[index]);
 				homeViewModel.orderConflictDetails.push(data[index]);
 			});
 			
+			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+			$table.fnDraw();
 		},
 		error : function() {
 			$("#content").hide();
@@ -29,6 +31,20 @@ function showOrderConflict() {
 	$('#ordConflict').show().fadeIn(800);
 }
 
+var qbItem = function(itemNumber) {
+	var self = this;
+    self.itemNameNumber = ko.observable(itemNumber);
+    self.itemPurchaseDesc = ko.observable("");
+    self.itemSalesDesc = ko.observable("");
+    self.itemSalesPrice = ko.observable("");
+    self.itemManuPartNum = ko.observable("");
+    self.itemTaxCode = ko.observable("");
+    self.itemExpenseAccount = ko.observable("");
+    self.itemAssetAccount = ko.observable("");
+    self.itemIncomeAccount = ko.observable("");
+    self.selectedChoice = ko.observable();
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -39,12 +55,19 @@ var homeViewModel = function() {
 	
 	//For the row click on conflict details
     self.clickedRow = function(item) {
-       alert(item.dataToFix);   
+//       alert(item.dataToFix);   
+       self.itemToFix.itemNameNumber(item.dataToFix);
     }
+    
+    self.itemToFix =  new qbItem("");
+    
+    self.showItemCreate = ko.computed(function() {
+        return self.itemToFix.itemNameNumber() != "" ;
+    }, self);
     
     //For saving new item to quickbooks
     self.availableItemTypes = ko.observableArray(['Inventory Part', 'Non Inventory Part', 'Inventory Assembly']);
-    self.itemNameNumber = ko.observable("");
+    /*self.itemNameNumber = ko.observable("");
     self.itemPurchaseDesc = ko.observable("");
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
@@ -53,10 +76,10 @@ var homeViewModel = function() {
     self.itemExpenseAccount = ko.observable("");
     self.itemAssetAccount = ko.observable("");
     self.itemIncomeAccount = ko.observable("");
-    self.selectedChoice = ko.observable();
+    self.selectedChoice = ko.observable();*/
     
     self.saveItemToQuickbooks = function() {
-    	var dataObj = {};
+    	/*var dataObj = {};
     	dataObj.itemNameNumber = self.itemNameNumber();
     	dataObj.itemPurchaseDesc = self.itemPurchaseDesc();
     	dataObj.itemSalesDesc = self.itemSalesDesc();
@@ -67,13 +90,13 @@ var homeViewModel = function() {
     	dataObj.itemAssetAccount = self.itemAssetAccount();
 	    dataObj.itemIncomeAccount = self.itemIncomeAccount();
 	    dataObj.selectedChoice = self.selectedChoice();
-    	console.log(ko.mapping.toJSON(dataObj));
+    	console.log(ko.mapping.toJSON(dataObj));*/
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
 			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			type : "POST",
 			dataType : "json",
-			data:  ko.mapping.toJSON(dataObj),
+			data:  ko.mapping.toJSON(self.itemToFix),
 			success : function(data) {
 				console.log(data);
 			},
