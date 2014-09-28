@@ -19,12 +19,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderCompareDetail;
+import com.mozu.qbintegration.model.OrderCompareObject;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.utils.EntityHelper;
 
 /**
  * @author Admin
@@ -57,7 +58,7 @@ public class OrdersController {
 		MozuOrderDetails criteria = new MozuOrderDetails();
 		criteria.setOrderStatus("POSTED");
 		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
-				.getMozuOrderDetails(tenantId, criteria);
+				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -89,7 +90,7 @@ public class OrdersController {
 		MozuOrderDetails criteria = new MozuOrderDetails();
 		criteria.setOrderStatus("CONFLICT");
 		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
-				.getMozuOrderDetails(tenantId, criteria);
+				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -108,7 +109,7 @@ public class OrdersController {
 	
 	@RequestMapping(value = "/getOrderConflictsDetails", method = RequestMethod.GET)
 	public @ResponseBody
-	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
+	String getConflictOrdersDetails(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) {	
@@ -125,4 +126,66 @@ public class OrdersController {
 		}
 		return value;
 	}
+	
+	/**
+	 * Display orders updated in mozu after those were posted to QB. Just pull the 
+	 * orders in updated status.
+	 * 
+	 * @param httpRequest
+	 * @param model
+	 * @param mozuOrderNumber
+	 * @param tenantId
+	 * @param siteId
+	 * @return
+	 */
+	@RequestMapping(value = "/getUpdatedOrders", method = RequestMethod.GET)
+	public @ResponseBody
+	String getUpdatedOrders(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "iDisplayStart") String iDisplayStart,
+			@RequestParam(value = "iDisplayLength") String iDisplayLength,
+			@RequestParam(value = "sSearch") String sSearch,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {	
+		
+		MozuOrderDetails criteria = new MozuOrderDetails();
+		criteria.setOrderStatus("UPDATED");
+		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+				.getMozuOrderDetails(tenantId, criteria, 
+						EntityHelper.getOrderUpdatedEntityName());
+
+		OrderJsonObject orderJsonObject = new OrderJsonObject();
+		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
+		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
+		orderJsonObject.setAaData(mozuOrderDetails);
+		
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(orderJsonObject);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
+		}
+		return value;
+	}
+	
+	@RequestMapping(value = "/getOrderCompareDetails", method = RequestMethod.GET)
+	public @ResponseBody
+	String getOrderCompareDetails(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {	
+
+		List<OrderCompareDetail> compareDetails = 
+				quickbooksService.getOrderCompareDetails(tenantId, mozuOrderNumber);
+		
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(compareDetails);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
+		}
+		return value;
+	}
+	
 }

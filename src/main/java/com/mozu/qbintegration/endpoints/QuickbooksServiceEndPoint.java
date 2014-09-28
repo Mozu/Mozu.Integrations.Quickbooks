@@ -43,6 +43,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
+import com.mozu.qbintegration.utils.EntityHelper;
 import com.mozu.quickbooks.generated.ArrayOfString;
 import com.mozu.quickbooks.generated.Authenticate;
 import com.mozu.quickbooks.generated.AuthenticateResponse;
@@ -123,8 +124,6 @@ public class QuickbooksServiceEndPoint {
 	public AuthenticateResponse authenticate(
 			@RequestPayload Authenticate authRequest)
 			throws java.rmi.RemoteException {
-		logger.debug(authRequest.getStrUserName() + " "
-				+ authRequest.getStrPassword());
 		AuthenticateResponse response = new AuthenticateResponse();
 
 		Integer tenantId = Integer.parseInt(authRequest.getStrUserName().split(
@@ -305,7 +304,7 @@ public class QuickbooksServiceEndPoint {
 					CustomerAccount custAcct = qbService.getMozuCustomer(order,
 							tenantId, workTask.getSiteId());
 					MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
-					qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
+					qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
 					
 					//Make entry in conflict reason table
 					//Log the not found product in error conflict 
@@ -416,7 +415,8 @@ public class QuickbooksServiceEndPoint {
 						tenantId, workTask.getSiteId());
 				
 				MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "POSTED", salesOrderResponse, custAcct);
-				qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
+				qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), 
+						tenantId, workTask.getSiteId());
 				
 				logger.debug((new StringBuilder())
 						.append("Processed order with id: ")
@@ -443,7 +443,8 @@ public class QuickbooksServiceEndPoint {
 			CustomerAccount custAcct = qbService.getMozuCustomer(order,
 					tenantId, workTask.getSiteId());
 			MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
-			qbService.saveOrderInEntityList(orderDetails, custAcct, tenantId, workTask.getSiteId());
+			qbService.saveOrderInEntityList(orderDetails, custAcct, 
+					EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();

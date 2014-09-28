@@ -17,7 +17,7 @@ function funEdit(orderNumber) {
 				homeViewModel.orderConflictDetails.push(data[index]);
 			});
 			
-			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
 			$table.fnDraw();
 		},
 		error : function() {
@@ -29,6 +29,43 @@ function funEdit(orderNumber) {
 function showOrderConflict() {
 	$('#ordConflictError').hide().fadeOut(800);
 	$('#ordConflict').show().fadeIn(800);
+}
+
+function compareDetails(orderNumber) {
+	$('#ordUpdated').hide().fadeOut(800);
+	$('#ordUpdateDetails').show().fadeIn(800);
+	
+	$.ajax({
+		url : "getOrderCompareDetails",
+		type : "GET",
+		data : {
+			"mozuOrderNumber" : orderNumber,
+			"tenantId" : $("#tenantIdHdn").text(),
+			"siteId"	: $("#siteIdHdn").text()
+		},
+		dataType : "json",		
+		success : function(data) {
+			saveDataToTable(data);
+			$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
+			$('#compareDisplay').dataTable().fnDraw();
+		},
+		error : function() {
+			$("#content").hide();
+		}
+	});
+}
+
+function saveDataToTable(data) {
+	homeViewModel.orderCompareDetails.removeAll();
+	$(data).each(function(index) {				
+		console.log(data[index]);
+		homeViewModel.orderCompareDetails.push(data[index]);
+	});
+}
+
+function showOrderCompare() {
+	$('#ordUpdateDetails').hide().fadeOut(800);
+	$('#ordUpdated').show().fadeIn(800);
 }
 
 var qbItem = function(itemNumber) {
@@ -52,6 +89,9 @@ var homeViewModel = function() {
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
+	
+	//For the compare section on Order Updates
+	self.orderCompareDetails = ko.observableArray([]);
 	
 	//For the row click on conflict details
     self.clickedRow = function(item) {
@@ -212,6 +252,7 @@ var homeViewModel = function() {
 
 	};
 	
+	//Display orders in conflict
 	self.getOrderConflicts = function() {
 
 		var $table = $('#orderConflictsTable').dataTable({
@@ -274,6 +315,74 @@ var homeViewModel = function() {
 				    	return "<a href='javascript:funEdit(" + row.mozuOrderNumber + ")'>Edit</a>";
 				   }
 				 }
+			]
+		});
+		$table.fnDraw();
+	};
+	
+	//Save orders updated in mozu, yet to go to QB
+	self.getOrdersUpdated = function() {
+
+		var $table = $('#orderUpdatedTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"sort" : "position",
+			"sSearch":true,
+			"sAjaxSource" : "getUpdatedOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"aoColumns" : [
+
+			            {    
+		            	   "mData": "mozuOrderNumber",
+		            	   "bSearchable": false,
+		            	   "bSortable": false,
+		            	   "mRender": function (data, type, full) {			
+		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+		            	   }
+			            },
+			            {
+			            	"mData" : "mozuOrderNumber"
+			            }, 
+						{
+							"mData" : "customerEmail"
+						}, 
+						{
+							"mData" : "orderDate",
+								"mRender": function (data, type, row) {
+							   
+									var myISODate =  new Date(data) ;
+							
+								      return myISODate.getDate()+'-'+
+								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+								      +':'+myISODate.getSeconds();
+								}
+						}, 
+						{
+							"mData" : "orderUpdatedDate",
+							"mRender": function (data, type, row) {
+							    	
+							 var myISODate =  new Date(data) ;
+						
+							      return myISODate.getDate()+'-'+
+							      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+							      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+							      +':'+myISODate.getSeconds();
+							}
+						},
+						{
+							"mData" : "amount"
+						},
+						{    
+						   //"mData": "conflictReason",
+						    "mData": "mozuOrderNumber",
+						    "bSearchable": false,
+						    "bSortable": false,
+						    "mRender": function (data, type, row) {
+						    	var dataId = data ;
+						    	return "<a href='javascript:compareDetails(" + row.mozuOrderNumber + ")'>Review</a>";
+						   }
+						}
 			]
 		});
 		$table.fnDraw();
