@@ -10,6 +10,7 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -144,10 +145,11 @@ public interface QuickbooksService {
 	 * 
 	 * @param tenantId
 	 * @param mozuOrderDetails
-	 * @return List<MozuOrderDetails>
+	 * @param mapName
+	 * @return
 	 */
 	List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId,
-			MozuOrderDetails mozuOrderDetails);
+			MozuOrderDetails mozuOrderDetails, String mapName);
 
 	/**
 	 * @param workTask
@@ -236,20 +238,24 @@ public interface QuickbooksService {
 	/**
 	 * @param mozuOrderDetails
 	 * @param custAccount
+	 * @param mapName
 	 * @param tenantId
 	 * @param siteId
 	 */
 	void saveOrderInEntityList(MozuOrderDetails mozuOrderDetails,
-			CustomerAccount custAccount, Integer tenantId, Integer siteId);
+			CustomerAccount custAccount, String mapName, Integer tenantId,
+			Integer siteId);
 
 	/**
 	 * @param mozuOrderDetails
 	 * @param custAccount
+	 * @param mapName
 	 * @param tenantId
 	 * @param siteId
 	 */
 	void updateOrderInEntityList(MozuOrderDetails mozuOrderDetails,
-			CustomerAccount custAccount, Integer tenantId, Integer siteId);
+			CustomerAccount custAccount, String mapName, Integer tenantId,
+			Integer siteId);
 
 	/**
 	 * @param tenantId
@@ -264,14 +270,24 @@ public interface QuickbooksService {
 	 * @param orderId
 	 * @return
 	 */
-	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId);
+	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,
+			String orderId);
 
 	/**
 	 * @param productToQuickbooks
 	 * @param tenantId
 	 * @param siteId
 	 */
-	void saveNewProductToQB(
-			ProductToQuickbooks productToQuickbooks, Integer tenantId,
-			Integer siteId);
+	void saveNewProductToQB(ProductToQuickbooks productToQuickbooks,
+			Integer tenantId, Integer siteId);
+
+	/**
+	 * Get the order comparison data for originally posted order and updated order
+	 * 
+	 * @param tenantId
+	 * @param mozuOrderNumber
+	 * @return
+	 */
+	List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,
+			String mozuOrderNumber);
 }

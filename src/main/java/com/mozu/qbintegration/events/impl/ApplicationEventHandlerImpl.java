@@ -94,6 +94,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			installOrdersSchema(apiContext.getTenantId());
 			installQBTaskQueueSchema(apiContext.getTenantId());
 			installOrderConflictSchema(apiContext.getTenantId());
+			installOrdersUpdatedSchema(apiContext.getTenantId());
 			if (settings != null && StringUtils.isNotEmpty(settings.getQbAccount()) && StringUtils.isNoneEmpty(settings.getQbPassword())) {
 				ApplicationUtils.setApplicationToInitialized(apiContext);
 			}
@@ -237,6 +238,27 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 	
+	private void installOrdersUpdatedSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(appNamespace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(EntityHelper.ORDERS_UPDATED_ENTITY);
+		entityList
+				.setIdProperty(getIndexedProperty("mozuOrderNumber", "string"));
+		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId",
+				"string"));
+		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED, POSTED, ERRORED, UPDATED
+		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = EntityHelper.getOrderUpdatedEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+		
+	}
+	
 	/*
 	 * Create or update entity list
 	 */
@@ -247,6 +269,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 				new MozuApiContext(tenantId));
 		try {
 			existing = entityListResource.getEntityList(mapName);
+			//entityListResource.deleteEntityList(mapName);
 			//TODO comment
 //			EntityResource entityResource = new EntityResource(
 //					new MozuApiContext(tenantId));

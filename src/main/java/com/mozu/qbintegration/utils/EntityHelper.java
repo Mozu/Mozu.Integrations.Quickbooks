@@ -14,6 +14,8 @@ public class EntityHelper {
 	
 	public static final String ORDER_CONFLICT_ENTITY = "QB_ORDER_CONFLICT";
 
+	public static final String ORDERS_UPDATED_ENTITY = "QB_UPDATED_ORDERS";;
+
 	public static String getCustomerEntityName() {
 		return EntityHelper.CUST_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
@@ -36,6 +38,10 @@ public class EntityHelper {
 	
 	public static String getOrderConflictEntityName() {
 		return EntityHelper.ORDER_CONFLICT_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+	}
+	
+	public static String getOrderUpdatedEntityName() {
+		return EntityHelper.ORDERS_UPDATED_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
 }
 

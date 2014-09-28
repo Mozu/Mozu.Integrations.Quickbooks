@@ -7,7 +7,6 @@ import com.mozu.api.ApiContext;
 import com.mozu.api.ApiError;
 import com.mozu.api.ApiException;
 import com.mozu.api.contracts.sitesettings.application.Application;
-import com.mozu.api.contracts.sitesettings.application.Capability;
 import com.mozu.api.resources.commerce.settings.ApplicationResource;
 import com.mozu.api.security.AppAuthenticator;
 
