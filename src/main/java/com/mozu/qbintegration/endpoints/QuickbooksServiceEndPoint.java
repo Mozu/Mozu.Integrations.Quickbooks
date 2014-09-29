@@ -1,18 +1,11 @@
 package com.mozu.qbintegration.endpoints;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletContext;
-import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.ws.WebServiceContext;
-import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.WebServiceContext;
 
 import org.apache.commons.logging.Log;
@@ -30,6 +23,7 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
@@ -229,14 +223,28 @@ public class QuickbooksServiceEndPoint {
 					qbService.saveCustInEntityList(custAcct, qbCustListID,
 							tenantId, workTask.getSiteId());
 
-					// Now need to enter ITEM_QUERY tasks
+					// Now need to enter ITEM_QUERY tasks or ORDER_ADD if all items are present
+					// Now create item query tasks for all items
+					boolean allItemsInEntityList = true;
+					List<String> itemListIds = new ArrayList<String>();
 					for (OrderItem item : order.getItems()) {
+
 						String itemListId = qbService.getProductFromEntityList(
 								item, tenantId, workTask.getSiteId());
+
 						if (null == itemListId) {
-							qbService.addItemQueryTaskToQueue(orderId,
-									tenantId, workTask.getSiteId(), order, item
-											.getProduct().getProductCode());
+							allItemsInEntityList = false;
+							qbService.addItemQueryTaskToQueue(orderId, tenantId,
+									workTask.getSiteId(), order, item.getProduct()
+											.getProductCode());
+
+						} else {
+							itemListIds.add(itemListId);
+						}
+						if (allItemsInEntityList) { // Add order ADD task
+							qbService.addOrderAddTaskToQueue(orderId, tenantId,
+									workTask.getSiteId(), custAcct, order,
+									itemListIds);
 						}
 					}
 				}
@@ -426,6 +434,38 @@ public class QuickbooksServiceEndPoint {
 						.append(" with status: ")
 						.append(salesOrderResponse.getStatusMessage())
 						.toString());
+			} else if ("ITEM_QUERY_ALL".equals(workTask.getQbTaskType())) {
+
+				QBXML itemSearchEle = (QBXML) qbService
+						.getUnmarshalledValue(workTask.getQbTaskResponse());
+				ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
+						.getQBXMLMsgsRs()
+						.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+						.get(0);
+				List<Object> itemServiceRetCollection = itemSearchResponse
+						.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
+				for (Object object : itemServiceRetCollection) {
+					String productName = null;
+					String productQbListID = null;
+					if(object instanceof ItemServiceRet) {
+						ItemServiceRet itemServiceRet = (ItemServiceRet) object;
+						productName = itemServiceRet.getFullName();
+						productQbListID = itemServiceRet.getListID();
+					} else if (object instanceof ItemInventoryRet) {
+						ItemInventoryRet itemInventoryRet = (ItemInventoryRet) object;
+						productName = itemInventoryRet.getFullName();
+						productQbListID = itemInventoryRet.getListID();
+					} //TODO need to identify more item inventory types and add here.
+					MozuProduct mozuProduct = new MozuProduct();
+					mozuProduct.setProductCode(productName);
+					mozuProduct.setQbProductListID(productQbListID);
+					mozuProduct.setProductName(productName);
+					qbService.saveAllProductInEntityList(mozuProduct, tenantId,
+							workTask.getSiteId());
+					logger.debug("Saved product through refresh all: "
+							+ productName);
+				}
+
 			}
 
 			// Right place to mark this task as PROCESSED
