@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderCompareDetail;
-import com.mozu.qbintegration.model.OrderCompareObject;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;

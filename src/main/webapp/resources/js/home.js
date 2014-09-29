@@ -19,6 +19,9 @@ function funEdit(orderNumber) {
 			
 			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
 			$table.fnDraw();
+			
+			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
+			getAllProductsFromEntityList();
 		},
 		error : function() {
 			$("#content").hide();
@@ -45,9 +48,8 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
+			homeViewModel.orderCompareDetails.removeAll();
 			saveDataToTable(data);
-			$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
-			$('#compareDisplay').dataTable().fnDraw();
 		},
 		error : function() {
 			$("#content").hide();
@@ -56,17 +58,51 @@ function compareDetails(orderNumber) {
 }
 
 function saveDataToTable(data) {
-	homeViewModel.orderCompareDetails.removeAll();
 	$(data).each(function(index) {				
 		console.log(data[index]);
 		homeViewModel.orderCompareDetails.push(data[index]);
 	});
+	
+	$(data).promise().done(function() {
+		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+		$('#compareDisplay').dataTable().fnDraw();
+	});
+	
+}
+
+function getAllProductsFromEntityList() {
+	$.ajax({
+		url : "getAllPostedProducts",
+		type : "GET",
+		data : {
+			"tenantId" : $("#tenantIdHdn").text(),
+			"siteId"	: $("#siteIdHdn").text()
+		},
+		dataType : "json",		
+		success : function(data) {
+			homeViewModel.allProductsInQB.removeAll();
+			$(data).each(function(index) {				
+				console.log(data[index]);
+				homeViewModel.allProductsInQB.push(
+						new ProductToMap(data[index].qbProductListID, 
+								data[index].productName));
+			});
+		},error : function() {
+			$("#content").hide();
+		}
+	});
+		
 }
 
 function showOrderCompare() {
 	$('#ordUpdateDetails').hide().fadeOut(800);
 	$('#ordUpdated').show().fadeIn(800);
 }
+
+var ProductToMap = function(qbProductListIDVal, productNameVal) {
+    this.qbProductListID = qbProductListIDVal;
+    this.productName = productNameVal;
+};
 
 var qbItem = function(itemNumber) {
 	var self = this;
@@ -107,30 +143,12 @@ var homeViewModel = function() {
     
     //For saving new item to quickbooks
     self.availableItemTypes = ko.observableArray(['Inventory Part', 'Non Inventory Part', 'Inventory Assembly']);
-    /*self.itemNameNumber = ko.observable("");
-    self.itemPurchaseDesc = ko.observable("");
-    self.itemSalesDesc = ko.observable("");
-    self.itemSalesPrice = ko.observable("");
-    self.itemManuPartNum = ko.observable("");
-    self.itemTaxCode = ko.observable("");
-    self.itemExpenseAccount = ko.observable("");
-    self.itemAssetAccount = ko.observable("");
-    self.itemIncomeAccount = ko.observable("");
-    self.selectedChoice = ko.observable();*/
+    
+    //For order conflict - populating and selecting existing items to map to this not found product
+    self.allProductsInQB = ko.observableArray([]);
+    self.selectedProductToMap = ko.observable();
     
     self.saveItemToQuickbooks = function() {
-    	/*var dataObj = {};
-    	dataObj.itemNameNumber = self.itemNameNumber();
-    	dataObj.itemPurchaseDesc = self.itemPurchaseDesc();
-    	dataObj.itemSalesDesc = self.itemSalesDesc();
-    	dataObj.itemSalesPrice = self.itemSalesPrice();
-    	dataObj.itemManuPartNum = self.itemManuPartNum();
-    	dataObj.itemTaxCode = self.itemTaxCode();
-    	dataObj.itemExpenseAccount = self.itemExpenseAccount();
-    	dataObj.itemAssetAccount = self.itemAssetAccount();
-	    dataObj.itemIncomeAccount = self.itemIncomeAccount();
-	    dataObj.selectedChoice = self.selectedChoice();
-    	console.log(ko.mapping.toJSON(dataObj));*/
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
 			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
@@ -144,6 +162,46 @@ var homeViewModel = function() {
 			}
     	});
     };
+    
+    //Map existing product to QB
+    self.mapItemToQuickbooks = function() {
+    	var productToMap = {};
+    	productToMap.selectedProductToMap = self.selectedProductToMap();
+    	productToMap.toBeMappedItemNumber = self.itemToFix.itemNameNumber();
+    	
+    	$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			type : "POST",
+			dataType : "json",
+			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
+			success : function(data) {
+				console.log(data);
+			},
+			error : function() {
+			}
+    	});
+    };
+    
+    self.getAllProductsFromQB = function() {
+    	$.ajax({
+    		url : "getAllProductsFromQB",
+    		type : "GET",
+    		data : {
+    			"tenantId" : $("#tenantIdHdn").text(),
+    			"siteId"	: $("#siteIdHdn").text()
+    		},
+    		dataType : "json",		
+    		success : function(data) {
+    			console.log(data);
+    			getAllProductsFromEntityList();
+    		},error : function() {
+    			$("#content").hide();
+    		}
+    	});
+    	
+    }
+    
 	self.save = function() {
 		//identify which is the active tab
 		

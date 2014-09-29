@@ -69,6 +69,7 @@
 						</table>
 					</div>
 				</div>
+				
 				<div class="row">
 					<div class="tab-full-column" style="margin-top:10px;"></div>
 				</div>
@@ -129,6 +130,32 @@
 					</div>
 					<div>
 						<a class="button primary-action" data-bind="click: saveItemToQuickbooks">Save Item</a>
+					</div>
+				</div>
+				
+				<div data-bind="visible: showItemCreate" style="margin-top:20px;">
+					<div class="row">
+						<div class="tab-full-column">
+							<label class="tab-field-label left-align" for="enableCB">Existing products</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="tab-full-column" style="margin-top:10px;"></div>
+					</div>
+					
+					<div data-bind="visible: showItemCreate">
+						<div class="row">
+							<a class="button primary-action" data-bind="click: getAllProductsFromQB">Refresh Products</a>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="tab-full-column">
+						    <label class="tab-field-label left-align" for="enableCB">Choose from below list to map:</label>
+							<select data-bind="options: allProductsInQB, optionsText: 'productName', optionsValue: 'qbProductListID', value: selectedProductToMap" class="dropdown" style="float: none; margin-left: 10px;"></select>
+						</div>
+					</div>
+					<div class="row">
+						<a class="button primary-action" data-bind="click: mapItemToQuickbooks">Map Item</a>
 					</div>
 				</div>
 			</div>
