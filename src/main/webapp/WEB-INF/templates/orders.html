@@ -29,17 +29,34 @@
 					</div>
 				</div>
 				
-				<div class="tabs">
+				
+				<div class="row" style="margin-bottom:10px;">
+					<div class="tab-full-column">
+						<div class="tab-divider" style="margin-top:0px;margin-bottom:5px;"></div>	
+						<span class="subTabs" style="margin-left: 10px; margin-top: 10px;">
+			                 <span class="link" id="postedTab" data-bind="click: getOrders" data-toggle="tab" data-tab-id="postedDivTab">Posted</span>
+			                 &nbsp;|&nbsp;
+			                 <span class="link" id="conflictsTab" data-bind="click: getOrderConflicts" data-toggle="tab"	data-tab-id="conflictsDivTab">Conflicts</span>
+			                 &nbsp;|&nbsp;
+			                 <span class="link" id="updatesTab" data-bind="click: getOrdersUpdated" data-toggle="tab" data-tab-id="updatedDivTab">Updates</span>
+	                 	</span>
+	                 	<div class="tab-divider" style="margin-top:5px;margin-bottom:0px;"></div>	
+					</div>
+				</div>
+				
+				
+			 	 
+				<!-- div class="tabs">
 					<a href="#" id="postedTab" data-bind="click: getOrders" class="button tab active" data-toggle="tab" 
 						data-tab-id="postedDivTab" data-hide-save="true">Orders Posted</a>   
 					<a href="#" id="conflictsTab" data-bind="click: getOrderConflicts" class="button tab" data-toggle="tab" 
 						data-tab-id="conflictsDivTab" data-hide-save="true">Order Conflicts</a>   
 					<a href="#" id="updatesTab" data-bind="click: getOrdersUpdated" class="button tab" data-toggle="tab" 
 						data-tab-id="updatedDivTab" data-hide-save="true">Order Updates</a>   
-				</div>
+				</div-->
 				
-				<div class="tab-view">
-					<div class="tab-section template" id="postedDivTab">
+				<div class="tab-view-ext">
+					<div class="tab-section template" id="postedDivTab" style="display: none">
 						<div th:include="orderposted :: content"></div>
 					</div>
 					<div class="tab-section template" style="display: none" id="conflictsDivTab">

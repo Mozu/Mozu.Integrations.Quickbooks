@@ -560,6 +560,29 @@ $(function() {
 		}
 		
 	});
+	
+	
+	$(".subTabs span").click(function (e) {
+        var tabElement = e.target.parentElement;
+        var newTab = e.target;
+        var parent = tabElement.parentElement;
+        var activeTab = $(parent).find('.selected');
+        var activeTabId = activeTab.data('tab-id');
+        var newTabId = $(newTab).data('tab-id');
+
+        activeTab.removeClass('selected');
+        $(newTab).addClass('selected');
+
+        if (activeTabId != null) {
+            $('#' + activeTabId).fadeOut('fast', function () {
+                $('#' + newTabId).fadeIn('fast');
+            });        	
+        } else {
+        	 $('#' + newTabId).fadeIn('fast');
+        }
+
+
+    });
 
 	window.homeViewModel = new homeViewModel();
 	
