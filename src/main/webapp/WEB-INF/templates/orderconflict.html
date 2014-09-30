@@ -69,8 +69,21 @@
 						</table>
 					</div>
 				</div>
-				<div class="row">
+				
+				<div class="row" data-bind="visible: showItemOptions">
 					<div class="tab-full-column" style="margin-top:10px;"></div>
+					<div class="tab-first-column">
+						<div class="tab-checkbox-container">
+							<input class="tab-checkbox" id="newItem" name="item" type="radio" data-bind="click: enableNewItem" value="new"></input>
+							<label class="tab-checkbox-label" for="newItem">Create New Item</label>	
+						</div>
+					</div>
+					<div class="tab-second-column">
+						<div class="tab-checkbox-container">
+							<input class="tab-checkbox" id="existingItem" name="item" type="radio" data-bind="click: enableExistingItem" value="map"></input>
+							<label class="tab-checkbox-label" for="existingItem">Map to Existing Item</label>	
+						</div>
+					</div>
 				</div>
 				<div data-bind="visible: showItemCreate">
 					<div class="row">
@@ -85,6 +98,9 @@
 							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" />
 							<label class="tab-field-label" for="field">Sales Price</label>
 							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"/>
+							
+						</div>
+						<div class="tab-second-column">
 							<label class="tab-field-label" for="field">Manufacturer Part Number</label>
 							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
 							<label class="tab-field-label" for="field">Tax Code</label>
@@ -97,6 +113,24 @@
 					</div>
 					<div>
 						<a class="button primary-action" data-bind="click: saveItemToQuickbooks">Save Item</a>
+					</div>
+				</div>
+				
+				<div data-bind="visible: showItemMap" style="margin-top:20px;">
+					<div class="row">
+						
+					</div>
+					<div class="row">
+					    <div class="tab-first-column">
+						    <label class="tab-field-label left-align" for="enableCB">Choose from below list to map:</label>
+							<select data-bind="options: allProductsInQB, optionsText: 'productName', optionsValue: 'qbProductListID', value: selectedProductToMap" class="dropdown" style="float: none; margin-left: 10px;"></select>
+							<a class="button primary-action" data-bind="click: getAllProductsFromQB">Refresh Products</a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="tab-first-column">
+							<a class="button primary-action" data-bind="click: mapItemToQuickbooks">Map Item</a>
+						</div>	
 					</div>
 				</div>
 			</div>

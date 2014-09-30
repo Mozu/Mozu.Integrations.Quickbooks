@@ -10,8 +10,10 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.tasks.WorkTask;
 
@@ -53,6 +55,14 @@ public interface QuickbooksService {
 	 */
 	String getQBCustomerGetXML(final Order order,
 			final CustomerAccount orderingCustomer);
+
+	/**
+	 * Get all products from QB and save in EL
+	 * @param tenantId
+	 * @param siteId
+	 * @return
+	 */
+	public String getAllQBProductsGetXML( Integer tenantId , Integer siteId);
 
 	/**
 	 * This method accepts mozu Order and returns the sales order insert qbXML
@@ -290,4 +300,34 @@ public interface QuickbooksService {
 	 */
 	List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,
 			String mozuOrderNumber);
+	
+	/**
+	 * Get all products from the entitylist
+	 * @param tenantId
+	 * @return
+	 */
+	public List<MozuProduct> getMozuProductList(Integer tenantId) ;
+
+	/**
+	 * Map a non-existing products to existing products which already have a
+	 * quickbooks list ID.
+	 * 
+	 * @param productToMapToEB
+	 * @param tenantId
+	 * @param siteId
+	 */
+	void mapProductToQBInEL(ProductToMapToQuickbooks productToMapToEB,
+			Integer tenantId, Integer siteId); 
+	
+	/**
+	 * Custom called method which pulls all products from quickbooks and 
+	 * inserts on updates them in EL
+	 * 
+	 * @param product
+	 * @param tenantId
+	 * @param siteId
+	 */
+
+	public void saveAllProductInEntityList(MozuProduct product,
+			Integer tenantId, Integer siteId);
 }

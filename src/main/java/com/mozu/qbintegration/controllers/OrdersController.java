@@ -41,7 +41,6 @@ import com.mozu.api.resources.platform.TenantResource;
 import com.mozu.api.security.Crypto;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderCompareDetail;
-import com.mozu.qbintegration.model.OrderCompareObject;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;

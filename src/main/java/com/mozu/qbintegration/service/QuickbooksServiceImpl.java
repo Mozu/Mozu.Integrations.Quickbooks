@@ -18,8 +18,6 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +32,7 @@ import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
 import com.mozu.api.contracts.mzdb.EntityCollection;
@@ -47,8 +46,10 @@ import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
@@ -289,6 +290,23 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		return getMarshalledValue(qbxml);
 	}
+	
+	@Override
+	public String getAllQBProductsGetXML(Integer tenantId, Integer siteId) {
+
+		QBXML qbxml = new QBXML();
+		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
+
+		qbxmlMsgsRqType.setOnError("stopOnError");
+		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
+		ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
+
+		qbxmlMsgsRqType
+				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
+						itemQueryRqType);
+
+		return getMarshalledValue(qbxml);
+	}
 
 	@Override
 	public void saveOrderInQuickbooks(Order order, CustomerAccount custAcct,
@@ -383,7 +401,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		JsonNode rtnEntry = null;
 		String mapName = EntityHelper.getCustomerEntityName();
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		try {
 			rtnEntry = entityResource.insertEntity(custNode, mapName);
 		} catch (Exception e) {
@@ -439,7 +457,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		JsonNode rtnEntry = null;
 		String mapName = EntityHelper.getProductEntityName();
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		try {
 			rtnEntry = entityResource.insertEntity(custNode, mapName);
 		} catch (Exception e) {
@@ -473,7 +491,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				qbListID = result.asText();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("Error retrieving entity for product code: "
 					+ entityIdValue);
 		}
@@ -486,7 +503,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		// First get an entity for settings if already present.
 		MozuApiContext context =new MozuApiContext(tenantId); 
-		EntityResource entityResource = new EntityResource(context); // TODO replace with real - move this code
+		EntityResource entityResource = new EntityResource(context); 
 		String mapName = EntityHelper.getSettingEntityName();
 		generalSettings.setId(tenantId.toString());
 		boolean isUpdate = false;
@@ -524,7 +541,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		JsonNode savedEntry = null;
 		String mapName = EntityHelper.getSettingEntityName();
 
@@ -740,7 +757,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		JsonNode orderNode = getOrderNode(orderDetails, tenantId, siteId, custAccount);
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
@@ -785,7 +802,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		
 		StringBuilder sb = new StringBuilder();
 		//Assuming status will never be null - it is meaningless to filter without it at this point.
@@ -845,7 +862,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			List<OrderConflictDetail> conflictReasons) {
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		String mapName = EntityHelper.getOrderConflictEntityName();
 		
 		for(OrderConflictDetail reason: conflictReasons) {
@@ -869,7 +886,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	public List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId) {
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); // TODO replace with real - move this code
+				tenantId)); 
 		String mapName = EntityHelper.getOrderConflictEntityName();
 		
 		EntityCollection orderConflictCollection = null;
@@ -958,7 +975,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 		return compareDetails;
 	}
-
 	
 	private void addUpdateExtensionLinks(Integer tenantId, Application application, String serverUrl) throws Exception {
 		ApiContext apiContext = new MozuApiContext(tenantId);
@@ -1012,4 +1028,108 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			entityResource.insertEntity(node, EntityHelper.getSubnavLinksEntityName());			
 		}
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.mozu.qbintegration.service.QuickbooksService#getMozuProductList(java
+	 * .lang.Integer)
+	 */
+	public List<MozuProduct> getMozuProductList(Integer tenantId) {
+
+		List<MozuProduct> mozuProductList = new ArrayList<MozuProduct>();
+
+		try {
+			// First get an entity for settings if already present.
+			EntityResource entityResource = new EntityResource(
+					new MozuApiContext(tenantId));
+			String mapName = EntityHelper.getProductEntityName();
+			EntityCollection mozuProductCollection = entityResource
+					.getEntities(mapName, 1000, 0, null, null, null);
+
+			if (null != mozuProductCollection) {
+				MozuProduct mozuProduct = null;
+				for (JsonNode singleOrder : mozuProductCollection.getItems()) {
+					mozuProduct = new MozuProduct();
+					mozuProduct.setProductCode(singleOrder.get("productCode")
+							.asText());
+					mozuProduct.setQbProductListID(singleOrder.get(
+							"qbProdustListID").asText());
+					mozuProduct.setProductName(singleOrder.get("productName")
+							.asText());
+					mozuProductList.add(mozuProduct);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Exception getting all products from entity list: "
+					+ e);
+		}
+		return mozuProductList;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.mozu.qbintegration.service.QuickbooksService#mapProductToQBInEL(com.mozu.qbintegration.model.ProductToMapToQuickbooks, java.lang.Integer, java.lang.Integer)
+	 */
+	@Override
+	public void mapProductToQBInEL(ProductToMapToQuickbooks productToMapToEB,
+			Integer tenantId, Integer siteId) {
+		
+		//Just save it in entity list. User is going to retry the order anyway
+		OrderItem orderItem = new OrderItem();
+		Product product = new Product();
+		orderItem.setProduct(product);
+		product.setProductCode(productToMapToEB.getToBeMappedItemNumber());
+		product.setName(productToMapToEB.getToBeMappedItemNumber());
+		
+		saveProductInEntityList(orderItem, productToMapToEB.getSelectedProductToMap(), tenantId, siteId);
+		
+		logger.debug((new StringBuilder()).append("Saved mapping of a not found item ").
+				append(productToMapToEB.getToBeMappedItemNumber()).append(" to an existing qb list id ").
+				append(productToMapToEB.getSelectedProductToMap()).append(" in entity list").toString());
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.mozu.qbintegration.service.QuickbooksService#saveAllProductInEntityList(com.mozu.qbintegration.model.MozuProduct, java.lang.Integer, java.lang.Integer)
+	 */
+	@Override
+	public void saveAllProductInEntityList(MozuProduct product,
+			Integer tenantId, Integer siteId) {
+
+		ObjectNode prodNode = mapper.createObjectNode();
+
+		prodNode.put("productCode", product.getProductCode());
+		prodNode.put("qbProdustListID", product.getQbProductListID());
+		prodNode.put("productName", product.getProductName());
+
+		OrderItem orderItem = new OrderItem();
+		Product productItem = new Product();
+		productItem.setProductCode(product.getProductCode());
+
+		orderItem.setProduct(productItem);
+
+		String qbListID = getProductFromEntityList(orderItem, tenantId, siteId);
+
+		// Add the mapping entry
+		JsonNode rtnEntry = null;
+		String mapName = EntityHelper.getProductEntityName();
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
+		try {
+			if (qbListID == null) { //insert if not originally present
+				rtnEntry = entityResource.insertEntity(prodNode, mapName);
+			} else {
+				rtnEntry = entityResource.updateEntity(prodNode, mapName,
+						product.getProductCode());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Error saving product in entity list during refresh all: "
+					+ product.getProductCode());
+		}
+		logger.debug("Retrieved entity: " + rtnEntry);
+		logger.debug("Returning");
+	}
+
 }
