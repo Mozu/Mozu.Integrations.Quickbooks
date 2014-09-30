@@ -5,10 +5,13 @@ package com.mozu.qbintegration.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Akshay
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MozuOrderDetails {
 	
 	private long enteredTime;
