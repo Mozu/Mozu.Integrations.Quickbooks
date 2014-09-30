@@ -128,7 +128,7 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	GeneralSettings saveOrUpdateSettingsInEntityList(
-			GeneralSettings generalSettings, Integer tenantId) throws Exception;
+			GeneralSettings generalSettings, Integer tenantId, String serverUrl) throws Exception;
 
 	/**
 	 * Get the general settings while populating the 2nd tab on click

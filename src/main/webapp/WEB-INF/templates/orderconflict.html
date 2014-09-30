@@ -74,57 +74,25 @@
 				</div>
 				<div data-bind="visible: showItemCreate">
 					<div class="row">
-					    <div class="tab-full-column">
-						    <label class="tab-field-label right-align" for="enableCB">Item type</label>
-							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown" style="float: none; margin-left: 10px;"></select>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Item Name/Number</label>
-							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Purchase Info</label>
-							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Sales Info</label>
-							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Sales Price</label>
-							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Manufacturer Part Number</label>
-							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Tax Code</label>
-							<input type="text" data-bind="value: itemToFix.itemTaxCode" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Expense Account</label>
-							<input type="text" data-bind="value: itemToFix.itemExpenseAccount" class="tab-field" style="float: none; margin-left: 10px;"/>
-						</div>
-					</div>
-					<div class="row">
-					    <div class="tab-full-column">
-							<label class="tab-field-label right-align" for="field">Income Account</label>
-							<input type="text" data-bind="value: itemToFix.itemIncomeAccount" class="tab-field" style="float: none; margin-left: 10px;"/>
+					    <div class="tab-first-column">
+						    <label class="tab-field-label" for="enableCB">Item type</label>
+							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Item Name/Number</label>
+							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" />
+							<label class="tab-field-label" for="field">Purchase Info</label>
+							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" />
+							<label class="tab-field-label" for="field">Sales Info</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" />
+							<label class="tab-field-label" for="field">Sales Price</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"/>
+							<label class="tab-field-label" for="field">Manufacturer Part Number</label>
+							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
+							<label class="tab-field-label" for="field">Tax Code</label>
+							<input type="text" data-bind="value: itemToFix.itemTaxCode" class="tab-field" />
+							<label class="tab-field-label" for="field">Expense Account</label>
+							<input type="text" data-bind="value: itemToFix.itemExpenseAccount" class="tab-field"/>
+							<label class="tab-field-label" for="field">Income Account</label>
+							<input type="text" data-bind="value: itemToFix.itemIncomeAccount" class="tab-field" />
 						</div>
 					</div>
 					<div>

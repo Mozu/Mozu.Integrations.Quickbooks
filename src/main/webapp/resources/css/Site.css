@@ -1,9 +1,3 @@
-
-p span 
-{
-    display: block;
-}
-
 table.dataTable, table.dataTable th, table.dataTable td {
 	-webkit-box-sizing: content-box;
 	-moz-box-sizing: content-box;
@@ -195,17 +189,16 @@ html {
   width: 100%;
 }
 body {
-    background-color: rgba(0, 0, 0, 0.6);
-    font-family: 'Source Sans Pro', sans-serif;
-    color: #333;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    font-smoothing: antialiased;
-    height: 100%;
-    width: 100%;
-    margin: 0px;
+  background-color: rgba(0, 0, 0, 0.6);
+  font-family:'Source Sans Pro', sans-serif;
+  color: #333;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  font-smoothin: antialiased;
+  height: 100%;
+  width: 100%;
 }
 h1 {
   margin-top: 20px;
@@ -223,13 +216,11 @@ h2 {
   font-weight: 400;
 }
 h3 {
-  margin-top: 10px;
+  margin-top: 20px;
   margin-bottom: 10px;
-  float: left;
-  font-size: 18px;
-  line-height: 20px;
-  font-weight: 600;
-
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
 }
 h4 {
   margin-top: 10px;
@@ -255,68 +246,64 @@ h6 {
 p {
   margin-bottom: 5px;
 }
-
-.right {
-    text-align: right;
-}
 .button {
-    display: inline-block;
-    padding: 4px 15px;
-    background-color: black;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    box-sizing: border-box;
-    cursor: pointer;
+	display: inline-block;
+	padding: 4px 15px;
+	background-color: black;
+	color: white;
+	text-align: center;
+	text-decoration: none;
+	box-sizing: border-box;
 }
-    .button.tab {
-        width: 100%;
-        min-height: 20px;
-        border: 1px solid #bfbfbf;
-        border-top-width: 0;
-        background-color: #f2f2f2;
-        color: #333;
-        font-weight: 400;
-        text-align: left;
-        padding: 5px;
-        cursor: pointer;
-    }
-        .button.tab.active {
-            border-top-width: 0px;
-            border-right-width: 1px;
-            border-right-color: white;
-            background-color: white;
-            color: #d2463c;
-        }
-        .button.tab:hover {
-            background-color: #e5e5e5;
-        }
-        .button.tab.active:hover {
-            background-color: inherit;
-        }
-    .button.primary-action {
-        height: 30px;
-        min-width: 70px;
-        float: right;
-        border: 1px solid #b83e35;
-        border-radius: 2px;
-        background-color: #d2463c;
-    }
-
+.button.tab {
+	width: 100%;
+	height: 30px;
+	padding-left: 10px;
+	border: 1px solid #bfbfbf;
+	border-top-width: 0;
+	background-color: #f2f2f2;
+	color: #333;
+	font-weight: 400;
+	text-align: left;
+	line-height: 30px;
+	padding: 0;
+	text-indent: 10px;
+}
+.button.tab.active {
+  border-top-width: 0px;
+  border-right-width: 1px;
+  border-right-color: white;
+  background-color: white;
+  color: #d2463c;
+}
+.button.tab:hover {
+	background-color: #e5e5e5;
+}
+.button.tab.active:hover {
+	background-color: inherit;
+}
+.button.primary-action {
+  height: 30px;
+  min-width: 70px;
+  float: right;
+  border: 1px solid #b83e35;
+  border-radius: 2px;
+  background-color: #d2463c;
+}
 .button.primary-action:hover {
   background-color: #b83e35;
 }
 .app-container {
-    display: block;
-    background-color: white;
-    box-sizing: border-box;
-    height: 100%;
-    width: 100%;
+	display: block;
+	background-color: white;
+	box-sizing: border-box;
+	height: 100%;
+	width: 100%;
 }
 .app {
-    height: 98%;
-    width: 99%;
-    margin: auto;
+	padding: 1.5%;
+	height: 97%;
+	width: 97%;
 }
 .header-actions {
   width: 100%;
@@ -328,35 +315,78 @@ p {
   clear: both;
   width: 100%;
   float: left;
-  height: 80%;
+  height: 82%;
 }
+
+
+.app-ext {
+	padding: 1.5%;
+	height: 100%;
+	width: 100%;
+}
+.tab-container-ext {
+  clear: both;
+  width: 100%;
+  float: left;
+  height: 100%;
+}
+.tab-container-ext {
+  clear: both;
+  width: 100%;
+  float: left;
+  height: 100%;
+}
+
 .help-icon {
   display: block;
 }
 .tab-view {
-    display: block;
-    width: 85%;
-    height: 100%;
-    padding: 20px;
-    float: left;
-    border: 1px solid #bfbfbf;
-    box-sizing: border-box;
-    overflow: auto;
+	display: block;
+	width: 85%;
+	height: 100%;
+	padding: 20px;
+	float: left;
+	border: 1px solid #bfbfbf;
+	box-sizing: border-box;
+	overflow: scroll;
+}
+
+.tab-view-ext {
+	display: block;
+	width: 90%;
+	height: 100%;
+	padding: 20px;
+	float: left;
+	border: 1px solid #bfbfbf;
+	box-sizing: border-box;
+	overflow: scroll;
 }
 .tab-view.config {
   width: 810px;
   height: 100%;
 }
 .tabs {
-    display: block;
-    width: 15%;
-    height: 100%;
-    float: left;
-    margin-right: -1px;
-    position: relative;
-    z-index: 0;
-    border-top: 1px solid #bfbfbf;
+	display: block;
+	width: 15%;
+	height: 100%;
+	float: left;
+	margin-right: -1px;
+	position: relative;
+	z-index: 0;
+	border-top: 1px solid #bfbfbf;
 }
+
+.tabs-ext {
+	display: block;
+	width: 10%;
+	height: 100%;
+	float: left;
+	margin-right: -1px;
+	position: relative;
+	z-index: 0;
+	border-top: 1px solid #bfbfbf;
+}
+
 .help-icon-link {
   width: 16px;
   height: 15px;
@@ -368,7 +398,7 @@ p {
   width: 100%;
   float: left;
   clear: both;
-  height: 5%;
+  height: 10%;
 }
 .branding-text {
   margin-top: 10px;
@@ -387,32 +417,32 @@ p {
   width: 100%;
 }
 .tab-field {
-    width: 300px;
-    height: 25px;
-    margin-bottom: 20px;
-    padding: 0px 10px;
-    border-radius: 2px;
-    border: 1px solid #bfbfbf;
-    font-weight: 400;
-    float: left;
-    clear: both;
-    box-sizing: border-box;
+	width: 300px;
+	height: 25px;
+	margin-bottom: 20px;
+	padding: 0px 10px;
+	border-radius: 2px;
+	border: 1px solid #bfbfbf;
+	font-weight: 400;
+	float: left;
+	clear: both;
+	box-sizing: border-box;
 }
 .tab-field.checkbox-field {
-    margin-bottom: 5px;
-    margin-left: 20px;
+	margin-bottom: 5px;
+	margin-left: 20px;
 }
 .tab-field-label {
-    width: 300px;
-    font-weight: 700;
-    float: left;
-    clear: both;
-    margin-bottom: 5px;
+	width: 300px;
+	font-weight: 700;
+	float: left;
+	clear: both;
+	margin-bottom: 5px;
 }
 .row {
-    width: 100%;
-    min-width: 625px;
-    float: left;
+	width: 100%;
+	min-width: 625px;
+	float: left;
 }
 .tab-full-column {
   width: 100%;
@@ -423,49 +453,68 @@ p {
   min-width: 300px;
   float: left;
   clear: both;
-  width: 55%;
-  border-right: 1px solid black;
-  height:80%
+  width: 48%;
 }
 .tab-second-column {
-  min-width: 256px;
-  margin-left: 2%;
+  min-width: 300px;
+  margin-left: 4%;
   float: left;
-  width: 40%;
+  width: 48%;
 }
 .tab-checkbox-container {
-    margin-top: 5px;
-    margin-bottom: 10px;
-    float: left;
-    clear: both;
+	margin-top: 5px;
+	margin-bottom: 10px;
+	float: left;
+	clear: both;
 }
 .tab-checkbox-container.with-input {
   margin-bottom: 0px;
 }
 .tab-checkbox-label {
   font-weight: 700;
-  padding-left: 5px;    
+  padding-left: 5px;	
 }
 .tab-checkbox-label-p {
-    max-width: 390px;
-    font-size: 12px;
-    line-height: 15px;
-    padding-left: 20px;
-    margin: 0;
-    box-sizing: border-box;
+	max-width: 390px;
+	font-size: 12px;
+	line-height: 15px;
+	padding-left: 20px;
+	margin: 0;
+	box-sizing: border-box;
 }
-
-.tab-p {
-    float: left;
-    margin: 10px 0 20px;
-}
-
 .dropdown {
-    float: left;
-    clear: left;
-    margin: 0 0 20px;
-    height: 30px;
-    min-width: 300px;
+	float: left;
+	clear: left;
+	margin: 0 0 20px;
+	height: 30px;
+	min-width: 300px;
+}
+table {
+	width: 100%;
+	float: left;
+	clear: both;
+}
+thead {
+	background: #333;
+	color: #fff;
+	border: 1px solid #333;
+	border-bottom-width: 0;
+	font-weight: bold;
+}
+tbody {
+	border: 1px solid #bfbfbf;
+	border-top-width: 0;
+	box-sizing: border-box;
+}
+td {
+	padding: 5px 20px;
+}
+tbody td {
+	border-bottom: 1px solid #e5e5e5;
+	border-bottom: 1px solid rgba(191,191,191,.2);
+}
+tbody tr:last-of-type td {
+	border-bottom: none;
 }
 
 .ko-grid {margin-bottom: 5px; background-color:White;width: 100%;float: left;clear: both }
@@ -545,12 +594,6 @@ p {
     background-color: rgba(241, 241, 241, 1);
     box-shadow: inset 0 0 0;
 }
-.tab-first-column:after {
-	content: "";
-	border: 0.5px solid black;
-	float: right;
-	height: 100%;
-}
 
 .account-info {
   padding: 20px 20px 0 20px;
@@ -568,14 +611,6 @@ p {
   padding: 6px;
   margin-top: 6px;
   width: 50%;
-}
-
-.firstrow:after{
-	
-	content: "";
-	border: 0.5px solid black;
-	width: 100%;
-	height:1px;
 }
 
 

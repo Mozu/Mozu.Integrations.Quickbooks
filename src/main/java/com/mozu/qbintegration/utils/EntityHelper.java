@@ -43,5 +43,9 @@ public class EntityHelper {
 	public static String getOrderUpdatedEntityName() {
 		return EntityHelper.ORDERS_UPDATED_ENTITY + "@" + ApplicationUtils.getAppNamespace();
 	}
+	
+	public static String getSubnavLinksEntityName() {
+		return "subnavlinks@mozu";
+	}
 }
 

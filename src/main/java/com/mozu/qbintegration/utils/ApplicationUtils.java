@@ -18,7 +18,7 @@ public class ApplicationUtils {
         return appId.substring(0, appId.indexOf('.'));
     }
     
-    public static final void setApplicationToInitialized(ApiContext apiContext) throws Exception {
+    public static final Application setApplicationToInitialized(ApiContext apiContext) throws Exception {
         String errorMsg = null;
         
         // get the application information
@@ -58,5 +58,7 @@ public class ApplicationUtils {
             logger.warn("Exception updating application: " + e.getMessage());
             throw new Exception("Exception updating application: " + e.getMessage());
         }
+        
+        return application;
     }
 }

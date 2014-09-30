@@ -2,12 +2,12 @@ function funEdit(orderNumber) {
 	$('#ordConflict').hide().fadeOut(800);
 	$('#ordConflictError').show().fadeIn(800);
 	$.ajax({
-		url : "getOrderConflictsDetails",
+		url : "Orders/getOrderConflictsDetails",
 		type : "GET",
 		data : {
 			"mozuOrderNumber" : orderNumber,
-			"tenantId" : $("#tenantIdHdn").text(),
-			"siteId"	: $("#siteIdHdn").text()
+			"tenantId" : $("#tenantIdHdn").val(),
+			"siteId"	: $("#siteIdHdn").val()
 		},
 		dataType : "json",		
 		success : function(data) {
@@ -40,8 +40,8 @@ function compareDetails(orderNumber) {
 		type : "GET",
 		data : {
 			"mozuOrderNumber" : orderNumber,
-			"tenantId" : $("#tenantIdHdn").text(),
-			"siteId"	: $("#siteIdHdn").text()
+			"tenantId" : $("#tenantIdHdn").val(),
+			"siteId"	: $("#siteIdHdn").val()
 		},
 		dataType : "json",		
 		success : function(data) {
@@ -107,31 +107,9 @@ var homeViewModel = function() {
     
     //For saving new item to quickbooks
     self.availableItemTypes = ko.observableArray(['Inventory Part', 'Non Inventory Part', 'Inventory Assembly']);
-    /*self.itemNameNumber = ko.observable("");
-    self.itemPurchaseDesc = ko.observable("");
-    self.itemSalesDesc = ko.observable("");
-    self.itemSalesPrice = ko.observable("");
-    self.itemManuPartNum = ko.observable("");
-    self.itemTaxCode = ko.observable("");
-    self.itemExpenseAccount = ko.observable("");
-    self.itemAssetAccount = ko.observable("");
-    self.itemIncomeAccount = ko.observable("");
-    self.selectedChoice = ko.observable();*/
     
     self.saveItemToQuickbooks = function() {
-    	/*var dataObj = {};
-    	dataObj.itemNameNumber = self.itemNameNumber();
-    	dataObj.itemPurchaseDesc = self.itemPurchaseDesc();
-    	dataObj.itemSalesDesc = self.itemSalesDesc();
-    	dataObj.itemSalesPrice = self.itemSalesPrice();
-    	dataObj.itemManuPartNum = self.itemManuPartNum();
-    	dataObj.itemTaxCode = self.itemTaxCode();
-    	dataObj.itemExpenseAccount = self.itemExpenseAccount();
-    	dataObj.itemAssetAccount = self.itemAssetAccount();
-	    dataObj.itemIncomeAccount = self.itemIncomeAccount();
-	    dataObj.selectedChoice = self.selectedChoice();
-    	console.log(ko.mapping.toJSON(dataObj));*/
-    	$.ajax({
+     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
 			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
 			type : "POST",
@@ -157,7 +135,7 @@ var homeViewModel = function() {
 		if("generalTab" === selectedTab) {
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "generalsettings?tenantId=" + $("#tenantIdHdn").text(),
+				url : "generalsettings?tenantId=" + $("#tenantIdHdn").val(),
 				type : "POST",
 				dataType : "json",
 				data:  ko.mapping.toJSON(self.settings),
@@ -207,7 +185,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "getPostedOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"sAjaxSource" : "Orders/getPostedOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 
 			{
@@ -261,7 +239,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "getConflictOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"sAjaxSource" : "Orders/getConflictOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 
 			            {    
@@ -329,7 +307,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "getUpdatedOrders?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			"sAjaxSource" : "Orders/getUpdatedOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 
 			            {    
@@ -391,14 +369,19 @@ var homeViewModel = function() {
 	self.getSettings = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").text(),
+				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").val(),
 				type : "GET",
 				dataType : "json",
 				success : function(data) {
 					ko.mapping.fromJS(data, self.settings);
 					ko.applyBindings(window.homeViewModel);
-	
-					window.homeViewModel.getVersion();
+
+					
+					if ($("#selectedTab").val() != "") {
+						$("#"+$("#selectedTab").val()+"Tab").click();
+					} else {
+						window.homeViewModel.getVersion();
+					}
 				},
 				error : function() {
 					$("#content").hide();

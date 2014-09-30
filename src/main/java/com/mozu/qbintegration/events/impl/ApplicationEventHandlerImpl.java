@@ -16,11 +16,13 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.event.Event;
 import com.mozu.api.contracts.mzdb.EntityList;
 import com.mozu.api.contracts.mzdb.IndexedProperty;
+import com.mozu.api.contracts.sitesettings.application.Application;
 import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.ApplicationEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.qbintegration.model.GeneralSettings;
+import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
@@ -96,7 +98,8 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			installOrderConflictSchema(apiContext.getTenantId());
 			installOrdersUpdatedSchema(apiContext.getTenantId());
 			if (settings != null && StringUtils.isNotEmpty(settings.getQbAccount()) && StringUtils.isNoneEmpty(settings.getQbPassword())) {
-				ApplicationUtils.setApplicationToInitialized(apiContext);
+				Application application = ApplicationUtils.setApplicationToInitialized(apiContext);
+				//addUpdateExtensionLinks(application);
 			}
 			
 		} catch (Exception e) {
@@ -258,6 +261,8 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 		
 	}
+	
+	
 	
 	/*
 	 * Create or update entity list

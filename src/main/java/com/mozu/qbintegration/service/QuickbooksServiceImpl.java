@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
@@ -35,8 +37,12 @@ import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
 import com.mozu.api.contracts.mzdb.EntityCollection;
+import com.mozu.api.contracts.mzdb.EntityContainer;
+import com.mozu.api.contracts.mzdb.EntityContainerCollection;
+import com.mozu.api.contracts.sitesettings.application.Application;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
+import com.mozu.api.resources.platform.entitylists.EntityContainerResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
@@ -44,6 +50,7 @@ import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
+import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
@@ -475,7 +482,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public GeneralSettings saveOrUpdateSettingsInEntityList(
-			GeneralSettings generalSettings, Integer tenantId) throws Exception {
+			GeneralSettings generalSettings, Integer tenantId, String serverUrl) throws Exception {
 
 		// First get an entity for settings if already present.
 		MozuApiContext context =new MozuApiContext(tenantId); 
@@ -502,7 +509,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				custNode = entityResource.updateEntity(custNode, mapName,generalSettings.getId());
 			}
 
-			ApplicationUtils.setApplicationToInitialized(context);
+			Application application = ApplicationUtils.setApplicationToInitialized(context);
+			addUpdateExtensionLinks(tenantId, application, serverUrl);
 		} catch (ApiException e) {
 			logger.error("Error saving settings for tenant id: " + tenantId, e);
 			throw e;
@@ -951,4 +959,57 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		return compareDetails;
 	}
 
+	
+	private void addUpdateExtensionLinks(Integer tenantId, Application application, String serverUrl) throws Exception {
+		ApiContext apiContext = new MozuApiContext(tenantId);
+		EntityContainerResource entityContainerResource = new EntityContainerResource(apiContext);
+		EntityResource entityResource = new EntityResource(apiContext);
+		
+		EntityContainerCollection collection = entityContainerResource.getEntityContainers(EntityHelper.getSubnavLinksEntityName(),200,null,null,null,null);
+
+		
+		SubnavLink postedOrdersLink = new SubnavLink();
+		postedOrdersLink.setParentId("orders");
+		postedOrdersLink.setAppId(application.getAppId());
+		postedOrdersLink.setPath(new String[] {"Quickbooks","Orders","Posted"});
+		postedOrdersLink.setWindowTitle("Quickbooks order Management");
+		postedOrdersLink.setHref(serverUrl+"/Orders?tab=posted");
+		addUpdateSubNavLink(postedOrdersLink, collection, entityResource);
+		
+		SubnavLink conflictOrdersLink = new SubnavLink();
+		conflictOrdersLink.setParentId("orders");
+		conflictOrdersLink.setAppId(application.getAppId());
+		conflictOrdersLink.setPath(new String[] {"Quickbooks","Orders","Conflicts"});
+		conflictOrdersLink.setWindowTitle("Quickbooks order Management");
+		conflictOrdersLink.setHref(serverUrl+"/Orders?tab=conflicts");
+		addUpdateSubNavLink(conflictOrdersLink, collection, entityResource);
+		
+		SubnavLink updatedOrdersLink = new SubnavLink();
+		updatedOrdersLink.setParentId("orders");
+		updatedOrdersLink.setAppId(application.getAppId());
+		updatedOrdersLink.setPath(new String[] {"Quickbooks","Orders","Updates"});
+		updatedOrdersLink.setWindowTitle("Quickbooks order Management");
+		updatedOrdersLink.setHref(serverUrl+"/Orders?tab=updates");
+
+		addUpdateSubNavLink(updatedOrdersLink, collection, entityResource);
+	}
+	
+	private void addUpdateSubNavLink(SubnavLink subNavLink,EntityContainerCollection collection,EntityResource entityResource ) throws Exception {
+		boolean updated = false;
+		
+		for(EntityContainer container: collection.getItems()) {
+			String id = container.getId();
+			SubnavLink link = mapper.readValue(container.getItem().toString(), SubnavLink.class);
+			if (Arrays.equals(link.getPath(), subNavLink.getPath())) {
+				JsonNode node = mapper.valueToTree(subNavLink);
+				entityResource.updateEntity(node, EntityHelper.getSubnavLinksEntityName(), id);	
+				updated = true;
+			} 
+		}
+		
+		if (!updated) {
+			JsonNode node = mapper.valueToTree(subNavLink);
+			entityResource.insertEntity(node, EntityHelper.getSubnavLinksEntityName());			
+		}
+	}
 }
