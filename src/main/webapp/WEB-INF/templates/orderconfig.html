@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+	
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.downloadsettings}" class="label-bold"></label>
+			</div>
+		</div>
+		<div class="tab-divider"></div>
+		
+
+		<div class="row">
+			<div class="tab-full-column">
+				<div><label th:text="#{label.downloadtext}"></label></div>
+	
+				<div class="tab-checkbox-container">
+					<input type="checkbox" class="orderfilter" id="acceptedCb" data-bind="checked: settings.accepted"></input>
+					<label th:text="#{label.accepted}"></label>
+				</div>
+				<div class="tab-checkbox-container">
+					<input type="checkbox" class="orderfilter" id="completedCb"  data-bind="checked: settings.completed"></input>
+					<label th:text="#{label.completed}"></label>
+				</div>
+				<div class="tab-checkbox-container">
+					<input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"></input>
+					<label th:text="#{label.cancelled}"></label>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
