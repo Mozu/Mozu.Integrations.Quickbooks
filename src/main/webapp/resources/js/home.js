@@ -39,7 +39,7 @@ function compareDetails(orderNumber) {
 	$('#ordUpdateDetails').show().fadeIn(800);
 	
 	$.ajax({
-		url : "getOrderCompareDetails",
+		url : "Orders/getOrderCompareDetails",
 		type : "GET",
 		data : {
 			"mozuOrderNumber" : orderNumber,
@@ -66,6 +66,7 @@ function saveDataToTable(data) {
 	$(data).promise().done(function() {
 		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
 		$('#compareDisplay').dataTable().fnDraw();
+		
 	});
 	
 }
@@ -75,8 +76,8 @@ function getAllProductsFromEntityList() {
 		url : "getAllPostedProducts",
 		type : "GET",
 		data : {
-			"tenantId" : $("#tenantIdHdn").text(),
-			"siteId"	: $("#siteIdHdn").text()
+			"tenantId" : $("#tenantIdHdn").val(),
+			"siteId"	: $("#siteIdHdn").val()
 		},
 		dataType : "json",		
 		success : function(data) {
@@ -131,7 +132,6 @@ var homeViewModel = function() {
 	
 	//For the row click on conflict details
     self.clickedRow = function(item) {
-//       alert(item.dataToFix);   
        self.itemToFix.itemNameNumber(item.dataToFix);
     }
     
@@ -146,6 +146,12 @@ var homeViewModel = function() {
     //For order conflict - populating and selecting existing items to map to this not found product
     self.allProductsInQB = ko.observableArray([]);
     self.selectedProductToMap = ko.observable();
+    
+    //For order update - select checkboxes
+    self.selectedOrdersToUpdate = ko.observableArray([]); // Initially checked
+    
+    
+    self.showDownload = ko.observable(false);
     
     self.showItemOptions = ko.computed(function() {
         return self.itemToFix.itemNameNumber() != "" ;
@@ -164,7 +170,7 @@ var homeViewModel = function() {
     self.saveItemToQuickbooks = function() {
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(self.itemToFix),
@@ -184,7 +190,7 @@ var homeViewModel = function() {
     	
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
@@ -196,13 +202,14 @@ var homeViewModel = function() {
     	});
     };
     
+    //TO show in the map product dropdown
     self.getAllProductsFromQB = function() {
     	$.ajax({
     		url : "getAllProductsFromQB",
     		type : "GET",
     		data : {
-    			"tenantId" : $("#tenantIdHdn").text(),
-    			"siteId"	: $("#siteIdHdn").text()
+    			"tenantId" : $("#tenantIdHdn").val(),
+    			"siteId"	: $("#siteIdHdn").val()
     		},
     		dataType : "json",		
     		success : function(data) {
@@ -213,7 +220,39 @@ var homeViewModel = function() {
     		}
     	});
     	
-    }
+    };
+    
+    //To post an updated order to quickbooks
+    self.postUpdatedOrderToQB = function() {
+    	console.log(console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length));
+    	
+    	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
+    	$allCheckedUpdateBoxes.each(function(index) {
+    		self.selectedOrdersToUpdate.push($(this).val());
+    	});
+    	
+    	$allCheckedUpdateBoxes.promise().done(function() {
+    		console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
+        	$.ajax({
+        		url : "Orders/postUpdatedOrderToQB",
+        		type : "POST",
+        		data : {
+        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedOrdersToUpdate()),
+        			"tenantId" : $("#tenantIdHdn").val(),
+        			"siteId"	: $("#siteIdHdn").val()
+        		},
+        		dataType : "json",		
+        		success : function(data) {
+        			
+        		},error : function() {
+        			$("#content").hide();
+        		}
+        	});
+    		
+    	});
+    	
+    };
+    
     
 	self.save = function() {
 		//identify which is the active tab
@@ -228,11 +267,29 @@ var homeViewModel = function() {
 		if("generalTab" === selectedTab) {
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "generalsettings?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
 				type : "POST",
 				dataType : "json",
 				data:  ko.mapping.toJSON(self.settings),
 				success : function(data) {
+					self.showDownload(true)
+				},
+				error : function() {
+				}
+			});
+		}
+		
+	};
+
+	self.qwcFileContent = ko.observable();
+	
+	self.download = function() {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/config/qbefile?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
 					//data.qbxml has the xml string - to be sent to download
 					
 					var form = $("<form>");
@@ -408,7 +465,9 @@ var homeViewModel = function() {
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
-		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data 
+		            		   		+ '" name="allOrdersCheckbox" value ="'+ data +'"' + 
+		            		   		' data-bind="click: maintainCBStateInArray"/>';
 		            	   }
 			            },
 			            {

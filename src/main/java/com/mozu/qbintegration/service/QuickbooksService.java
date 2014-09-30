@@ -82,8 +82,8 @@ public interface QuickbooksService {
 	 * 
 	 * @return marshalled string representation of QB SalesOrderUpdate request.
 	 */
-	String getQBOrderUpdateXML(final Order order,
-			final CustomerAccount customerAccount);
+	String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, 
+			List<String> itemListIDs, MozuOrderDetails postedOrder);
 
 	/**
 	 * This method accepts mozu order and returns the order GET qbXML. This
@@ -224,6 +224,19 @@ public interface QuickbooksService {
 	void addOrderAddTaskToQueue(String orderId, Integer tenantId,
 			Integer siteId, CustomerAccount custAcct, Order order,
 			List<String> itemListIds);
+	
+	/**
+	 * @param orderId
+	 * @param tenantId
+	 * @param siteId
+	 * @param custAcct
+	 * @param order
+	 * @param itemListIds
+	 * @param postedOrder
+	 */
+	void addOrderUpdateTaskToQueue(String orderId, Integer tenantId,
+			Integer siteId, CustomerAccount custAcct, Order order,
+			List<String> itemListIds, MozuOrderDetails postedOrder);
 
 	/**
 	 * @param orderId
@@ -329,5 +342,15 @@ public interface QuickbooksService {
 	 */
 
 	public void saveAllProductInEntityList(MozuProduct product,
+			Integer tenantId, Integer siteId);
+
+	/**
+	 * Update user selected orders in quickbooks.
+	 * 
+	 * @param orderNumberList
+	 * @param tenantId
+	 * @param siteId
+	 */
+	void updateOrdersInQuickbooks(List<String> orderNumberList,
 			Integer tenantId, Integer siteId);
 }

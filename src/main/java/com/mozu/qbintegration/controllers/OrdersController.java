@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.Cookie;
@@ -31,7 +33,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.Headers;
 import com.mozu.api.MozuApiContext;
@@ -249,6 +254,37 @@ public class OrdersController {
 			value = "";
 		}
 		return value;
+	}
+	
+	@RequestMapping(value = "/postUpdatedOrderToQB", method = RequestMethod.POST)
+	public @ResponseBody
+	String postUpdatedOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {	
+
+		ArrayNode ordersNode = null;
+		try {
+			ordersNode = (ArrayNode) mapper.readTree(mozuOrderNumbers);
+			Iterator<JsonNode> orderNums = ordersNode.elements();
+			List<String> orderNumberList = new ArrayList<String>();
+			while (orderNums.hasNext()) {
+				JsonNode numNode = orderNums.next();
+				orderNumberList.add(numNode.asText());
+			}
+			
+			quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		logger.debug("" + ordersNode.size());
+		
+		return "Selected orders have been successfully updated in Quickbooks.";
 	}
 	
 }
