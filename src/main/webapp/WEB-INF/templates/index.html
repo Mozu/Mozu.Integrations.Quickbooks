@@ -16,7 +16,7 @@
 			</div>
 			<div class="tab-container">
 				<div
-					style="position: absolute; z-index: 10; width: 99%; height: 92%; background-color: rgba(255, 255, 255, .5);"
+					style="position: absolute; z-index: 10; width: 95%; height: 90%; background-color: rgba(255, 255, 255, .5);"
 					id="progressIndicator">
 					<div class="loadingicon"></div>
 				</div>
@@ -38,12 +38,6 @@
 				<div class="tabs">
 					<a class="button tab active" data-toggle="tab" data-tab-id="aboutTab" data-hide-save="true">Info</a> 
 					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Settings</a>
-					<a href="#" data-bind="click: getOrders" class="button tab" data-toggle="tab" 
-						data-tab-id="ordersTab" data-hide-save="true">Orders Posted</a>   
-					<a href="#" data-bind="click: getOrderConflicts" class="button tab" data-toggle="tab" 
-						data-tab-id="orderConflictsTab" data-hide-save="true">Order Conflicts</a>   
-					<a href="#" data-bind="click: getOrdersUpdated" class="button tab" data-toggle="tab" 
-						data-tab-id="ordersUpdatedTab" data-hide-save="true">Order Updates</a>   
 				</div>
 				
 				<div class="tab-view">
@@ -52,15 +46,6 @@
 					</div>
 					<div class="tab-section template" style="display: none" id="generalTab">
 						<div th:include="generalsettings :: content"></div>
-					</div>
-					<div class="tab-section template" style="display: none" id="ordersTab">
-						<div th:include="orderposted :: content"></div>
-					</div>
-					<div class="tab-section template" style="display: none" id="orderConflictsTab">
-						<div th:include="orderconflict :: content"></div>
-					</div>
-					<div class="tab-section template" style="display: none" id="ordersUpdatedTab">
-						<div th:include="ordersupdated :: content"></div>
 					</div>
 				</div>
 
@@ -71,8 +56,9 @@
 						rights reserved.</div>
 				</div>
 				
-				<p style="display:none;" id="tenantIdHdn" th:text="${tenantId}"></p>
-				<p style="display:none;" id="siteIdHdn"	th:text="${siteId}"></p>
+				<input type="hidden" id="tenantIdHdn" th:value="${tenantId}"></input>
+				<input type="hidden" id="siteIdHdn"	th:value="${siteId}"></input>
+				<input type="hidden" id="selectedTab"	th:value="${selectedTab}"></input>
 			
 			</div>
 		</div>

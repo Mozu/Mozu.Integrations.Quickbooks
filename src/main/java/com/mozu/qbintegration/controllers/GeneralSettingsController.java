@@ -89,7 +89,7 @@ public class GeneralSettingsController implements ServletContextAware {
 
 		generalSettings.setWsURL( getSoapUrl(request) );
 		quickbooksService.saveOrUpdateSettingsInEntityList(generalSettings,
-				tenantId);
+				tenantId, "https://"+request.getServerName()+ context.getContextPath());
 		
 		
 		QuickWebConnector quickWebCon = new QuickWebConnector();

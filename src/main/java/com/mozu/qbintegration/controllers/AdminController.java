@@ -71,22 +71,14 @@ public class AdminController {
 
 		// validate request
 		try {
-			/*if (!Crypto.isRequestValid(apiContext, decodedBody)) {
+			if (!Crypto.isRequestValid(apiContext, decodedBody)) {
 				logger.warn("Unauthorized request");
 				return "unauthorized";
-			}*/
+			}
 			httpResponse.addCookie(new Cookie(SECURITY_COOKIE,
 					ConfigurationSecurityInterceptor.encrypt(DateTime.now()
 							.toString(), sharedSecret)));
-
-			// Psuedo initialize the app - not saving anything
-			try {
-				ApplicationUtils.setApplicationToInitialized(apiContext);
-			} catch (Exception e) {
-				logger.warn(e.getMessage());
-				throw e;
-			}
-
+			
 		} catch (Exception e) {
 			logger.warn("Validation exception: " + e.getMessage());
 			return "unauthorized";
