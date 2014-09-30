@@ -9,15 +9,9 @@
 
 	<div th:fragment="content">
 			<div id="ordConflict">
-				<div class="row" >
-					<div class="tab-full-column">
-						<h3 class="title">Order Conflicts</h3><br/>
-					</div>
-				</div>
 				<div class="row">
 					<div class="tab-full-column">	
-						<table width="100%"
-							style="border: 3px; background: rgb(243, 244, 248);">
+						<table width="100%">
 							<tr>
 								<td>
 									<table id="orderConflictsTable" class="display">
@@ -74,13 +68,13 @@
 					<div class="tab-full-column" style="margin-top:10px;"></div>
 					<div class="tab-first-column">
 						<div class="tab-checkbox-container">
-							<input class="tab-checkbox" id="newItem" name="item" type="radio" data-bind="click: enableNewItem" value="new"></input>
+							<input name="item" type="radio" data-bind="click: enableNewItem" value="new"></input>
 							<label class="tab-checkbox-label" for="newItem">Create New Item</label>	
 						</div>
 					</div>
 					<div class="tab-second-column">
 						<div class="tab-checkbox-container">
-							<input class="tab-checkbox" id="existingItem" name="item" type="radio" data-bind="click: enableExistingItem" value="map"></input>
+							<input name="item" type="radio" data-bind="click: enableExistingItem" value="map"></input>
 							<label class="tab-checkbox-label" for="existingItem">Map to Existing Item</label>	
 						</div>
 					</div>
@@ -112,24 +106,22 @@
 						</div>
 					</div>
 					<div>
-						<a class="button primary-action" data-bind="click: saveItemToQuickbooks">Save Item</a>
+						<a class="button primary-action" data-bind="click: saveItemToQuickbooks" style="float:none;">Save Item</a>
 					</div>
 				</div>
 				
-				<div data-bind="visible: showItemMap" style="margin-top:20px;">
+				<div data-bind="visible: showItemMap">
 					<div class="row">
-						
-					</div>
-					<div class="row">
-					    <div class="tab-first-column">
+					    <div class="tab-full-column">
 						    <label class="tab-field-label left-align" for="enableCB">Choose from below list to map:</label>
 							<select data-bind="options: allProductsInQB, optionsText: 'productName', optionsValue: 'qbProductListID', value: selectedProductToMap" class="dropdown" style="float: none; margin-left: 10px;"></select>
-							<a class="button primary-action" data-bind="click: getAllProductsFromQB">Refresh Products</a>
+							
 						</div>
 					</div>
 					<div class="row">
 						<div class="tab-first-column">
-							<a class="button primary-action" data-bind="click: mapItemToQuickbooks">Map Item</a>
+							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB">Refresh Products</a>
+							<a class="button primary-action" data-bind="click: mapItemToQuickbooks" style="float:none;">Map Item</a>
 						</div>	
 					</div>
 				</div>
