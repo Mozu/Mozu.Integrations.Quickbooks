@@ -131,7 +131,6 @@ var homeViewModel = function() {
 	
 	//For the row click on conflict details
     self.clickedRow = function(item) {
-//       alert(item.dataToFix);   
        self.itemToFix.itemNameNumber(item.dataToFix);
     }
     
@@ -146,6 +145,9 @@ var homeViewModel = function() {
     //For order conflict - populating and selecting existing items to map to this not found product
     self.allProductsInQB = ko.observableArray([]);
     self.selectedProductToMap = ko.observable();
+    
+    
+    self.showDownload = ko.observable(false);
     
     self.showItemOptions = ko.computed(function() {
         return self.itemToFix.itemNameNumber() != "" ;
@@ -228,27 +230,12 @@ var homeViewModel = function() {
 		if("generalTab" === selectedTab) {
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "generalsettings?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
 				type : "POST",
 				dataType : "json",
 				data:  ko.mapping.toJSON(self.settings),
 				success : function(data) {
-					//data.qbxml has the xml string - to be sent to download
-					
-					var form = $("<form>");
-					var element1 = $("<input>");
-					form.attr("method", "POST");
-					form.attr("action", "download");
-
-					element1.attr("id", "qwcfilestr");
-					element1.attr("name", "qwcfilestr");
-					element1.attr("type", "hidden");
-					element1.attr("value", data.qbxml);
-					
-					form.append(element1);
-					var body = $(document.body);
-					body.append(form);
-					form.submit();
+					self.showDownload(true)
 				},
 				error : function() {
 				}
@@ -257,6 +244,26 @@ var homeViewModel = function() {
 		
 	};
 
+	self.qwcFileContent = ko.observable();
+	
+	self.download = function() {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/config/qbefile?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				//data.qbxml has the xml string - to be sent to download
+				
+				self.qwcFileContent(data.qbxml);
+				$("#downloadForm").submit();
+				
+			},
+			error : function() {
+			}
+		});
+	}
+	
 	self.getVersion = function() {
 		$.ajax({
 			url : "version",
@@ -462,7 +469,7 @@ var homeViewModel = function() {
 	self.getSettings = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "getgeneralsettings?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
 				type : "GET",
 				dataType : "json",
 				success : function(data) {
@@ -474,6 +481,10 @@ var homeViewModel = function() {
 						$("#"+$("#selectedTab").val()+"Tab").click();
 					} else {
 						window.homeViewModel.getVersion();
+						if (self.settings.qbAccount() != "" && self.settings.qbPassword() != "") {
+							self.showDownload(true);
+						} 
+							
 					}
 				},
 				error : function() {
@@ -552,5 +563,5 @@ $(function() {
 
 	window.homeViewModel = new homeViewModel();
 	
-
+	$("#saveBtn").hide();
 });
