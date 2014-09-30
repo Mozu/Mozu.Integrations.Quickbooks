@@ -289,6 +289,8 @@ p {
   border: 1px solid #b83e35;
   border-radius: 2px;
   background-color: #d2463c;
+  margin-left:10px;
+  cursor: pointer;
 }
 .button.primary-action:hover {
   background-color: #b83e35;
@@ -303,7 +305,7 @@ p {
 .app {
 	padding: 1.5%;
 	height: 97%;
-	width: 97%;
+	width: 100%;
 }
 .header-actions {
   width: 100%;
@@ -315,7 +317,7 @@ p {
   clear: both;
   width: 100%;
   float: left;
-  height: 82%;
+  height: 87%;
 }
 
 
@@ -323,12 +325,6 @@ p {
 	padding: 1.5%;
 	height: 100%;
 	width: 100%;
-}
-.tab-container-ext {
-  clear: both;
-  width: 100%;
-  float: left;
-  height: 100%;
 }
 .tab-container-ext {
   clear: both;
@@ -636,10 +632,6 @@ label {
 	font-weight: bold;
 }
 
-.secondrow, .thirdrow{
-	margin-top: 1em;
-	margin-bottom: 1em; 
-}
 
 .right-align {
     text-align:right;
