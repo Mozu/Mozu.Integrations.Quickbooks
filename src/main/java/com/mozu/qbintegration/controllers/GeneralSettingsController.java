@@ -28,6 +28,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.QuickWebConnector;
 import com.mozu.qbintegration.model.Scheduler;
@@ -43,6 +44,9 @@ public class GeneralSettingsController implements ServletContextAware {
 
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	@Autowired
+	private EncryptDecryptHandler encryptDecryptHandler;
 	
 	@Value("${webserviceName}")
 	private String webserviceName;
@@ -75,11 +79,16 @@ public class GeneralSettingsController implements ServletContextAware {
 	}
 	
 	@RequestMapping(value = "settings", method = RequestMethod.POST)
-	public @ResponseBody void saveGeneralSettings(@RequestParam(value = "tenantId", required = false) Integer tenantId,	@RequestBody GeneralSettings generalSettings,
+	public @ResponseBody GeneralSettings saveGeneralSettings(@RequestParam(value = "tenantId", required = false) Integer tenantId,	@RequestBody GeneralSettings generalSettings,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 
 		generalSettings.setWsURL( "");
+		if (StringUtils.isEmpty(generalSettings.getQbPassword()))
+			generalSettings.setQbPassword(encryptDecryptHandler.encrypt(tenantId+"~"+generalSettings.getQbAccount()));
 		quickbooksService.saveOrUpdateSettingsInEntityList(generalSettings,	tenantId, "https://"+request.getServerName()+ context.getContextPath());
+		generalSettings.setWsURL( getSoapUrl(request) );
+		
+		return generalSettings;
 	}
 
 	@RequestMapping(value = "qbefile", method = RequestMethod.GET)
@@ -119,6 +128,17 @@ public class GeneralSettingsController implements ServletContextAware {
 		JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(false);
 		ObjectNode node = jsonNodeFactory.objectNode();
 		node.put("qbxml", fileContent);
+		return node;
+	}
+	
+	@RequestMapping(value = "generatePwd", method = RequestMethod.POST)
+	public @ResponseBody ObjectNode generatePwd(@RequestParam(value = "tenantId", required = false) Integer tenantId,@RequestBody String name, final HttpServletRequest request) throws Exception {
+		String password = encryptDecryptHandler.encrypt(tenantId+"~"+name);
+		
+		JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(false);
+		ObjectNode node = jsonNodeFactory.objectNode();
+		node.put("pwd", password);
+		
 		return node;
 	}
 	
