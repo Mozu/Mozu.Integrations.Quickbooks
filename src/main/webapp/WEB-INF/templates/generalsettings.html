@@ -18,7 +18,8 @@
 				<label class="tab-field-label" th:text="#{label.username}"></label>
 				<input type="text" class="tab-field" id="qbUsername" data-bind="value : settings.qbAccount"></input>
 				<label class="tab-field-label"  th:text="#{label.password}"></label>
-				<input type="password" class="tab-field" id="qbPassword" data-bind="value : settings.qbPassword"></input>
+				<input type="text" readonly="true" class="tab-field" id="qbPassword" data-bind="value : settings.qbPassword" placeholder="Generated on save"></input>
+				
 			</div>
 
 		</div>
@@ -29,7 +30,7 @@
 					<input type="hidden" id="qwcfilestr" name="qwcfilestr" data-bind="value: qwcFileContent"></input> 
 				</form>
 
-				<a class="mz-button secondary" data-bind="click: download" id="downloadBtn">Download QWC file</a>
+				<button class="mz-button secondary" data-bind="click: download" id="downloadBtn">Download QWC file</button>
 			</div>
 		</div>
 
