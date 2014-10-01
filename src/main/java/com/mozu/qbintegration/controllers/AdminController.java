@@ -1,14 +1,8 @@
 package com.mozu.qbintegration.controllers;
 
-import java.io.IOException;
-import java.net.URLDecoder;
-
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,15 +12,9 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.mozu.api.ApiContext;
-import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.tenant.Site;
 import com.mozu.api.contracts.tenant.Tenant;
-import com.mozu.api.resources.platform.TenantResource;
-import com.mozu.api.security.Crypto;
 import com.mozu.base.controllers.AdminControllerHelper;
 import com.mozu.base.handlers.TenantHandler;
-import com.mozu.base.utils.ApplicationUtils;
 
 @Controller
 @RequestMapping({ "/", "/index" })

@@ -18,7 +18,6 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
@@ -37,7 +36,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineGroupRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
@@ -396,25 +394,6 @@ public class QuickbooksServiceEndPoint {
 						workTask.getSiteId());
 
 				logger.debug("Added new product to quickbooks: " + invAddResponse.getItemInventoryRet().getName());
-				// If all items have are in processed status, put the order add
-				// task
-				// in.
-				// We dont need this code anymore. ITEM_ADD wont save the order automatically.
-				// Leaving for today for reference
-				/*
-				String orderId = workTask.getTaskId(); // this gets the order id
-				Order order = qbService.getMozuOrder(orderId, tenantId,
-						workTask.getSiteId());
-				CustomerAccount custAcct = qbService.getMozuCustomer(order,
-						tenantId, workTask.getSiteId());
-				
-				List<String> itemListIds = getItemListIdsIfAllPresent(order, tenantId, workTask.getSiteId());
-
-				if (null != itemListIds) { // Add order ADD task since all items are present
-					qbService.addOrderAddTaskToQueue(orderId, tenantId, workTask.getSiteId()
-							, custAcct, order, itemListIds);
-				}
-				*/
 
 			} else if ("ORDER_ADD".equals(workTask.getQbTaskType())) {
 				// Resume with response
@@ -494,6 +473,11 @@ public class QuickbooksServiceEndPoint {
 				qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), 
 						tenantId, workTask.getSiteId());
 				
+				//UPdated order in updated EL to POSTED -- that screen picks up orders in UPDATED status so 
+				//this one will stop showing up.
+				qbService.updateOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderUpdatedEntityName(), 
+						tenantId, workTask.getSiteId());
+				
 				logger.debug((new StringBuilder())
 						.append("Processed order with id: ")
 						.append(workTask.getTaskId())
@@ -531,42 +515,47 @@ public class QuickbooksServiceEndPoint {
 	private MozuOrderDetails populateMozuOrderDetails(Order order, String status, 
 			SalesOrderAddRsType salesOrderResponse, CustomerAccount custAcct) {
 		String qbTransactionId = null;
-		SalesOrderLineGroupRet salesOrderLineGroupRet = null;
+		List<Object> salesOrderLineRet = null;
 		
 		if(salesOrderResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineGroupRet = 
-					(SalesOrderLineGroupRet) salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet().get(0);
+			salesOrderLineRet = 
+					salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
 		}
 		
+		//Set the edit sequence to be used while updating
+		String editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
+		
 		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, salesOrderLineGroupRet);
+				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
 	}
 	
 	private MozuOrderDetails populateMozuOrderUpdateDetails(Order order, String status, 
 			SalesOrderModRsType salesOrderModResponse, CustomerAccount custAcct) {
 		
 		String qbTransactionId = null;
-		SalesOrderLineGroupRet salesOrderLineGroupRet = null;
+		List<Object> salesOrderLineRet = null;
 		
 		if(salesOrderModResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderModResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineGroupRet = 
-					(SalesOrderLineGroupRet) salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet().get(0);
+			salesOrderLineRet = 
+					salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
 		}
+		//Set the edit sequence to be used while updating
+		String editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
 		
 		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, salesOrderLineGroupRet);
+				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
 	}
 	
 	private MozuOrderDetails populateOtherDetails(Order order, String status,
-			CustomerAccount custAcct, String qbTransactionId, SalesOrderLineGroupRet salesOrderLineGroupRet) {
+			CustomerAccount custAcct, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) {
 		MozuOrderDetails orderDetails = new MozuOrderDetails();
-		orderDetails.setEnteredTime(System.currentTimeMillis());
+		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
 		orderDetails.setMozuOrderId(order.getId());
 		orderDetails.setQuickbooksOrderListId(qbTransactionId);
@@ -584,15 +573,22 @@ public class QuickbooksServiceEndPoint {
 		//Set item ids
 		List<QuickBooksSavedOrderLine> savedLines = new ArrayList<QuickBooksSavedOrderLine>();
 		QuickBooksSavedOrderLine savedOrderLine = null;
-		if(salesOrderLineGroupRet != null) {
-			for(SalesOrderLineRet returnedItem: salesOrderLineGroupRet.getSalesOrderLineRet()) {
-				savedOrderLine = new QuickBooksSavedOrderLine();
-				savedOrderLine.setProductCode(returnedItem.getItemRef().getListID());
-				savedOrderLine.setQbLineItemTxnID(returnedItem.getTxnLineID());
-				savedLines.add(savedOrderLine);
+		SalesOrderLineRet orderLineRet = null;
+		if(salesOrderLineRet != null) {
+			for(OrderItem item: order.getItems()) {
+				for(Object returnedItem: salesOrderLineRet) {
+					orderLineRet = (SalesOrderLineRet) returnedItem;
+					savedOrderLine = new QuickBooksSavedOrderLine();
+					savedOrderLine.setProductCode(orderLineRet.getItemRef().getFullName());
+					savedOrderLine.setQbLineItemTxnID(orderLineRet.getTxnLineID());
+					savedLines.add(savedOrderLine);
+				}
 			}
-			orderDetails.setSavedOrderLines(savedLines);
+			orderDetails.setSavedOrderLinesList(savedLines);
 		}
+		
+		//Set the edit sequence
+		orderDetails.setEditSequence(editSequence);
 		
 		return orderDetails;
 		

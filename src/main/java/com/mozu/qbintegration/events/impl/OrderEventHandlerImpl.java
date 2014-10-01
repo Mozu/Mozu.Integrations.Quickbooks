@@ -150,6 +150,7 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 
 				private MozuOrderDetails populateOrderDetails(final Order order, String emailAddress) {
 					MozuOrderDetails orderDetails = new MozuOrderDetails();
+					orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 					orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
 					orderDetails.setMozuOrderId(order.getId());
 					orderDetails.setQuickbooksOrderListId("");

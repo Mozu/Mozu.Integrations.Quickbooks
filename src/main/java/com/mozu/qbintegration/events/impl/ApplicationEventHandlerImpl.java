@@ -16,14 +16,12 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.event.Event;
 import com.mozu.api.contracts.mzdb.EntityList;
 import com.mozu.api.contracts.mzdb.IndexedProperty;
-import com.mozu.api.contracts.sitesettings.application.Application;
 import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.ApplicationEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.EntityHelper;
 
@@ -283,7 +281,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 //					new MozuApiContext(tenantId));
 //			EntityCollection collection = entityResource.getEntities(mapName);
 //			for (JsonNode jsonNode: collection.getItems()) {
-//				entityResource.deleteEntity(EntityHelper.getTaskqueueEntityName(), jsonNode.get("enteredTime").asText());
+//				entityResource.deleteEntity(EntityHelper.getOrderEntityName(), jsonNode.get("mozuOrderNumber").asText());
 //			}
 		} catch (ApiException ae) {
 			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
