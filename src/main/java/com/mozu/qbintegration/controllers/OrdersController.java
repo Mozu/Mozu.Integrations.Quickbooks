@@ -44,7 +44,6 @@ import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
 
 /**

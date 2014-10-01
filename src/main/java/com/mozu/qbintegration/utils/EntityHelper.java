@@ -1,5 +1,9 @@
 package com.mozu.qbintegration.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.mozu.api.security.AppAuthenticator;
+
 public class EntityHelper {
 
 	public static final String CUST_ENTITY = "QB_CUSTOMER";
@@ -16,32 +20,43 @@ public class EntityHelper {
 
 	public static final String ORDERS_UPDATED_ENTITY = "QB_UPDATED_ORDERS";;
 
+	private static String nameSpace = "";
+	
+	public static String getAppNamespace(){
+		if (StringUtils.isEmpty(nameSpace)) {
+			String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
+			nameSpace = appId.substring(0, appId.indexOf('.'));
+		}
+		
+		return nameSpace;
+    }
+	
 	public static String getCustomerEntityName() {
-		return EntityHelper.CUST_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.CUST_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getProductEntityName() {
-		return EntityHelper.PRODUCT_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.PRODUCT_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getOrderEntityName() {
-		return EntityHelper.ORDERS_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.ORDERS_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getSettingEntityName() {
-		return EntityHelper.SETTINGS_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.SETTINGS_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getTaskqueueEntityName() {
-		return EntityHelper.TASKQUEUE_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.TASKQUEUE_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getOrderConflictEntityName() {
-		return EntityHelper.ORDER_CONFLICT_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.ORDER_CONFLICT_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getOrderUpdatedEntityName() {
-		return EntityHelper.ORDERS_UPDATED_ENTITY + "@" + ApplicationUtils.getAppNamespace();
+		return EntityHelper.ORDERS_UPDATED_ENTITY + "@" + getAppNamespace();
 	}
 	
 	public static String getSubnavLinksEntityName() {

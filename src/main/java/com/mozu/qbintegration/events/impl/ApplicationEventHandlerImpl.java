@@ -21,10 +21,10 @@ import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.ApplicationEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.platform.EntityListResource;
+import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
 
 @Component
@@ -41,7 +41,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	@PostConstruct
 	public void initialize() {
 		EventManager.getInstance().registerHandler(this);
-		appNamespace = ApplicationUtils.getAppNamespace();
+		appNamespace = EntityHelper.getAppNamespace();
 		logger.info("Application event handler initialized");
 	}
 
@@ -98,8 +98,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 			installOrderConflictSchema(apiContext.getTenantId());
 			installOrdersUpdatedSchema(apiContext.getTenantId());
 			if (settings != null && StringUtils.isNotEmpty(settings.getQbAccount()) && StringUtils.isNoneEmpty(settings.getQbPassword())) {
-				Application application = ApplicationUtils.setApplicationToInitialized(apiContext);
-				//addUpdateExtensionLinks(application);
+				ApplicationUtils.setApplicationToInitialized(apiContext);
 			}
 			
 		} catch (Exception e) {

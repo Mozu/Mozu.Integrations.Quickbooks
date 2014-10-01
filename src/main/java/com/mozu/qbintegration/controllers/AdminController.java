@@ -23,7 +23,8 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.tenant.Site;
 import com.mozu.api.resources.platform.TenantResource;
 import com.mozu.api.security.Crypto;
-import com.mozu.qbintegration.utils.ApplicationUtils;
+import com.mozu.base.controllers.AdminControllerHelper;
+import com.mozu.base.utils.ApplicationUtils;
 
 @Controller
 @RequestMapping({ "/", "/index" })
@@ -47,7 +48,7 @@ public class AdminController {
 			HttpServletResponse httpResponse, ModelMap modelMap)
 			throws IOException {
 
-		String body = IOUtils.toString(httpRequest.getInputStream());
+		/*String body = IOUtils.toString(httpRequest.getInputStream());
 		String msgHash = httpRequest.getParameter("messageHash");
 		String dateKey = httpRequest.getParameter("dt");
 		String tenantId = httpRequest.getParameter("tenantId");
@@ -82,10 +83,15 @@ public class AdminController {
 		} catch (Exception e) {
 			logger.warn("Validation exception: " + e.getMessage());
 			return "unauthorized";
-		}
-
+		}*/
+		
+		 AdminControllerHelper adh = new AdminControllerHelper();
+         if (!adh.securityCheck(httpRequest, httpResponse)) {
+             logger.warn("Not authorized");
+             return "unauthorized";
+         }
+        String tenantId = httpRequest.getParameter("tenantId");
 		modelMap.addAttribute("tenantId", tenantId);
-		modelMap.addAttribute("siteId", siteId);
 		return "index";
 	}
 }
