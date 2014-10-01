@@ -176,8 +176,10 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(EntityHelper.ORDERS_ENTITY);
+		entityList.setIdProperty(
+				getIndexedProperty("enteredTime", "string"));
 		entityList
-				.setIdProperty(getIndexedProperty("mozuOrderNumber", "string"));
+				.setIndexD(getIndexedProperty("mozuOrderNumber", "string"));
 		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId",
 				"string"));
 		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED,
@@ -245,8 +247,10 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 		entityList.setNameSpace(appNamespace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(EntityHelper.ORDERS_UPDATED_ENTITY);
+		entityList.setIdProperty(
+				getIndexedProperty("enteredTime", "string"));
 		entityList
-				.setIdProperty(getIndexedProperty("mozuOrderNumber", "string"));
+				.setIndexD(getIndexedProperty("mozuOrderNumber", "string"));
 		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId",
 				"string"));
 		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED, POSTED, ERRORED, UPDATED

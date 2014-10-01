@@ -39,7 +39,7 @@ function compareDetails(orderNumber) {
 	$('#ordUpdateDetails').show().fadeIn(800);
 	
 	$.ajax({
-		url : "getOrderCompareDetails",
+		url : "Orders/getOrderCompareDetails",
 		type : "GET",
 		data : {
 			"mozuOrderNumber" : orderNumber,
@@ -66,6 +66,7 @@ function saveDataToTable(data) {
 	$(data).promise().done(function() {
 		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
 		$('#compareDisplay').dataTable().fnDraw();
+		
 	});
 	
 }
@@ -75,8 +76,8 @@ function getAllProductsFromEntityList() {
 		url : "getAllPostedProducts",
 		type : "GET",
 		data : {
-			"tenantId" : $("#tenantIdHdn").text(),
-			"siteId"	: $("#siteIdHdn").text()
+			"tenantId" : $("#tenantIdHdn").val(),
+			"siteId"	: $("#siteIdHdn").val()
 		},
 		dataType : "json",		
 		success : function(data) {
@@ -146,6 +147,8 @@ var homeViewModel = function() {
     self.allProductsInQB = ko.observableArray([]);
     self.selectedProductToMap = ko.observable();
     
+    //For order update - select checkboxes
+    self.selectedOrdersToUpdate = ko.observableArray([]); // Initially checked
     
     self.showDownload = ko.observable(false);
     
@@ -166,7 +169,7 @@ var homeViewModel = function() {
     self.saveItemToQuickbooks = function() {
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(self.itemToFix),
@@ -186,7 +189,7 @@ var homeViewModel = function() {
     	
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").text() + "&siteId=" + $("#siteIdHdn").text(),
+			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
@@ -198,13 +201,14 @@ var homeViewModel = function() {
     	});
     };
     
+    //TO show in the map product dropdown
     self.getAllProductsFromQB = function() {
     	$.ajax({
     		url : "getAllProductsFromQB",
     		type : "GET",
     		data : {
-    			"tenantId" : $("#tenantIdHdn").text(),
-    			"siteId"	: $("#siteIdHdn").text()
+    			"tenantId" : $("#tenantIdHdn").val(),
+    			"siteId"	: $("#siteIdHdn").val()
     		},
     		dataType : "json",		
     		success : function(data) {
@@ -215,7 +219,43 @@ var homeViewModel = function() {
     		}
     	});
     	
-    }
+    };
+    
+    self.maintainCBStateInArray = function() {
+    	
+    };
+    
+    //To post an updated order to quickbooks
+    self.postUpdatedOrderToQB = function() {
+    	console.log(console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length));
+    	
+    	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
+    	$allCheckedUpdateBoxes.each(function(index) {
+    		self.selectedOrdersToUpdate.push($(this).val());
+    	});
+    	
+    	$allCheckedUpdateBoxes.promise().done(function() {
+    		console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
+        	$.ajax({
+        		url : "Orders/postUpdatedOrderToQB",
+        		type : "POST",
+        		data : {
+        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedOrdersToUpdate()),
+        			"tenantId" : $("#tenantIdHdn").val(),
+        			"siteId"	: $("#siteIdHdn").val()
+        		},
+        		dataType : "json",		
+        		success : function(data) {
+        			
+        		},error : function() {
+        			$("#content").hide();
+        		}
+        	});
+    		
+    	});
+    	
+    };
+    
     
 	self.save = function() {
 		//identify which is the active tab
@@ -253,17 +293,17 @@ var homeViewModel = function() {
 			type : "GET",
 			dataType : "json",
 			success : function(data) {
-				//data.qbxml has the xml string - to be sent to download
-				
+					//data.qbxml has the xml string - to be sent to download
+					
 				self.qwcFileContent(data.qbxml);
 				$("#downloadForm").submit();
-				
-			},
-			error : function() {
-			}
-		});
-	}
-	
+
+				},
+				error : function() {
+				}
+			});
+		}
+		
 	self.getVersion = function() {
 		$.ajax({
 			url : "version",
@@ -415,7 +455,9 @@ var homeViewModel = function() {
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
-		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data 
+		            		   		+ '" name="allOrdersCheckbox" value ="'+ data +'"' + 
+		            		   		' data-bind="click: maintainCBStateInArray"/>';
 		            	   }
 			            },
 			            {
@@ -483,7 +525,7 @@ var homeViewModel = function() {
 						window.homeViewModel.getVersion();
 						if (self.settings.qbAccount() != "" && self.settings.qbPassword() != "") {
 							self.showDownload(true);
-						} 
+					}
 							
 					}
 				},
@@ -560,7 +602,7 @@ $(function() {
 		}
 		
 	});
-	
+
 	
 	$(".subTabs span").click(function (e) {
         var tabElement = e.target.parentElement;

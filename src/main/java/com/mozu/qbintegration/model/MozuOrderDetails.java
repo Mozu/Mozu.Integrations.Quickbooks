@@ -3,11 +3,18 @@
  */
 package com.mozu.qbintegration.model;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Akshay
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MozuOrderDetails {
+	
+	private long enteredTime;
 	
 	/**
 	 * 
@@ -53,6 +60,25 @@ public class MozuOrderDetails {
 	 * 
 	 */
 	private String amount;
+	
+	/**
+	 * 
+	 */
+	private List<QuickBooksSavedOrderLine> savedOrderLines;
+	
+	/**
+	 * @return the enteredTime
+	 */
+	public long getEnteredTime() {
+		return enteredTime;
+	}
+
+	/**
+	 * @param enteredTime the enteredTime to set
+	 */
+	public void setEnteredTime(long enteredTime) {
+		this.enteredTime = enteredTime;
+	}
 	
 	/**
 	 * @return the amount
@@ -178,6 +204,20 @@ public class MozuOrderDetails {
 	 */
 	public void setCustomerEmail(String customerEmail) {
 		this.customerEmail = customerEmail;
+	}
+	
+	/**
+	 * @return the savedOrderLines
+	 */
+	public List<QuickBooksSavedOrderLine> getSavedOrderLines() {
+		return savedOrderLines;
+	}
+
+	/**
+	 * @param savedLines
+	 */
+	public void setSavedOrderLines(List<QuickBooksSavedOrderLine> savedLines) {
+		this.savedOrderLines = savedLines;
 	}
 
 }

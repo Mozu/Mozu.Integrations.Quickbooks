@@ -17,7 +17,7 @@
 								<table id="orderUpdatedTable" class="display">
 									<thead>
 										<tr>
-											<th><input type="checkbox" /></th>
+											<th><input type="checkbox"/></th>
 											<th><p th:text="#{label.order}"></p></th>
 											<th><p th:text="#{label.customerName}"></p></th>
 											<th><p th:text="#{label.createdDate}"></p></th>
@@ -32,6 +32,13 @@
 					</table>
 				</div>
 			</div>
+			
+			<div class="row">
+				<div class="tab-first-column">
+					<a class="button primary-action" data-bind="click: postUpdatedOrderToQB">Post Selected to Quickbooks</a>
+				</div>	
+			</div>
+			
 		</div>
 		
 		<!-- Compare div -->
@@ -62,9 +69,11 @@
 					</table>
 				</div>
 			</div>
+			
 			<div class="row">
 				<div class="tab-full-column" style="margin-top:10px;"></div>
 			</div>
+			
 		</div>
 	</div>
 </body>
