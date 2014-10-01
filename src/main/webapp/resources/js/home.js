@@ -257,30 +257,35 @@ var homeViewModel = function() {
     };
     
     
-	self.save = function() {
-		//identify which is the active tab
-		
-		var selectedTab;
-		$(".tab").each(function(index) {
-			if($(this).attr('class').indexOf(" active") > -1) {
-				selectedTab = $(this).data("tab-id");
+    /*self.generatePwd = function() {
+    	$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/config/generatePwd?tenantId=" + $("#tenantIdHdn").val(),
+			type : "POST",
+			dataType : "json",
+			data:  self.settings.qbAccount(),
+			success : function(data) {
+				self.settings.qbPassword(data.pwd);
+			},
+			error : function() {
 			}
 		});
-
-		if("generalTab" === selectedTab) {
-			$.ajax({
-				contentType: 'application/json; charset=UTF-8',
-				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
-				type : "POST",
-				dataType : "json",
-				data:  ko.mapping.toJSON(self.settings),
-				success : function(data) {
-					self.showDownload(true)
-				},
-				error : function() {
-				}
-			});
-		}
+    }*/
+    
+	self.save = function() {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
+			type : "POST",
+			dataType : "json",
+			data:  ko.mapping.toJSON(self.settings),
+			success : function(data) {
+				self.showDownload(true)
+				ko.mapping.fromJS(data, self.settings);
+			},
+			error : function() {
+			}
+		});
 		
 	};
 
@@ -523,7 +528,7 @@ var homeViewModel = function() {
 						$("#"+$("#selectedTab").val()+"Tab").click();
 					} else {
 						window.homeViewModel.getVersion();
-						if (self.settings.qbAccount() != "" && self.settings.qbPassword() != "") {
+						if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
 							self.showDownload(true);
 					}
 							
@@ -566,7 +571,6 @@ $(function() {
 	}
 
 	$.ajaxPrefilter(function(options, originalOptions, jqXHR) {
-		console.log(originalOptions);
 		$("#serverError").hide();
 		$("#progressIndicator").show();
 		jqXHR.complete(function() {

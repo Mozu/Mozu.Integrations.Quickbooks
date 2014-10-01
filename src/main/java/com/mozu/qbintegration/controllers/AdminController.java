@@ -21,9 +21,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.tenant.Site;
+import com.mozu.api.contracts.tenant.Tenant;
 import com.mozu.api.resources.platform.TenantResource;
 import com.mozu.api.security.Crypto;
-import com.mozu.qbintegration.utils.ApplicationUtils;
+import com.mozu.base.controllers.AdminControllerHelper;
+import com.mozu.base.handlers.TenantHandler;
+import com.mozu.base.utils.ApplicationUtils;
 
 @Controller
 @RequestMapping({ "/", "/index" })
@@ -45,47 +48,16 @@ public class AdminController {
 	@RequestMapping(method = RequestMethod.POST)
 	public String index(HttpServletRequest httpRequest,
 			HttpServletResponse httpResponse, ModelMap modelMap)
-			throws IOException {
-
-		String body = IOUtils.toString(httpRequest.getInputStream());
-		String msgHash = httpRequest.getParameter("messageHash");
-		String dateKey = httpRequest.getParameter("dt");
-		String tenantId = httpRequest.getParameter("tenantId");
-		TenantResource tenantResource = new TenantResource(new MozuApiContext(
-				Integer.parseInt(tenantId)));
-		Integer siteId = null;
-		try {
-			Site site = tenantResource.getTenant(Integer.parseInt(tenantId)).getSites().get(0);
-			siteId = site.getId();
-		} catch (NumberFormatException e1) {
-			logger.error("NFE while getting site id for tenant: " + tenantId + ". tenant id perhaps is not a valid Integer?", e1);
-		} catch (Exception e1) {
-			logger.error("Excption getting site id for tenant: " + tenantId + ". Perhaps no site exists for this tenant?", e1);
-		}
-
-		ApiContext apiContext = new MozuApiContext(new Integer(tenantId));
-		apiContext.setHeaderDate(dateKey);
-		apiContext.setHmacSha256(msgHash);
-
-		String decodedBody = URLDecoder.decode(body, "ISO-8859-1");
-
-		// validate request
-		try {
-			if (!Crypto.isRequestValid(apiContext, decodedBody)) {
-				logger.warn("Unauthorized request");
-				return "unauthorized";
-			}
-			httpResponse.addCookie(new Cookie(SECURITY_COOKIE,
-					ConfigurationSecurityInterceptor.encrypt(DateTime.now()
-							.toString(), sharedSecret)));
-			
-		} catch (Exception e) {
-			logger.warn("Validation exception: " + e.getMessage());
-			return "unauthorized";
-		}
-
+			throws NumberFormatException, Exception {
+		
+		 AdminControllerHelper adh = new AdminControllerHelper();
+         if (!adh.securityCheck(httpRequest, httpResponse)) {
+             logger.warn("Not authorized");
+             return "unauthorized";
+         }
+        String tenantId = httpRequest.getParameter("tenantId");
+        Tenant tenant = TenantHandler.getTenant(Integer.parseInt(tenantId)); //DO a get tenant to make sure the app has access
 		modelMap.addAttribute("tenantId", tenantId);
-		modelMap.addAttribute("siteId", siteId);
 		return "index";
 	}
 }

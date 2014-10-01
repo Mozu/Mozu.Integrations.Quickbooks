@@ -76,7 +76,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.ApplicationUtils;
+import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.utils.EntityHelper;
 
 /**

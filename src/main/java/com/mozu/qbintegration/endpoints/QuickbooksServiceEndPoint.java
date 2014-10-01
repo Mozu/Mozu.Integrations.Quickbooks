@@ -23,6 +23,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
@@ -80,6 +81,8 @@ public class QuickbooksServiceEndPoint {
 	@Autowired
 	private QueueManagerService queueManagerService;
 
+	@Autowired
+	private EncryptDecryptHandler encryptDecryptHandler;
     
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 	
@@ -125,14 +128,17 @@ public class QuickbooksServiceEndPoint {
 			throws java.rmi.RemoteException {
 		AuthenticateResponse response = new AuthenticateResponse();
 
-		Integer tenantId = Integer.parseInt(authRequest.getStrUserName().split(
-				"~")[0]);
-
+		String decryptedPwd = encryptDecryptHandler.decrypt(authRequest.getStrPassword());
+		Integer tenantId = Integer.parseInt(decryptedPwd.split("~")[0]);
+		String userName = 	decryptedPwd.split("~")[1];
+		
 		ArrayOfString arrStr = new ArrayOfString();
 		List<String> val = arrStr.getString();
 		val.add(tenantId + "~" + String.valueOf(System.currentTimeMillis())); // GUID
-
-		if (true) {
+		
+		//TODO: Add more security based on tenantId ?
+		
+		if (userName.equals(authRequest.getStrUserName())) {
 			val.add(""); // Pending work to do?
 			val.add("");
 			val.add(null);
