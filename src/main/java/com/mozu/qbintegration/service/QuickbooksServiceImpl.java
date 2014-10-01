@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -31,6 +32,7 @@ import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
+import com.mozu.api.contracts.commerceruntime.orders.OrderCollection;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
@@ -51,6 +53,7 @@ import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
+import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
 import com.mozu.qbintegration.model.SubnavLink;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
@@ -69,6 +72,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineAdd;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.tasks.WorkTask;
 import com.mozu.qbintegration.utils.ApplicationUtils;
@@ -218,9 +223,58 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 	@Override
-	public String getQBOrderUpdateXML(final Order order, final CustomerAccount customerAccount) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, 
+			List<String> itemListIDs, MozuOrderDetails postedOrder) {
+		QBXML qbxml = new QBXML();
+		QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
+		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
+		com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRqType salesOrderModRqType = 
+				new com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRqType();
+		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
+				.add(salesOrderModRqType);
+		qbxmlMsgsRq.setOnError("stopOnError");
+		SalesOrderMod salesOrdermod = new SalesOrderMod();
+		salesOrderModRqType.setRequestID(singleOrder.getId());
+		
+		salesOrderModRqType.setSalesOrderMod(salesOrdermod);
+		CustomerRef customerRef = new CustomerRef();
+		customerRef.setListID(customerQBListID);
+		salesOrdermod.setCustomerRef(customerRef);
+		salesOrdermod.setTxnID(postedOrder.getQuickbooksOrderListId());
+		List<OrderItem> items = singleOrder.getItems();
+		ItemRef itemRef = null;
+		SalesOrderLineMod salesOrderLineMod = null;
+
+		NumberFormat numberFormat = new DecimalFormat("#.00");
+		int counter = 0;
+		
+		List<QuickBooksSavedOrderLine> orderlines = postedOrder.getSavedOrderLines();
+		for (OrderItem item : items) {
+			itemRef = new ItemRef();
+			
+			itemRef.setListID(itemListIDs.get(counter));
+			salesOrderLineMod = new SalesOrderLineMod();
+			
+			if(!orderlines.isEmpty()) {
+				for(QuickBooksSavedOrderLine singleLine: orderlines) {
+					if(singleLine.getProductCode().equals(item.getProduct().getProductCode())) {
+						salesOrderLineMod.setTxnLineID(singleLine.getQbLineItemTxnID());
+					}
+				}
+			}
+			
+			salesOrderLineMod.setAmount(numberFormat.format(item
+					.getDiscountedTotal()));
+			salesOrderLineMod.setItemRef(itemRef);
+			// salesOrderLineAdd.setRatePercent("7.5"); // (getItemtaxTotal *
+			// 100)/
+			// itemTaxableTotal
+			salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
+			
+			counter++;
+		}
+
+		return getMarshalledValue(qbxml);
 	}
 
 	@Override
@@ -635,6 +689,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			ex.printStackTrace();
 		}
 		return order;
+		
 	}
 
 	@Override
@@ -691,6 +746,33 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		sOrderAddTask.setQbTaskRequest(getQBOrderSaveXML(order, custQBListID,
 						itemListIds));
 		queueManagerService.saveTask(sOrderAddTask, tenantId);
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.mozu.qbintegration.service.QuickbooksService#addOrderAddTaskToQueue(java.lang.String, java.lang.Integer, java.lang.Integer, com.mozu.api.contracts.customer.CustomerAccount, com.mozu.api.contracts.commerceruntime.orders.Order, java.util.List)
+	 */
+	@Override
+	public void addOrderUpdateTaskToQueue(String orderId, Integer tenantId,
+			Integer siteId, CustomerAccount custAcct, Order order,
+			List<String> itemListIds, MozuOrderDetails postedOrder) {
+		WorkTask sOrderUpdateTask = new WorkTask();
+		// Just to make it unique
+		sOrderUpdateTask
+				.setEnteredTime(System.currentTimeMillis());
+		sOrderUpdateTask.setTaskId(orderId);
+		sOrderUpdateTask.setQbTaskStatus("ENTERED");
+		sOrderUpdateTask.setTenantId(tenantId);
+		sOrderUpdateTask.setSiteId(siteId);
+		sOrderUpdateTask.setQbTaskType("ORDER_UPDATE");
+		// Get customer from entity list - by this time the user
+		// to be present in entity list.
+		// TODO handle error when customer is not found for any
+		// reason.
+		String custQBListID = getCustFromEntityList(
+				custAcct, tenantId, siteId);
+		sOrderUpdateTask.setQbTaskRequest(getQBOrderUpdateXML(order, custQBListID,
+						itemListIds, postedOrder));
+		queueManagerService.saveTask(sOrderUpdateTask, tenantId);
 	}
 
 	/* (non-Javadoc)
@@ -793,6 +875,20 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		taskNode.put("conflictReason", orderDetails.getConflictReason());
 		taskNode.put("amount", orderDetails.getAmount());
 		
+		//Also save item txn ids returned from qb if any
+		try {
+			if(orderDetails.getSavedOrderLines() != null) {
+				List<QuickBooksSavedOrderLine> savedOrderLines = orderDetails.getSavedOrderLines();
+				taskNode.put("savedOrderLines", mapper.writeValueAsString(savedOrderLines));
+			} else {
+				taskNode.put("savedOrderLines", mapper.writeValueAsString(mapper.createArrayNode()));
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			logger.error("Error saving qb item tx ids for order id: " + 
+					orderDetails.getMozuOrderNumber() + ", tenant: " + tenantId);
+		}
+		
 		return taskNode;
 	}
 	
@@ -817,33 +913,10 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		EntityCollection orderCollection = null;
 		
 		try {
-			orderCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "mozuOrderNumber desc", null);
-			MozuOrderDetails singleOrdDetail = null;
+			orderCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "enteredTime desc", null);
 			if (null != orderCollection) {
 				for (JsonNode singleOrder : orderCollection.getItems()) {
-					singleOrdDetail = new MozuOrderDetails();
-					singleOrdDetail.setMozuOrderId(singleOrder.get(
-							"mozuOrderId") == null? "" : singleOrder.get(
-									"mozuOrderId").asText());
-					singleOrdDetail.setMozuOrderNumber(singleOrder.get(
-							"mozuOrderNumber").asText());
-					singleOrdDetail.setQuickbooksOrderListId(singleOrder.get(
-							"quickbooksOrderListId").asText());
-					singleOrdDetail.setOrderStatus(singleOrder.get("orderStatus")
-							.asText());
-					singleOrdDetail.setCustomerEmail(singleOrder.get(
-							"customerEmail").asText());
-					singleOrdDetail.setOrderDate(singleOrder.get(
-							"orderDate").asText());
-					singleOrdDetail.setOrderUpdatedDate(singleOrder.get(
-							"orderUpdatedDate").asText());
-					singleOrdDetail.setConflictReason(singleOrder.get(
-							"conflictReason").asText());
-					singleOrdDetail.setAmount(singleOrder.get(
-							"amount") == null? "0.00" : singleOrder.get(
-									"amount").asText());
-					
-					mozuOrders.add(singleOrdDetail);
+					mozuOrders.add(mapper.readValue(singleOrder.toString(), MozuOrderDetails.class));
 				}
 			}
 		} catch (Exception e) {
@@ -1130,6 +1203,52 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		logger.debug("Retrieved entity: " + rtnEntry);
 		logger.debug("Returning");
+	}
+
+	@Override
+	public void updateOrdersInQuickbooks(List<String> orderNumberList,
+			Integer tenantId, Integer siteId) {
+		
+		for(String mozuOrderNum: orderNumberList) {
+			
+			//1. Get the updated data from mozu for the order - data has ben changed
+			
+			OrderResource resource = new OrderResource(new MozuApiContext(tenantId, siteId));
+			Order updatedOrder = null;
+			try {
+				OrderCollection collection = resource.getOrders(0, 10, null, "orderNumber eq " + mozuOrderNum, null, null, null);
+				updatedOrder = collection.getItems().get(0);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			CustomerAccount custAcct = getMozuCustomer(updatedOrder,
+					tenantId, siteId);
+			
+			List<String> itemListIds = new ArrayList<String>();
+			for (OrderItem item : updatedOrder.getItems()) {
+				String itemListId = getProductFromEntityList(
+						item, tenantId, siteId);
+				itemListIds.add(itemListId);
+			}
+			
+			MozuOrderDetails mozuOrderDetails = new MozuOrderDetails();
+			mozuOrderDetails.setOrderStatus("POSTED");
+			mozuOrderDetails.setMozuOrderNumber(mozuOrderNum);
+			
+			List<MozuOrderDetails> postedOrders = 
+					getMozuOrderDetails(tenantId, mozuOrderDetails, EntityHelper.getOrderEntityName());
+			
+			MozuOrderDetails postedOrder = postedOrders.get(0);
+			
+			addOrderUpdateTaskToQueue(updatedOrder.getId(), tenantId, siteId, custAcct, 
+					updatedOrder, itemListIds, postedOrder);
+			
+			logger.debug("Slotted an order update task for mozu order number: " + mozuOrderNum);
+			
+		}
+		
 	}
 
 }
