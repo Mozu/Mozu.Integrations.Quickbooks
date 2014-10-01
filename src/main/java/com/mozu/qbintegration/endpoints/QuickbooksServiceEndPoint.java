@@ -531,40 +531,36 @@ public class QuickbooksServiceEndPoint {
 	private MozuOrderDetails populateMozuOrderDetails(Order order, String status, 
 			SalesOrderAddRsType salesOrderResponse, CustomerAccount custAcct) {
 		String qbTransactionId = null;
-		SalesOrderLineGroupRet salesOrderLineGroupRet = null;
+		List<Object> salesOrderLineRet = null;
 		
 		if(salesOrderResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineGroupRet = 
-					(SalesOrderLineGroupRet) salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet().get(0);
+			salesOrderLineRet = salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
 		}
 		
-		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, salesOrderLineGroupRet);
+		return populateOtherDetails(order, status, custAcct, qbTransactionId, salesOrderLineRet);
 	}
 	
 	private MozuOrderDetails populateMozuOrderUpdateDetails(Order order, String status, 
 			SalesOrderModRsType salesOrderModResponse, CustomerAccount custAcct) {
 		
 		String qbTransactionId = null;
-		SalesOrderLineGroupRet salesOrderLineGroupRet = null;
+		List<Object> salesOrderLineRet = null;
 		
 		if(salesOrderModResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderModResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineGroupRet = 
-					(SalesOrderLineGroupRet) salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet().get(0);
+			salesOrderLineRet = salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
 		}
 		
-		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, salesOrderLineGroupRet);
+		return populateOtherDetails(order, status, custAcct, qbTransactionId, salesOrderLineRet);
 	}
 	
 	private MozuOrderDetails populateOtherDetails(Order order, String status,
-			CustomerAccount custAcct, String qbTransactionId, SalesOrderLineGroupRet salesOrderLineGroupRet) {
+			CustomerAccount custAcct, String qbTransactionId, List<Object> salesOrderLineRet) {
 		MozuOrderDetails orderDetails = new MozuOrderDetails();
 		orderDetails.setEnteredTime(System.currentTimeMillis());
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
@@ -584,13 +580,18 @@ public class QuickbooksServiceEndPoint {
 		//Set item ids
 		List<QuickBooksSavedOrderLine> savedLines = new ArrayList<QuickBooksSavedOrderLine>();
 		QuickBooksSavedOrderLine savedOrderLine = null;
-		if(salesOrderLineGroupRet != null) {
-			for(SalesOrderLineRet returnedItem: salesOrderLineGroupRet.getSalesOrderLineRet()) {
-				savedOrderLine = new QuickBooksSavedOrderLine();
-				savedOrderLine.setProductCode(returnedItem.getItemRef().getListID());
-				savedOrderLine.setQbLineItemTxnID(returnedItem.getTxnLineID());
-				savedLines.add(savedOrderLine);
+		SalesOrderLineRet orderLineRet = null;
+		if(salesOrderLineRet != null) {
+			for(OrderItem item: order.getItems()) {
+				for(Object returnedItem: salesOrderLineRet) {
+					orderLineRet = (SalesOrderLineRet) returnedItem;
+					savedOrderLine = new QuickBooksSavedOrderLine();
+					savedOrderLine.setProductCode(orderLineRet.getItemRef().getFullName());
+					savedOrderLine.setQbLineItemTxnID(orderLineRet.getTxnLineID());
+					savedLines.add(savedOrderLine);
+				}
 			}
+
 			orderDetails.setSavedOrderLines(savedLines);
 		}
 		

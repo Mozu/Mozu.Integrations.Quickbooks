@@ -13,6 +13,8 @@ public class QuickBooksSavedOrderLine {
 	
 	private String qbLineItemTxnID;
 
+	private Integer quantity;
+
 	/**
 	 * @return the productCode
 	 */
@@ -41,4 +43,13 @@ public class QuickBooksSavedOrderLine {
 		this.qbLineItemTxnID = qbLineItemTxnID;
 	}
 
+	public Integer getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+
+	
 }

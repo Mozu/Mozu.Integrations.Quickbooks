@@ -211,6 +211,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			salesOrderLineAdd.setAmount(numberFormat.format(item
 					.getDiscountedTotal()));
 			salesOrderLineAdd.setItemRef(itemRef);
+			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
+			
 			// salesOrderLineAdd.setRatePercent("7.5"); // (getItemtaxTotal *
 			// 100)/
 			// itemTaxableTotal
