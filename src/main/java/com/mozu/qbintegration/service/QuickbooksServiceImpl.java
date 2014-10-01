@@ -3,6 +3,7 @@
  */
 package com.mozu.qbintegration.service;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -10,6 +11,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -23,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -208,8 +212,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			itemRef = new ItemRef();
 			itemRef.setListID(itemListIDs.get(counter));
 			salesOrderLineAdd = new SalesOrderLineAdd();
-			salesOrderLineAdd.setAmount(numberFormat.format(item
-					.getDiscountedTotal()));
+			salesOrderLineAdd.setAmount(numberFormat.format(item.getDiscountedTotal()));
 			salesOrderLineAdd.setItemRef(itemRef);
 			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
 			
@@ -242,22 +245,53 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
 		salesOrdermod.setCustomerRef(customerRef);
+		
 		salesOrdermod.setTxnID(postedOrder.getQuickbooksOrderListId());
+		salesOrdermod.setEditSequence(postedOrder.getEditSequence());
+		
 		List<OrderItem> items = singleOrder.getItems();
 		ItemRef itemRef = null;
 		SalesOrderLineMod salesOrderLineMod = null;
 
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		int counter = 0;
+
+		List<QuickBooksSavedOrderLine> orderlines = null;
 		
-		List<QuickBooksSavedOrderLine> orderlines = postedOrder.getSavedOrderLines();
+		if(!"".equals(postedOrder.getSavedOrderLines())) {
+			try {
+				Object converted = mapper.readValue(postedOrder.getSavedOrderLines(), Object.class);
+				
+				List<LinkedHashMap<String, String>> values = (List<LinkedHashMap<String, String>>) converted;
+				orderlines = new ArrayList<QuickBooksSavedOrderLine>();
+				
+				QuickBooksSavedOrderLine booksSavedOrderLine = null;
+				for(LinkedHashMap<String, String> singleVal: values) {
+					booksSavedOrderLine = new QuickBooksSavedOrderLine();
+					booksSavedOrderLine.setProductCode(singleVal.get("productCode"));
+					booksSavedOrderLine.setQbLineItemTxnID("-1");
+					orderlines.add(booksSavedOrderLine);
+				}
+				
+			} catch (JsonParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		int counter = 0;
 		for (OrderItem item : items) {
 			itemRef = new ItemRef();
 			
 			itemRef.setListID(itemListIDs.get(counter));
 			salesOrderLineMod = new SalesOrderLineMod();
 			
-			if(!orderlines.isEmpty()) {
+			if(orderlines != null) {
 				for(QuickBooksSavedOrderLine singleLine: orderlines) {
 					if(singleLine.getProductCode().equals(item.getProduct().getProductCode())) {
 						salesOrderLineMod.setTxnLineID(singleLine.getQbLineItemTxnID());
@@ -855,7 +889,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			e.printStackTrace();
 			logger.error("Error saving order details for tenant id: " + tenantId);
 		}
-		logger.debug("Retrieved entity: " + rtnEntry);
+		logger.debug("Saved or updated order in entity list: " + rtnEntry);
 		logger.debug("Returning");
 		
 	}
@@ -863,7 +897,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	private JsonNode getOrderNode(MozuOrderDetails orderDetails, Integer tenantId, Integer siteId, CustomerAccount custAccount) {
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode taskNode = nodeFactory.objectNode();
-
+		taskNode.put("enteredTime", orderDetails.getEnteredTime());
 		taskNode.put("mozuOrderNumber", orderDetails.getMozuOrderNumber());
 		taskNode.put("mozuOrderId", orderDetails.getMozuOrderNumber());
 		taskNode.put("quickbooksOrderListId", orderDetails.getQuickbooksOrderListId() == null ? 
@@ -876,11 +910,12 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		taskNode.put("orderUpdatedDate", orderDetails.getOrderUpdatedDate());
 		taskNode.put("conflictReason", orderDetails.getConflictReason());
 		taskNode.put("amount", orderDetails.getAmount());
+		taskNode.put("editSequence", orderDetails.getEditSequence());
 		
 		//Also save item txn ids returned from qb if any
 		try {
-			if(orderDetails.getSavedOrderLines() != null) {
-				List<QuickBooksSavedOrderLine> savedOrderLines = orderDetails.getSavedOrderLines();
+			if(orderDetails.getSavedOrderLinesList() != null) {
+				List<QuickBooksSavedOrderLine> savedOrderLines = orderDetails.getSavedOrderLinesList();
 				taskNode.put("savedOrderLines", mapper.writeValueAsString(savedOrderLines));
 			} else {
 				taskNode.put("savedOrderLines", mapper.writeValueAsString(mapper.createArrayNode()));
@@ -896,7 +931,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	
 	@Override
 	public List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId, 
-			MozuOrderDetails mozuOrderDetails, String mapName) {
+			MozuOrderDetails mozuOrderDetails, String mapName) throws Exception {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
@@ -922,8 +957,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("Error saving settings for tenant id: " + tenantId);
+			throw e;
 		}
 		return mozuOrders;
 		
@@ -1005,7 +1040,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,
-			String mozuOrderNumber) {
+			String mozuOrderNumber) throws Exception {
 		
 		//Step 1: Get original order from qb_orders EL
 		MozuOrderDetails criteria = new MozuOrderDetails();
@@ -1199,7 +1234,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 						product.getProductCode());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("Error saving product in entity list during refresh all: "
 					+ product.getProductCode());
 		}
@@ -1209,7 +1243,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public void updateOrdersInQuickbooks(List<String> orderNumberList,
-			Integer tenantId, Integer siteId) {
+			Integer tenantId, Integer siteId) throws Exception {
 		
 		for(String mozuOrderNum: orderNumberList) {
 			
@@ -1222,7 +1256,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				updatedOrder = collection.getItems().get(0);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 			
 			CustomerAccount custAcct = getMozuCustomer(updatedOrder,
@@ -1251,6 +1285,21 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			
 		}
 		
+	}
+	
+	@Override
+	public boolean isOrderProcessed(Integer tenantId, Integer siteId, Integer orderNumber) throws Exception {
+		
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+		try {
+			EntityCollection collection = entityResource.getEntities(EntityHelper.getOrderEntityName(), 1, 0, "mozuOrderNumber eq "+orderNumber, null, null);
+			return collection.getItems().size() > 0;
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		
+		return false;
 	}
 
 }

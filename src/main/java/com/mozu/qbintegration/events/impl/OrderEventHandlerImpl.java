@@ -80,7 +80,7 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 						final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
 						quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
 					} catch (Exception e) {
-						e.printStackTrace();
+						logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
 					}
 					
 				}
@@ -121,24 +121,30 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 						if(order.getAcceptedDate() != null) { //log only if order has been previously submitted (accepted)
 							CustomerAccountResource accountResource = new CustomerAccountResource(apiContext);
 							final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
-							MozuOrderDetails mozuOrderDetails = populateOrderDetails(order, orderingCust.getEmailAddress());
 							
-							//Check if already present in EL. If yes update else, insert
-							//Step 2: Get updated order from qb_updated_orders EL
-							MozuOrderDetails criteriaForUpDate = new MozuOrderDetails();
-							criteriaForUpDate.setOrderStatus("UPDATED");
-							criteriaForUpDate.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+							//Check if order has been processed, if not put in process Queue
+							boolean isProcessed = quickbooksService.isOrderProcessed(tenantId, siteId, order.getOrderNumber());
 							
-							//1. Get from EL the order
-							List<MozuOrderDetails> updatedOrders = quickbooksService.getMozuOrderDetails(tenantId, 
-									criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
-							String mapName = EntityHelper.getOrderUpdatedEntityName();
-							if(updatedOrders.isEmpty()) {
-								quickbooksService.saveOrderInEntityList(mozuOrderDetails, orderingCust, 
-										mapName , tenantId, siteId);
+							if (isProcessed) {
+								MozuOrderDetails mozuOrderDetails = populateOrderDetails(order, orderingCust.getEmailAddress());
+								
+								//Check if already present in EL. If yes update else, insert
+								//Step 2: Get updated order from qb_updated_orders EL
+								MozuOrderDetails criteriaForUpDate = new MozuOrderDetails();
+								criteriaForUpDate.setOrderStatus("UPDATED");
+								criteriaForUpDate.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+								
+								//1. Get from EL the order
+								List<MozuOrderDetails> updatedOrders = quickbooksService.getMozuOrderDetails(tenantId, 
+										criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
+								String mapName = EntityHelper.getOrderUpdatedEntityName();
+								if(updatedOrders.isEmpty()) {
+									quickbooksService.saveOrderInEntityList(mozuOrderDetails, orderingCust, mapName , tenantId, siteId);
+								} else {
+									quickbooksService.updateOrderInEntityList(mozuOrderDetails, orderingCust,mapName, tenantId, siteId);
+								}
 							} else {
-								quickbooksService.updateOrderInEntityList(mozuOrderDetails, orderingCust,
-										mapName, tenantId, siteId);
+								quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
 							}
 						}
 								
@@ -150,6 +156,7 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 
 				private MozuOrderDetails populateOrderDetails(final Order order, String emailAddress) {
 					MozuOrderDetails orderDetails = new MozuOrderDetails();
+					orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 					orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
 					orderDetails.setMozuOrderId(order.getId());
 					orderDetails.setQuickbooksOrderListId("");
