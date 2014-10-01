@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MozuOrderDetails {
 	
-	private long enteredTime;
+	private String enteredTime;
 	
 	/**
 	 * 
@@ -64,19 +64,29 @@ public class MozuOrderDetails {
 	/**
 	 * 
 	 */
-	private List<QuickBooksSavedOrderLine> savedOrderLines;
+	private List<QuickBooksSavedOrderLine> savedOrderLinesList;
+	
+	/**
+	 * 
+	 */
+	private String savedOrderLines;
+	
+	/**
+	 * 
+	 */
+	private String editSequence;
 	
 	/**
 	 * @return the enteredTime
 	 */
-	public long getEnteredTime() {
+	public String getEnteredTime() {
 		return enteredTime;
 	}
 
 	/**
 	 * @param enteredTime the enteredTime to set
 	 */
-	public void setEnteredTime(long enteredTime) {
+	public void setEnteredTime(String enteredTime) {
 		this.enteredTime = enteredTime;
 	}
 	
@@ -207,18 +217,46 @@ public class MozuOrderDetails {
 	}
 	
 	/**
+	 * @return the savedOrderLinesList
+	 */
+	public List<QuickBooksSavedOrderLine> getSavedOrderLinesList() {
+		return savedOrderLinesList;
+	}
+
+	/**
+	 * @param savedOrderLinesList the savedOrderLinesList to set
+	 */
+	public void setSavedOrderLinesList(
+			List<QuickBooksSavedOrderLine> savedOrderLinesList) {
+		this.savedOrderLinesList = savedOrderLinesList;
+	}
+
+	/**
 	 * @return the savedOrderLines
 	 */
-	public List<QuickBooksSavedOrderLine> getSavedOrderLines() {
+	public String getSavedOrderLines() {
 		return savedOrderLines;
 	}
 
 	/**
-	 * @param savedLines
+	 * @param savedOrderLines the savedOrderLines to set
 	 */
-	public void setSavedOrderLines(List<QuickBooksSavedOrderLine> savedLines) {
-		this.savedOrderLines = savedLines;
+	public void setSavedOrderLines(String savedOrderLines) {
+		this.savedOrderLines = savedOrderLines;
 	}
 
+	/**
+	 * @return the editSequence
+	 */
+	public String getEditSequence() {
+		return editSequence;
+	}
+
+	/**
+	 * @param editSequence the editSequence to set
+	 */
+	public void setEditSequence(String editSequence) {
+		this.editSequence = editSequence;
+	}
 }
 
