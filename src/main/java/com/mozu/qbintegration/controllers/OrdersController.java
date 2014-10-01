@@ -107,7 +107,7 @@ public class OrdersController {
 	public @ResponseBody
 	String getPostedOrders(HttpServletRequest httpRequest, ModelMap model, @RequestParam(value = "iDisplayStart") String iDisplayStart,
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
-			@RequestParam(value = "sSearch") String sSearch) {
+			@RequestParam(value = "sSearch") String sSearch) throws Exception {
 
 		final Integer tenantId = Integer.parseInt(httpRequest
 				.getParameter("tenantId"));
@@ -139,7 +139,7 @@ public class OrdersController {
 	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "iDisplayStart") String iDisplayStart,
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
-			@RequestParam(value = "sSearch") String sSearch) {
+			@RequestParam(value = "sSearch") String sSearch) throws Exception {
 
 		final Integer tenantId = Integer.parseInt(httpRequest
 				.getParameter("tenantId"));
@@ -196,6 +196,7 @@ public class OrdersController {
 	 * @param tenantId
 	 * @param siteId
 	 * @return
+	 * @throws Exception 
 	 */
 	@RequestMapping(value = "/getUpdatedOrders", method = RequestMethod.GET)
 	public @ResponseBody
@@ -204,7 +205,7 @@ public class OrdersController {
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
 			@RequestParam(value = "sSearch") String sSearch,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {	
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 		
 		MozuOrderDetails criteria = new MozuOrderDetails();
 		criteria.setOrderStatus("UPDATED");
@@ -221,8 +222,8 @@ public class OrdersController {
 		try {
 			value = mapper.writeValueAsString(orderJsonObject);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			value = "";
+			logger.error(e.getMessage(), e);
+			throw e;
 		}
 		return value;
 	}
@@ -232,7 +233,7 @@ public class OrdersController {
 	String getOrderCompareDetails(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {	
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 
 		List<OrderCompareDetail> compareDetails = 
 				quickbooksService.getOrderCompareDetails(tenantId, mozuOrderNumber);
@@ -240,9 +241,9 @@ public class OrdersController {
 		String value = null;
 		try {
 			value = mapper.writeValueAsString(compareDetails);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			value = "";
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw e;
 		}
 		return value;
 	}
@@ -252,7 +253,7 @@ public class OrdersController {
 	String postUpdatedOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {	
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 
 		ArrayNode ordersNode = null;
 		try {
@@ -266,13 +267,10 @@ public class OrdersController {
 			
 			quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
 			
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw e;
+		} 
 		logger.debug("" + ordersNode.size());
 		
 		return "Selected orders have been successfully updated in Quickbooks.";

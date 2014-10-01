@@ -51,8 +51,7 @@ public class ApplicationEventHandlerImpl implements ApplicationEventHandler {
 	@Override
 	public EventHandlerStatus enabled(ApiContext apiContext, Event event) {
 		logger.debug("Application enabled event");
-		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
-		return status;
+		return enableApplication(apiContext);
 	}
 
 	@Override
