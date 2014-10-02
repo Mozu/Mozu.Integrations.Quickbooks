@@ -335,4 +335,12 @@ public interface QuickbooksService {
 	 * @throws Exception 
 	 */
 	boolean isOrderProcessed(Integer tenantId, Integer siteId, Integer orderNumber) throws Exception;
+
+	/**
+	 * @param orderNumberList
+	 * @param tenantId
+	 * @param siteId
+	 */
+	void updateConflictOrdersInQuickbooks(List<String> orderNumberList,
+			Integer tenantId, Integer siteId);
 }

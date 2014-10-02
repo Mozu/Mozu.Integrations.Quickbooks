@@ -255,25 +255,46 @@ public class OrdersController {
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 
+		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		logger.debug("" + orderNumberList.size());
+		
+		quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		
+		return "Selected orders have been successfully updated in Quickbooks.";
+	}
+	
+	private List<String> getMozuOrderNumbers(String mozuOrderNumbers) throws Exception {
 		ArrayNode ordersNode = null;
+		List<String> orderNumberList = new ArrayList<String>();
 		try {
 			ordersNode = (ArrayNode) mapper.readTree(mozuOrderNumbers);
 			Iterator<JsonNode> orderNums = ordersNode.elements();
-			List<String> orderNumberList = new ArrayList<String>();
+			
 			while (orderNums.hasNext()) {
 				JsonNode numNode = orderNums.next();
 				orderNumberList.add(numNode.asText());
 			}
 			
-			quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
-			
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw e;
 		} 
-		logger.debug("" + ordersNode.size());
+		return orderNumberList; 
+	}
+
+	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
+	public @ResponseBody
+	String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 		
-		return "Selected orders have been successfully updated in Quickbooks.";
+		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		logger.debug("" + orderNumberList.size());
+		
+		quickbooksService.updateConflictOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
+		
 	}
 	
 }

@@ -147,8 +147,11 @@ var homeViewModel = function() {
     self.allProductsInQB = ko.observableArray([]);
     self.selectedProductToMap = ko.observable();
     
+    //For order conflict - select checkboxes
+    self.selectedConflictOrders = ko.observableArray([]);
+    	
     //For order update - select checkboxes
-    self.selectedOrdersToUpdate = ko.observableArray([]); // Initially checked
+    self.selectedOrdersToUpdate = ko.observableArray([]);
     
     self.showDownload = ko.observable(false);
     
@@ -225,9 +228,45 @@ var homeViewModel = function() {
     	
     };
     
+    // To Post a Retry for an Order in CONFLICT status
+    self.postRetryOrderToQB = function() {
+    	
+    	//Clear the checkboxes array
+		self.selectedConflictOrders.removeAll();
+		
+    	console.log($('input:checkbox[name=allOrderConflictCheckbox]:checked').length);
+    	var $allCheckedConflictBoxes = $('input:checkbox[name=allOrderConflictCheckbox]:checked');
+    	$allCheckedConflictBoxes.each(function(index) {
+    		self.selectedConflictOrders.push($(this).val());
+    	});
+    	
+    	$allCheckedConflictBoxes.promise().done(function() {
+    		console.log(ko.mapping.toJSON(self.selectedConflictOrders()));
+    		$.ajax({
+        		url : "Orders/postConflictOrderToQB",
+        		type : "POST",
+        		data : {
+        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedConflictOrders()),
+        			"tenantId" : $("#tenantIdHdn").val(),
+        			"siteId"	: $("#siteIdHdn").val()
+        		},
+        		dataType : "json",		
+        		success : function(data) {
+        			console.log(data);
+        		},error : function() {
+        			$("#content").hide();
+        		}
+        	});
+    	});
+    };
+    
     //To post an updated order to quickbooks
     self.postUpdatedOrderToQB = function() {
-    	console.log(console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length));
+    	
+    	//Clear the checkboxes array
+		self.selectedOrdersToUpdate.removeAll();
+		
+    	console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length);
     	
     	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
     	$allCheckedUpdateBoxes.each(function(index) {
@@ -392,7 +431,7 @@ var homeViewModel = function() {
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
-		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data + '" name="allOrdersCheckbox" value ="'+ data +'" />';
+		            		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" />';
 			            }
 			    },
 			    {

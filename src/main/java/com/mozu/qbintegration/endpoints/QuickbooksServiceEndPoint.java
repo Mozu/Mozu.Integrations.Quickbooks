@@ -172,7 +172,7 @@ public class QuickbooksServiceEndPoint {
 			response.setSendRequestXMLResult(workTask.getQbTaskRequest());
 		} else {
 			response.setSendRequestXMLResult(null); // nothing to do - come
-														// back after 5 sconds
+														// back after 5 seconds
 		}
 		return response;
 	}
@@ -473,7 +473,7 @@ public class QuickbooksServiceEndPoint {
 				qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), 
 						tenantId, workTask.getSiteId());
 				
-				//UPdated order in updated EL to POSTED -- that screen picks up orders in UPDATED status so 
+				//Updated order in updated EL to POSTED -- that screen picks up orders in UPDATED status so 
 				//this one will stop showing up.
 				qbService.updateOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderUpdatedEntityName(), 
 						tenantId, workTask.getSiteId());
@@ -517,16 +517,16 @@ public class QuickbooksServiceEndPoint {
 		String qbTransactionId = null;
 		List<Object> salesOrderLineRet = null;
 		
+		String editSequence = null;
 		if(salesOrderResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderResponse.getSalesOrderRet().getTxnID();
 			salesOrderLineRet = 
 					salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
+			//Set the edit sequence to be used while updating
+			editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
 		}
-		
-		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
 		
 		return populateOtherDetails(order, status, 
 				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
@@ -538,15 +538,16 @@ public class QuickbooksServiceEndPoint {
 		String qbTransactionId = null;
 		List<Object> salesOrderLineRet = null;
 		
+		//Set the edit sequence to be used while updating
+		String editSequence = null;
 		if(salesOrderModResponse == null) {
 			qbTransactionId = "";
 		} else {
 			qbTransactionId = salesOrderModResponse.getSalesOrderRet().getTxnID();
 			salesOrderLineRet = 
 					salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
+			editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
 		}
-		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
 		
 		return populateOtherDetails(order, status, 
 				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
@@ -589,7 +590,9 @@ public class QuickbooksServiceEndPoint {
 		}
 		
 		//Set the edit sequence
-		orderDetails.setEditSequence(editSequence);
+		if(editSequence != null) {
+			orderDetails.setEditSequence(editSequence);
+		}
 		
 		return orderDetails;
 		
