@@ -22,7 +22,9 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
+import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
@@ -67,8 +69,7 @@ import com.mozu.quickbooks.generated.ServerVersionResponse;
 @Endpoint
 public class QuickbooksServiceEndPoint {
 
-	private static final Log logger = LogFactory
-			.getLog(QuickbooksServiceEndPoint.class);
+	private static final Log logger = LogFactory.getLog(QuickbooksServiceEndPoint.class);
 
     @Resource
     private WebServiceContext context;
@@ -81,7 +82,13 @@ public class QuickbooksServiceEndPoint {
 
 	@Autowired
 	private EncryptDecryptHandler encryptDecryptHandler;
+	
+	@Autowired
+	private OrderHandler orderHandler;
     
+	@Autowired
+	CustomerHandler customerHandler;
+	
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 	
 	}
@@ -179,8 +186,7 @@ public class QuickbooksServiceEndPoint {
 
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "receiveResponseXML")
 	@ResponsePayload
-	public ReceiveResponseXMLResponse receiveResponseXML(
-			ReceiveResponseXML responseXML) throws java.rmi.RemoteException {
+	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 		logger.debug(responseXML.getMessage());
 
 		// Get the tenantID
@@ -213,10 +219,8 @@ public class QuickbooksServiceEndPoint {
 						.get(0);
 
 				String orderId = workTask.getTaskId(); // this gets the order id
-				Order order = qbService.getMozuOrder(orderId, tenantId,
-						workTask.getSiteId());
-				CustomerAccount custAcct = qbService.getMozuCustomer(order,
-						tenantId, workTask.getSiteId());
+				Order order = orderHandler.getOrder(orderId, tenantId,workTask.getSiteId());
+				CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 
 				if ("warn".equalsIgnoreCase(custQueryResponse
 						.getStatusSeverity())
@@ -268,12 +272,10 @@ public class QuickbooksServiceEndPoint {
 				String customerListId = custAddResponse.getCustomerRet()
 						.getListID();
 				String orderId = workTask.getTaskId(); // this gets the order id
-				Order order = qbService.getMozuOrder(orderId, tenantId,
-						workTask.getSiteId());
-				CustomerAccount custAcct = qbService.getMozuCustomer(order,
-						tenantId, workTask.getSiteId());
-				qbService.saveCustInEntityList(custAcct, customerListId,
-						tenantId, workTask.getSiteId());
+				Order order = orderHandler.getOrder(orderId, tenantId,workTask.getSiteId());
+				
+				CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
+				qbService.saveCustInEntityList(custAcct, customerListId,tenantId, workTask.getSiteId());
 
 				// Now create item query tasks for all items
 				boolean allItemsInEntityList = true;
@@ -315,29 +317,25 @@ public class QuickbooksServiceEndPoint {
 					// TODO this is error scenario. So hold on.
 					//Log the not found product in error conflict 
 					String orderId = workTask.getTaskId(); // this gets the order id
-					Order order = qbService.getMozuOrder(orderId, tenantId,
-							workTask.getSiteId());
-					CustomerAccount custAcct = qbService.getMozuCustomer(order,
-							tenantId, workTask.getSiteId());
-					MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
-					qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
+					//Order order = orderHandler.getOrder(orderId, tenantId,workTask.getSiteId());
+					//CustomerAccount custAcct = qbService.getMozuCustomer(order,tenantId, workTask.getSiteId());
+					MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId,workTask.getSiteId(),orderId, "CONFLICT", null);
+					qbService.saveOrderInEntityList(orderDetails, EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
 					
 					//Make entry in conflict reason table
 					//Log the not found product in error conflict 
-					QBXML qbxml2 = (QBXML) qbService
-							.getUnmarshalledValue(workTask.getQbTaskRequest());
-					ItemQueryRqType itemReq = (ItemQueryRqType) qbxml2.getQBXMLMsgsRq().
-							getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().get(0);
+					QBXML qbxml2 = (QBXML) qbService.getUnmarshalledValue(workTask.getQbTaskRequest());
+					ItemQueryRqType itemReq = (ItemQueryRqType) qbxml2.getQBXMLMsgsRq().getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().get(0);
 					
 					OrderConflictDetail conflictDetail = new OrderConflictDetail();
-					conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+					conflictDetail.setMozuOrderNumber(String.valueOf(orderDetails.getMozuOrderNumber()));
 					conflictDetail.setNatureOfConflict("Not Found");
 					conflictDetail.setDataToFix(itemReq.getFullName().get(0));
 					conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
 					
 					List<OrderConflictDetail> conflictDetails = new ArrayList<OrderConflictDetail>();
 					conflictDetails.add(conflictDetail);
-					qbService.saveConflictInEntityList(tenantId, order.getOrderNumber(), conflictDetails);
+					qbService.saveConflictInEntityList(tenantId,Integer.parseInt(conflictDetail.getMozuOrderNumber()), conflictDetails);
 					logger.debug("Saved conflict for: " + itemSearchResponse.getStatusMessage());
 
 				} else {
@@ -347,10 +345,9 @@ public class QuickbooksServiceEndPoint {
 					// Check if we can create order add task now
 					String orderId = workTask.getTaskId(); // this gets the
 															// order id
-					Order order = qbService.getMozuOrder(orderId, tenantId,
-							workTask.getSiteId());
-					CustomerAccount custAcct = qbService.getMozuCustomer(order,
-							tenantId, workTask.getSiteId());
+					Order order = orderHandler.getOrder(orderId, tenantId,workTask.getSiteId());
+					
+					CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 					boolean allItemsInEntityList = true;
 					List<String> itemListIds = new ArrayList<String>();
 					for (OrderItem singleItem : order.getItems()) {
@@ -406,14 +403,11 @@ public class QuickbooksServiceEndPoint {
 
 				//Make an entry in the order entity list with posted status
 				String orderId = workTask.getTaskId(); // this gets the order id
-				Order order = qbService.getMozuOrder(orderId, tenantId,
-						workTask.getSiteId());
-				CustomerAccount custAcct = qbService.getMozuCustomer(order,
-						tenantId, workTask.getSiteId());
+				//Order order = orderHandler.getOrder(orderId, tenantId,	workTask.getSiteId());
+				//CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 				
-				MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "POSTED", salesOrderResponse, custAcct);
-				qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), 
-						tenantId, workTask.getSiteId());
+				MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "POSTED", salesOrderResponse);
+				qbService.saveOrderInEntityList(orderDetails, EntityHelper.getOrderEntityName(),tenantId, workTask.getSiteId());
 				
 				logger.debug((new StringBuilder())
 						.append("Processed order with id: ")
@@ -464,19 +458,15 @@ public class QuickbooksServiceEndPoint {
 				
 				//Make an entry in the order entity list with posted status
 				String orderId = workTask.getTaskId(); // this gets the order id
-				Order order = qbService.getMozuOrder(orderId, tenantId,
-						workTask.getSiteId());
-				CustomerAccount custAcct = qbService.getMozuCustomer(order,
-						tenantId, workTask.getSiteId());
+				//Order order = orderHandler.getOrder(orderId, tenantId, workTask.getSiteId());
+				//CustomerAccount custAcct = qbService.getMozuCustomer(order,	tenantId, workTask.getSiteId());
 				
-				MozuOrderDetails orderDetails = populateMozuOrderUpdateDetails(order, "POSTED", orderModRsType, custAcct);
-				qbService.saveOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderEntityName(), 
-						tenantId, workTask.getSiteId());
+				MozuOrderDetails orderDetails = orderHandler.getOrderUpdateDetails(tenantId, workTask.getSiteId(), orderId, "POSTED", orderModRsType);
+				qbService.saveOrderInEntityList(orderDetails, EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
 				
 				//UPdated order in updated EL to POSTED -- that screen picks up orders in UPDATED status so 
 				//this one will stop showing up.
-				qbService.updateOrderInEntityList(orderDetails, custAcct, EntityHelper.getOrderUpdatedEntityName(), 
-						tenantId, workTask.getSiteId());
+				qbService.updateOrderInEntityList(orderDetails, EntityHelper.getOrderUpdatedEntityName(),	tenantId, workTask.getSiteId());
 				
 				logger.debug((new StringBuilder())
 						.append("Processed order with id: ")
@@ -498,13 +488,11 @@ public class QuickbooksServiceEndPoint {
 			queueManagerService.updateTask(workTask, tenantId);
 			//Make an entry in the order entity list with posted status
 			String orderId = workTask.getTaskId(); // this gets the order id
-			Order order = qbService.getMozuOrder(orderId, tenantId,
-					workTask.getSiteId());
-			CustomerAccount custAcct = qbService.getMozuCustomer(order,
-					tenantId, workTask.getSiteId());
-			MozuOrderDetails orderDetails = populateMozuOrderDetails(order, "CONFLICT", null, custAcct);
-			qbService.saveOrderInEntityList(orderDetails, custAcct, 
-					EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
+			//Order order = orderHandler.getOrder(orderId, tenantId,workTask.getSiteId());
+			//CustomerAccount custAcct = qbService.getMozuCustomer(order,	tenantId, workTask.getSiteId());
+			
+			MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "CONFLICT", null);
+			qbService.saveOrderInEntityList(orderDetails, EntityHelper.getOrderEntityName(), tenantId, workTask.getSiteId());
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
@@ -512,88 +500,7 @@ public class QuickbooksServiceEndPoint {
 		return responseToResponse;
 	}
 
-	private MozuOrderDetails populateMozuOrderDetails(Order order, String status, 
-			SalesOrderAddRsType salesOrderResponse, CustomerAccount custAcct) {
-		String qbTransactionId = null;
-		List<Object> salesOrderLineRet = null;
-		
-		if(salesOrderResponse == null) {
-			qbTransactionId = "";
-		} else {
-			qbTransactionId = salesOrderResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineRet = 
-					salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
-		}
-		
-		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
-		
-		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
-	}
 	
-	private MozuOrderDetails populateMozuOrderUpdateDetails(Order order, String status, 
-			SalesOrderModRsType salesOrderModResponse, CustomerAccount custAcct) {
-		
-		String qbTransactionId = null;
-		List<Object> salesOrderLineRet = null;
-		
-		if(salesOrderModResponse == null) {
-			qbTransactionId = "";
-		} else {
-			qbTransactionId = salesOrderModResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineRet = 
-					salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
-		}
-		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
-		
-		return populateOtherDetails(order, status, 
-				custAcct, qbTransactionId, editSequence, salesOrderLineRet);
-	}
-	
-	private MozuOrderDetails populateOtherDetails(Order order, String status,
-			CustomerAccount custAcct, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) {
-		MozuOrderDetails orderDetails = new MozuOrderDetails();
-		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
-		orderDetails.setMozuOrderId(order.getId());
-		orderDetails.setQuickbooksOrderListId(qbTransactionId);
-		orderDetails.setOrderStatus(status);
-		orderDetails.setCustomerEmail(custAcct.getEmailAddress());
-		
-		DateTimeFormatter timeFormat = DateTimeFormat
-				.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-		
-		orderDetails.setOrderDate(timeFormat.print(order.getAcceptedDate().getMillis()));
-		orderDetails.setOrderUpdatedDate(timeFormat.print(order.getAcceptedDate().getMillis()));
-		orderDetails.setConflictReason("");
-		orderDetails.setAmount(String.valueOf(order.getSubtotal()));
-		
-		//Set item ids
-		List<QuickBooksSavedOrderLine> savedLines = new ArrayList<QuickBooksSavedOrderLine>();
-		QuickBooksSavedOrderLine savedOrderLine = null;
-		SalesOrderLineRet orderLineRet = null;
-		if(salesOrderLineRet != null) {
-			for(OrderItem item: order.getItems()) {
-				for(Object returnedItem: salesOrderLineRet) {
-					orderLineRet = (SalesOrderLineRet) returnedItem;
-					savedOrderLine = new QuickBooksSavedOrderLine();
-					savedOrderLine.setProductCode(orderLineRet.getItemRef().getFullName());
-					savedOrderLine.setQbLineItemTxnID(orderLineRet.getTxnLineID());
-					savedLines.add(savedOrderLine);
-				}
-			}
-
-			orderDetails.setSavedOrderLinesList(savedLines);
-		}
-		
-		//Set the edit sequence
-		orderDetails.setEditSequence(editSequence);
-		
-		return orderDetails;
-		
-	}
 
 	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse, Integer tenantId, Integer siteId) {
 		String itemListId = null;

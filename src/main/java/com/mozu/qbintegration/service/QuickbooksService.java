@@ -159,12 +159,6 @@ public interface QuickbooksService {
 	 */
 	void setNextTask(WorkTask workTask, Integer tenantId);
 
-	/**
-	 * @param orderId
-	 * @param tenantId
-	 * @return
-	 */
-	Order getMozuOrder(String orderId, Integer tenantId, Integer siteId);
 
 	void saveCustInEntityList(CustomerAccount custAcct, String customerListId, Integer tenantId, Integer siteId);
 
@@ -192,13 +186,6 @@ public interface QuickbooksService {
 	 */
 	String getProductFromEntityList(OrderItem orderItem, Integer tenantId, Integer siteId);
 
-	/**
-	 * @param order
-	 * @param tenantId
-	 * @param siteId
-	 * @return
-	 */
-	CustomerAccount getMozuCustomer(Order order, Integer tenantId, Integer siteId);
 
 	/**
 	 * @param orderId
@@ -246,7 +233,7 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param siteId
 	 */
-	void saveOrderInEntityList(MozuOrderDetails mozuOrderDetails, CustomerAccount custAccount, String mapName, Integer tenantId, Integer siteId);
+	void saveOrderInEntityList(MozuOrderDetails mozuOrderDetails,  String mapName, Integer tenantId, Integer siteId);
 
 	/**
 	 * @param mozuOrderDetails
@@ -255,7 +242,7 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param siteId
 	 */
-	void updateOrderInEntityList(MozuOrderDetails mozuOrderDetails, CustomerAccount custAccount, String mapName, Integer tenantId, Integer siteId);
+	void updateOrderInEntityList(MozuOrderDetails mozuOrderDetails, String mapName, Integer tenantId, Integer siteId);
 
 	/**
 	 * @param tenantId

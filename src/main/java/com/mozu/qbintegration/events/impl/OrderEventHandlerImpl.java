@@ -139,9 +139,10 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 										criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
 								String mapName = EntityHelper.getOrderUpdatedEntityName();
 								if(updatedOrders.isEmpty()) {
-									quickbooksService.saveOrderInEntityList(mozuOrderDetails, orderingCust, mapName , tenantId, siteId);
+									quickbooksService.saveOrderInEntityList(mozuOrderDetails, mapName , tenantId, siteId);
 								} else {
-									quickbooksService.updateOrderInEntityList(mozuOrderDetails, orderingCust,mapName, tenantId, siteId);
+									mozuOrderDetails.setEnteredTime(updatedOrders.get(0).getEnteredTime());
+									quickbooksService.updateOrderInEntityList(mozuOrderDetails, mapName, tenantId, siteId);
 								}
 							} else {
 								quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
