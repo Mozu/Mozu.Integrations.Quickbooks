@@ -212,9 +212,10 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			itemRef = new ItemRef();
 			itemRef.setListID(itemListIDs.get(counter));
 			salesOrderLineAdd = new SalesOrderLineAdd();
-			salesOrderLineAdd.setAmount(numberFormat.format(item
-					.getDiscountedTotal()));
+			salesOrderLineAdd.setAmount(numberFormat.format(item.getDiscountedTotal()));
 			salesOrderLineAdd.setItemRef(itemRef);
+			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
+			
 			// salesOrderLineAdd.setRatePercent("7.5"); // (getItemtaxTotal *
 			// 100)/
 			// itemTaxableTotal
@@ -930,7 +931,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	
 	@Override
 	public List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId, 
-			MozuOrderDetails mozuOrderDetails, String mapName) {
+			MozuOrderDetails mozuOrderDetails, String mapName) throws Exception {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
@@ -956,8 +957,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("Error saving settings for tenant id: " + tenantId);
+			throw e;
 		}
 		return mozuOrders;
 		
@@ -1039,7 +1040,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,
-			String mozuOrderNumber) {
+			String mozuOrderNumber) throws Exception {
 		
 		//Step 1: Get original order from qb_orders EL
 		MozuOrderDetails criteria = new MozuOrderDetails();
@@ -1233,7 +1234,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 						product.getProductCode());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("Error saving product in entity list during refresh all: "
 					+ product.getProductCode());
 		}
@@ -1243,7 +1243,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	@Override
 	public void updateOrdersInQuickbooks(List<String> orderNumberList,
-			Integer tenantId, Integer siteId) {
+			Integer tenantId, Integer siteId) throws Exception {
 		
 		for(String mozuOrderNum: orderNumberList) {
 			
@@ -1256,7 +1256,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				updatedOrder = collection.getItems().get(0);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 			
 			CustomerAccount custAcct = getMozuCustomer(updatedOrder,
@@ -1285,6 +1285,21 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			
 		}
 		
+	}
+	
+	@Override
+	public boolean isOrderProcessed(Integer tenantId, Integer siteId, Integer orderNumber) throws Exception {
+		
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+		try {
+			EntityCollection collection = entityResource.getEntities(EntityHelper.getOrderEntityName(), 1, 0, "mozuOrderNumber eq "+orderNumber, null, null);
+			return collection.getItems().size() > 0;
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		
+		return false;
 	}
 
 }

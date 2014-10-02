@@ -369,6 +369,7 @@ p {
 	position: relative;
 	z-index: 0;
 	border-top: 1px solid #bfbfbf;
+	cursor: pointer;
 }
 
 .tabs-ext {

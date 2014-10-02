@@ -584,6 +584,7 @@ public class QuickbooksServiceEndPoint {
 					savedLines.add(savedOrderLine);
 				}
 			}
+
 			orderDetails.setSavedOrderLinesList(savedLines);
 		}
 		
