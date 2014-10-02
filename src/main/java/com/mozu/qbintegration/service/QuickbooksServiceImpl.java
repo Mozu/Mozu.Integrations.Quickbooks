@@ -846,7 +846,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		custAddTask.setTenantId(tenantId);
 		custAddTask.setSiteId(siteId);
 		custAddTask.setQbTaskType("CUST_ADD");
-		custAddTask.setQbTaskRequest(getQBCustomerGetXML(
+		custAddTask.setQbTaskRequest(getQBCustomerSaveXML(
 				order, custAcct));
 		queueManagerService.saveTask(custAddTask, tenantId);
 	}
@@ -872,7 +872,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	//Used for saving to orders as well as updated orders entity lists
 	private void saveOrUpdateOrderInEL(MozuOrderDetails orderDetails, CustomerAccount custAccount,
 			String mapName, Integer tenantId, Integer siteId, Boolean isUpdate) {
-		JsonNode orderNode = getOrderNode(orderDetails, tenantId, siteId, custAccount);
+		JsonNode orderNode = getOrderNode(orderDetails, tenantId, siteId, custAccount.getEmailAddress());
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); 
@@ -883,7 +883,17 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			if(!isUpdate) {
 				rtnEntry = entityResource.insertEntity(orderNode, mapName);
 			} else {
-				rtnEntry = entityResource.updateEntity(orderNode, mapName, orderDetails.getMozuOrderNumber());
+				
+				//2nd Oct '14 update - Now that the key is enteredTime, get the record first to get the id
+				MozuOrderDetails updateCriteria = new MozuOrderDetails();
+				updateCriteria.setOrderStatus("UPDATED");
+				updateCriteria.setMozuOrderNumber(orderDetails.getMozuOrderNumber());
+				
+				List<MozuOrderDetails> updatedOrdList = getMozuOrderDetails(tenantId, updateCriteria, 
+						EntityHelper.getOrderUpdatedEntityName());
+				String enteredTime = updatedOrdList.get(0).getEnteredTime();
+				((ObjectNode)orderNode).put("enteredTime", enteredTime);
+				rtnEntry = entityResource.updateEntity(orderNode, mapName, enteredTime);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -894,7 +904,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 	}
 
-	private JsonNode getOrderNode(MozuOrderDetails orderDetails, Integer tenantId, Integer siteId, CustomerAccount custAccount) {
+	private JsonNode getOrderNode(MozuOrderDetails orderDetails, Integer tenantId, 
+			Integer siteId, String emailAddress) {
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode taskNode = nodeFactory.objectNode();
 		taskNode.put("enteredTime", orderDetails.getEnteredTime());
@@ -905,7 +916,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		taskNode.put("tenantId", tenantId);
 		taskNode.put("siteId", siteId);
 		taskNode.put("orderStatus", orderDetails.getOrderStatus());
-		taskNode.put("customerEmail", custAccount.getEmailAddress());
+		taskNode.put("customerEmail", emailAddress);
 		taskNode.put("orderDate", orderDetails.getOrderDate());
 		taskNode.put("orderUpdatedDate", orderDetails.getOrderUpdatedDate());
 		taskNode.put("conflictReason", orderDetails.getConflictReason());
@@ -1300,6 +1311,55 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		
 		return false;
+	}
+
+	@Override
+	public void updateConflictOrdersInQuickbooks(List<String> orderNumberList,
+			Integer tenantId, Integer siteId) {
+	
+		/*
+		 * At this stage, the order was failed for some or the other reason.
+		 * So it's always safe to start as if a new order was submitted 
+		 */
+		for(String mozuOrderNum: orderNumberList) {
+			OrderResource resource = new OrderResource(new MozuApiContext(tenantId, siteId));
+			Order conflictedOrder = null;
+			try {
+				OrderCollection collection = resource.getOrders(0, 10, null, "orderNumber eq " + mozuOrderNum, null, null, null);
+				conflictedOrder = collection.getItems().get(0);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				logger.error(e.getMessage(), e);
+			}
+			
+			CustomerAccount custAcct = getMozuCustomer(conflictedOrder, tenantId, siteId);
+			
+			//Now first mark the orders in CONFLICT status as RETRIED since they are taken up for processing.
+			//For now they will remain in entity list in RETRIED status, and if retry fails a new record will
+			// be added anyway in CONFLICT status
+			MozuOrderDetails criteria = new MozuOrderDetails();
+			criteria.setOrderStatus("CONFLICT");
+			criteria.setMozuOrderNumber(mozuOrderNum);
+			try {
+				List<MozuOrderDetails> conflictOrders = getMozuOrderDetails(tenantId, 
+						criteria, EntityHelper.getOrderEntityName());
+				for(MozuOrderDetails singleOrder: conflictOrders) {
+					singleOrder.setOrderStatus("RETRIED");
+					JsonNode orderNode = getOrderNode(singleOrder, tenantId, siteId, singleOrder.getCustomerEmail());
+					EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+					entityResource.updateEntity(orderNode, EntityHelper.getOrderEntityName(), singleOrder.getEnteredTime());
+					logger.debug("Updated order number: " + mozuOrderNum + " to RETRIED for tenant ID: " + tenantId);
+				}
+			} catch (Exception e) {
+				logger.error("Error while marking CONFLICT orders as RETRIED, tenantID: " + tenantId);
+			}
+			
+			saveOrderInQuickbooks(conflictedOrder, custAcct, tenantId, siteId);
+			
+			logger.debug("Slotted conflicted order for retry with order number: " + mozuOrderNum + " for tenant: " + tenantId);
+		}
+
+		logger.debug("Slotted all conflicted orders for retry for tenant: " + tenantId);
 	}
 
 }

@@ -67,7 +67,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		EntityCollection workTasksCollection = null;
 		try {
-			workTasksCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "taskId", null);
+			workTasksCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "enteredTime", null);
 			if(!workTasksCollection.getItems().isEmpty()) {
 				for(JsonNode jsonNode: workTasksCollection.getItems()) {
 					workTasks.add(getPopulatedTask(jsonNode));
