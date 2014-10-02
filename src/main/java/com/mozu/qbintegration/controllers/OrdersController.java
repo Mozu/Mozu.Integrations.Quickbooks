@@ -11,12 +11,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +37,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.Headers;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.security.Crypto;
+import com.mozu.base.controllers.ConfigurationSecurityInterceptor;
 import com.mozu.qbintegration.model.MozuOrderDetails;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
@@ -54,6 +58,8 @@ public class OrdersController {
 
 	public final static String ACCEPTED = "Accepted";
 
+	protected static final String SECURITY_COOKIE = "MozuToken";
+	
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrdersController.class);
 
@@ -63,9 +69,7 @@ public class OrdersController {
 	final ObjectMapper mapper = new ObjectMapper();
 
 	@RequestMapping(method = RequestMethod.POST)
-	public String index(HttpServletRequest httpRequest,
-			HttpServletResponse httpResponse, ModelMap modelMap)
-			throws IOException, URISyntaxException {
+	public String index(HttpServletRequest httpRequest,	HttpServletResponse httpResponse, ModelMap modelMap) throws Exception {
 
 		String body = IOUtils.toString(httpRequest.getInputStream());
 
@@ -88,6 +92,10 @@ public class OrdersController {
 		if (!Crypto.isRequestValid(apiContext, decodedBody)) {
             return "unauthorized";
         }
+	
+		httpResponse.addCookie(new Cookie(SECURITY_COOKIE, 
+              ConfigurationSecurityInterceptor.encrypt(DateTime.now().toString(), 
+                      AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret())));
 		modelMap.addAttribute("tenantId", apiContext.getTenantId());
 		modelMap.addAttribute("siteId", apiContext.getSiteId());
 		modelMap.addAttribute("selectedTab", tab);
@@ -255,25 +263,46 @@ public class OrdersController {
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 
+		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		logger.debug("" + orderNumberList.size());
+		
+		quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		
+		return "Selected orders have been successfully updated in Quickbooks.";
+	}
+	
+	private List<String> getMozuOrderNumbers(String mozuOrderNumbers) throws Exception {
 		ArrayNode ordersNode = null;
+		List<String> orderNumberList = new ArrayList<String>();
 		try {
 			ordersNode = (ArrayNode) mapper.readTree(mozuOrderNumbers);
 			Iterator<JsonNode> orderNums = ordersNode.elements();
-			List<String> orderNumberList = new ArrayList<String>();
+			
 			while (orderNums.hasNext()) {
 				JsonNode numNode = orderNums.next();
 				orderNumberList.add(numNode.asText());
 			}
 			
-			quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
-			
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw e;
 		} 
-		logger.debug("" + ordersNode.size());
+		return orderNumberList; 
+	}
+
+	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
+	public @ResponseBody
+	String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 		
-		return "Selected orders have been successfully updated in Quickbooks.";
+		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		logger.debug("" + orderNumberList.size());
+		
+		quickbooksService.updateConflictOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
+		
 	}
 	
 }

@@ -67,7 +67,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		EntityCollection workTasksCollection = null;
 		try {
-			workTasksCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "taskId", null);
+			workTasksCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "enteredTime", null);
 			if(!workTasksCollection.getItems().isEmpty()) {
 				for(JsonNode jsonNode: workTasksCollection.getItems()) {
 					workTasks.add(getPopulatedTask(jsonNode));
@@ -97,6 +97,32 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		return saveOrUpdateTask(workTask, tenantId, Boolean.FALSE); //false is for update
 	}
 
+	@Override
+	public boolean taskExists(Integer tenantId, String orderId) throws Exception {
+		List<JsonNode> existing = EntityHelper.searchEntity(tenantId, EntityHelper.getTaskqueueEntityName(), "taskId eq "+orderId+" and (qbTaskStatus eq ENTERED or qbTaskStatus eq PROCESSING)");
+		return existing.size() > 0;
+	}
+	
+	@Override
+	public WorkTask addTask(Integer tenantId, Integer siteId, String taskId, String taskStatus, String taskType, String taskRequest ) throws Exception {
+		return addTask(tenantId, siteId, taskId, taskStatus,taskType,taskRequest, false );
+	}
+	
+	@Override
+	public WorkTask addTask(Integer tenantId, Integer siteId, String taskId, String taskStatus, String taskType, String taskRequest, boolean byPassExistCheck ) throws Exception {
+		if(!byPassExistCheck && taskExists(tenantId, taskId) ) return null;
+		
+		WorkTask custAddTask = new WorkTask();
+		custAddTask.setEnteredTime(System.currentTimeMillis());
+		custAddTask.setTaskId(taskId);
+		custAddTask.setQbTaskStatus(taskStatus); // since at this moment I think we cannot have an AND in the filter
+		custAddTask.setTenantId(tenantId);
+		custAddTask.setSiteId(siteId);
+		custAddTask.setQbTaskType(taskType);
+		custAddTask.setQbTaskRequest(taskRequest);
+		return saveTask(custAddTask, tenantId);
+	}
+	
 	/*
 	 * Save or update the task in entity list
 	 */
