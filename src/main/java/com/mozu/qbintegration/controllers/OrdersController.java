@@ -11,12 +11,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +37,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.Headers;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.security.Crypto;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.base.controllers.ConfigurationSecurityInterceptor;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
@@ -54,6 +58,8 @@ public class OrdersController {
 
 	public final static String ACCEPTED = "Accepted";
 
+	protected static final String SECURITY_COOKIE = "MozuToken";
+	
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrdersController.class);
 
@@ -63,9 +69,7 @@ public class OrdersController {
 	final ObjectMapper mapper = new ObjectMapper();
 
 	@RequestMapping(method = RequestMethod.POST)
-	public String index(HttpServletRequest httpRequest,
-			HttpServletResponse httpResponse, ModelMap modelMap)
-			throws IOException, URISyntaxException {
+	public String index(HttpServletRequest httpRequest,	HttpServletResponse httpResponse, ModelMap modelMap) throws Exception {
 
 		String body = IOUtils.toString(httpRequest.getInputStream());
 
@@ -88,6 +92,10 @@ public class OrdersController {
 		if (!Crypto.isRequestValid(apiContext, decodedBody)) {
             return "unauthorized";
         }
+	
+		httpResponse.addCookie(new Cookie(SECURITY_COOKIE, 
+              ConfigurationSecurityInterceptor.encrypt(DateTime.now().toString(), 
+                      AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret())));
 		modelMap.addAttribute("tenantId", apiContext.getTenantId());
 		modelMap.addAttribute("siteId", apiContext.getSiteId());
 		modelMap.addAttribute("selectedTab", tab);
@@ -114,9 +122,9 @@ public class OrdersController {
 		final Integer siteId = Integer.parseInt(httpRequest
 				.getParameter("siteId")); // TODO do at site level
 
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("POSTED");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
@@ -146,9 +154,9 @@ public class OrdersController {
 		final Integer siteId = Integer.parseInt(httpRequest
 				.getParameter("siteId")); // TODO do at site level
 
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("CONFLICT");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
@@ -207,9 +215,9 @@ public class OrdersController {
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 		
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("UPDATED");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, 
 						EntityHelper.getOrderUpdatedEntityName());
 

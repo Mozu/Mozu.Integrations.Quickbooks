@@ -11,13 +11,13 @@ import java.util.List;
  */
 public class OrderJsonObject extends OrderDatatableObject {
 
-	List<MozuOrderDetails> aaData;
+	List<MozuOrderDetail> aaData;
 
-	public List<MozuOrderDetails> getAaData() {
+	public List<MozuOrderDetail> getAaData() {
 		return aaData;
 	}
 
-	public void setAaData(List<MozuOrderDetails> aaData) {
+	public void setAaData(List<MozuOrderDetail> aaData) {
 		this.aaData = aaData;
 	}
 

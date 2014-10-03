@@ -51,4 +51,8 @@ public interface QueueManagerService {
 	 */
 	WorkTask updateTask(final WorkTask workTask, final Integer tenantId);
 
+	boolean taskExists(Integer tenantId, String orderId) throws Exception;
+	
+	WorkTask addTask(Integer tenantId, Integer siteId, String taskId,String taskStatus, String taskType, String taskRequest  ) throws Exception;
+	WorkTask addTask(Integer tenantId, Integer siteId, String taskId,String taskStatus, String taskType, String taskRequest, boolean byPassExistCheck  ) throws Exception;
 }

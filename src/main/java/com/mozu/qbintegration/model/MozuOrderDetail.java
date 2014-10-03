@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MozuOrderDetails {
+public class MozuOrderDetail {
 	
 	private String enteredTime;
 	

@@ -1,7 +1,13 @@
 package com.mozu.qbintegration.utils;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.mzdb.EntityCollection;
+import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.security.AppAuthenticator;
 
 public class EntityHelper {
@@ -61,6 +67,12 @@ public class EntityHelper {
 	
 	public static String getSubnavLinksEntityName() {
 		return "subnavlinks@mozu";
+	}
+	
+	public static List<JsonNode> searchEntity(Integer tenantId, String entityName, String filter) throws Exception {
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+		EntityCollection collection = entityResource.getEntities(entityName, 200, 0, filter, null, null);
+		return collection.getItems();
 	}
 }
 
