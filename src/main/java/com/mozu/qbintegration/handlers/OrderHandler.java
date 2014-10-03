@@ -15,7 +15,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
@@ -42,7 +42,7 @@ public class OrderHandler {
 	}
 
 	
-	public MozuOrderDetails getOrderDetails(Integer tenantId, Integer siteId,String orderId, String status,SalesOrderAddRsType salesOrderResponse) throws Exception {
+	public MozuOrderDetail getOrderDetails(Integer tenantId, Integer siteId,String orderId, String status,SalesOrderAddRsType salesOrderResponse) throws Exception {
 		String qbTransactionId = null;
 		List<Object> salesOrderLineRet = null;
 		
@@ -63,7 +63,7 @@ public class OrderHandler {
 		return getOrderDetails(tenantId, siteId,orderId, status,qbTransactionId, editSequence, salesOrderLineRet);
 	}
 	
-	public MozuOrderDetails getOrderUpdateDetails(Integer tenantId, Integer siteId,String orderId, String status, SalesOrderModRsType salesOrderModResponse) throws Exception {
+	public MozuOrderDetail getOrderUpdateDetails(Integer tenantId, Integer siteId,String orderId, String status, SalesOrderModRsType salesOrderModResponse) throws Exception {
 		
 		String qbTransactionId = null;
 		List<Object> salesOrderLineRet = null;
@@ -84,13 +84,13 @@ public class OrderHandler {
 		return getOrderDetails(tenantId, siteId, orderId, status, qbTransactionId, editSequence, salesOrderLineRet);
 	}
 	
-	public MozuOrderDetails getOrderDetails(Integer tenantId, Integer siteId,String orderId, String status, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) throws Exception {
+	public MozuOrderDetail getOrderDetails(Integer tenantId, Integer siteId,String orderId, String status, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) throws Exception {
 		
 		Order order = getOrder(orderId, tenantId, siteId);
 
 		CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 		
-		MozuOrderDetails orderDetails = new MozuOrderDetails();
+		MozuOrderDetail orderDetails = new MozuOrderDetail();
 		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
 		orderDetails.setMozuOrderId(order.getId());

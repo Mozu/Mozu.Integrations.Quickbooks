@@ -21,7 +21,7 @@ import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.EntityHelper;
@@ -102,16 +102,16 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 				boolean isProcessed = quickbooksService.isOrderProcessed(tenantId, siteId, order.getOrderNumber());
 				
 				if (isProcessed) {
-					MozuOrderDetails mozuOrderDetails = populateOrderDetails(order, orderingCust.getEmailAddress());
+					MozuOrderDetail mozuOrderDetails = populateOrderDetails(order, orderingCust.getEmailAddress());
 					
 					//Check if already present in EL. If yes update else, insert
 					//Step 2: Get updated order from qb_updated_orders EL
-					MozuOrderDetails criteriaForUpDate = new MozuOrderDetails();
+					MozuOrderDetail criteriaForUpDate = new MozuOrderDetail();
 					criteriaForUpDate.setOrderStatus("UPDATED");
 					criteriaForUpDate.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
 					
 					//1. Get from EL the order
-					List<MozuOrderDetails> updatedOrders = quickbooksService.getMozuOrderDetails(tenantId, 
+					List<MozuOrderDetail> updatedOrders = quickbooksService.getMozuOrderDetails(tenantId, 
 							criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
 					String mapName = EntityHelper.getOrderUpdatedEntityName();
 					if(updatedOrders.isEmpty()) {
@@ -133,8 +133,8 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		return status;
 	}
 
-	private MozuOrderDetails populateOrderDetails(final Order order, String emailAddress) {
-		MozuOrderDetails orderDetails = new MozuOrderDetails();
+	private MozuOrderDetail populateOrderDetails(final Order order, String emailAddress) {
+		MozuOrderDetail orderDetails = new MozuOrderDetail();
 		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
 		orderDetails.setMozuOrderId(order.getId());

@@ -40,7 +40,7 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.security.Crypto;
 import com.mozu.base.controllers.ConfigurationSecurityInterceptor;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
@@ -122,9 +122,9 @@ public class OrdersController {
 		final Integer siteId = Integer.parseInt(httpRequest
 				.getParameter("siteId")); // TODO do at site level
 
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("POSTED");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
@@ -154,9 +154,9 @@ public class OrdersController {
 		final Integer siteId = Integer.parseInt(httpRequest
 				.getParameter("siteId")); // TODO do at site level
 
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("CONFLICT");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
@@ -215,9 +215,9 @@ public class OrdersController {
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 		
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("UPDATED");
-		List<MozuOrderDetails> mozuOrderDetails = quickbooksService
+		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
 				.getMozuOrderDetails(tenantId, criteria, 
 						EntityHelper.getOrderUpdatedEntityName());
 
