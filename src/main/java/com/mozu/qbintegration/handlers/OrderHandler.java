@@ -55,7 +55,10 @@ public class OrderHandler {
 		}
 		
 		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
+		String editSequence = "";
+		
+		if (salesOrderResponse != null)
+			editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
 		
 		return getOrderDetails(tenantId, siteId,orderId, status,qbTransactionId, editSequence, salesOrderLineRet);
 	}
@@ -73,7 +76,10 @@ public class OrderHandler {
 					salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
 		}
 		//Set the edit sequence to be used while updating
-		String editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
+		
+		String editSequence = "";
+		if (salesOrderModResponse != null)
+			salesOrderModResponse.getSalesOrderRet().getEditSequence();
 		
 		return getOrderDetails(tenantId, siteId, orderId, status, qbTransactionId, editSequence, salesOrderLineRet);
 	}
