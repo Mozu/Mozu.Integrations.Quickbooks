@@ -9,7 +9,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
@@ -79,7 +79,7 @@ public interface QuickbooksService {
 	 * @return marshalled string representation of QB SalesOrderUpdate request.
 	 * @throws Exception 
 	 */
-	String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, List<String> itemListIDs, MozuOrderDetails postedOrder) throws Exception;
+	String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, List<String> itemListIDs, MozuOrderDetail postedOrder) throws Exception;
 
 	/**
 	 * This method accepts mozu order and returns the order GET qbXML. This
@@ -156,7 +156,7 @@ public interface QuickbooksService {
 	 * @return
 	 * @throws Exception 
 	 */
-	List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId, MozuOrderDetails mozuOrderDetails, String mapName) throws Exception;
+	List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, MozuOrderDetail mozuOrderDetails, String mapName) throws Exception;
 
 	/**
 	 * @param workTask
@@ -214,7 +214,7 @@ public interface QuickbooksService {
 	 * @param postedOrder
 	 * @throws Exception 
 	 */
-	void addOrderUpdateTaskToQueue(String orderId, Integer tenantId, Integer siteId, CustomerAccount custAcct, Order order, List<String> itemListIds, MozuOrderDetails postedOrder) throws Exception;
+	void addOrderUpdateTaskToQueue(String orderId, Integer tenantId, Integer siteId, CustomerAccount custAcct, Order order, List<String> itemListIds, MozuOrderDetail postedOrder) throws Exception;
 
 	/**
 	 * @param orderId
@@ -243,7 +243,7 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param siteId
 	 */
-	void saveOrderInEntityList(MozuOrderDetails mozuOrderDetails,  String mapName, Integer tenantId, Integer siteId);
+	void saveOrderInEntityList(MozuOrderDetail mozuOrderDetails,  String mapName, Integer tenantId, Integer siteId);
 
 	/**
 	 * @param mozuOrderDetails
@@ -252,7 +252,7 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param siteId
 	 */
-	void updateOrderInEntityList(MozuOrderDetails mozuOrderDetails, String mapName, Integer tenantId, Integer siteId);
+	void updateOrderInEntityList(MozuOrderDetail mozuOrderDetails, String mapName, Integer tenantId, Integer siteId);
 
 	/**
 	 * @param tenantId

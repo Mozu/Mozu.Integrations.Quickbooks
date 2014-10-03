@@ -52,7 +52,7 @@ import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
@@ -236,7 +236,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 	@Override
-	public String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, List<String> itemListIDs, MozuOrderDetails postedOrder) throws Exception {
+	public String getQBOrderUpdateXML(Order singleOrder, String customerQBListID, List<String> itemListIDs, MozuOrderDetail postedOrder) throws Exception {
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
@@ -264,7 +264,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		List<QuickBooksSavedOrderLine> orderlines = null;
 		
-		if(StringUtils.isEmpty(postedOrder.getSavedOrderLines())) {
+		if(!postedOrder.getSavedOrderLines().isEmpty()) {
 			try {
 				Object converted = mapper.readValue(postedOrder.getSavedOrderLines(), Object.class);
 				
@@ -294,7 +294,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			
 			if(orderlines != null) {
 				for(QuickBooksSavedOrderLine singleLine: orderlines) {
-					if(singleLine.getProductCode().equals(item.getProduct().getProductCode())) {
+					if(singleLine.getProductCode().toLowerCase().equals(item.getProduct().getProductCode().toLowerCase())) {
 						salesOrderLineMod.setTxnLineID(singleLine.getQbLineItemTxnID());
 					}
 				}
@@ -434,16 +434,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 						allItemsInEntityList = false;
 
 						this.addItemQueryTaskToQueue(order.getId(), tenantId, siteId, singleItem.getProduct().getProductCode());
-						/*WorkTask itemQueryTask = new WorkTask();
-						//Just to make it unique
-						itemQueryTask.setEnteredTime(System.currentTimeMillis());
-						itemQueryTask.setTaskId(order.getId());
-						itemQueryTask.setQbTaskStatus("ENTERED");
-						itemQueryTask.setTenantId(tenantId);
-						itemQueryTask.setSiteId(siteId);
-						itemQueryTask.setQbTaskType("ITEM_QUERY");
-						itemQueryTask.setQbTaskRequest(getQBProductsGetXML(order.getId(), singleItem.getProduct().getProductCode()));
-						queueManagerService.saveTask(itemQueryTask, tenantId);*/
+						
 						
 					}
 					itemListIds.add(itemQBListId); //list will anyway be discarded if above flag is false, so no null
@@ -453,20 +444,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 					//Check if there is a pending work item
 					//if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
 					this.addOrderAddTaskToQueue(tenantId, siteId, custAcct, order, itemListIds);
-
-					/*WorkTask sOrderAddTask = new WorkTask();
-					//Just to make it unique
-					sOrderAddTask.setEnteredTime(System.currentTimeMillis());
-					sOrderAddTask.setTaskId(order.getId());
-					sOrderAddTask.setQbTaskStatus("ENTERED");
-					sOrderAddTask.setTenantId(tenantId);
-					sOrderAddTask.setSiteId(siteId);
-					sOrderAddTask.setQbTaskType("ORDER_ADD");
-					//Get customer from entity list - by this time the user HAS to be present in entity list. 
-					//TODO handle error when customer is not found for any reason.
-					String custQBListID = getCustFromEntityList(custAcct, tenantId);
-					sOrderAddTask.setQbTaskRequest(getQBOrderSaveXML(order, custQBListID, itemListIds));
-					queueManagerService.saveTask(sOrderAddTask, tenantId);*/
 				}
 				
 			} else { //Customer not found, so add task to check in qb and let it go
@@ -719,26 +696,12 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		
 	}
-
-
 	
 	
 	public void addCustomerQueryTaskToQueue(Order order, CustomerAccount custAcct, Integer tenantId, Integer siteId) throws Exception {
 		String requestXml = getQBCustomerGetXML(order, custAcct);
 		queueManagerService.addTask(tenantId, siteId, order.getId(), "ENTERED", "CUST_QUERY", requestXml);
-		//Check if there is a pending work item
-		/*if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
 		
-		WorkTask custAddTask = new WorkTask();
-		custAddTask.setEnteredTime(System.currentTimeMillis());
-		custAddTask.setTaskId(order.getId());
-		custAddTask.setQbTaskStatus("ENTERED"); //since at this moment I think we cannot have an AND in the filter
-		custAddTask.setTenantId(tenantId);
-		custAddTask.setSiteId(siteId);
-		custAddTask.setQbTaskType("CUST_QUERY");
-		custAddTask.setQbTaskRequest(getQBCustomerGetXML(order, custAcct));
-		queueManagerService.saveTask(custAddTask, tenantId);
-		*/
 	}
 
 	/* (non-Javadoc)
@@ -749,56 +712,16 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		String custQBListID = getCustFromEntityList(custAcct, tenantId);
 		String requestXml = getQBOrderSaveXML(order, custQBListID,itemListIds);
 		queueManagerService.addTask(tenantId, siteId, order.getId(), "ENTERED", "ORDER_ADD", requestXml);
-		//Check if there is a pending work item
-		/*if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
-				
-		WorkTask sOrderAddTask = new WorkTask();
-		// Just to make it unique
-		sOrderAddTask
-				.setEnteredTime(System.currentTimeMillis());
-		sOrderAddTask.setTaskId(orderId);
-		sOrderAddTask.setQbTaskStatus("ENTERED");
-		sOrderAddTask.setTenantId(tenantId);
-		sOrderAddTask.setSiteId(siteId);
-		sOrderAddTask.setQbTaskType("ORDER_ADD");
-		// Get customer from entity list - by this time the user
-		// HAS
-		// to be present in entity list.
-		// TODO handle error when customer is not found for any
-		// reason.
-		String custQBListID = getCustFromEntityList(custAcct, tenantId);
-		sOrderAddTask.setQbTaskRequest(getQBOrderSaveXML(order, custQBListID,itemListIds));
-		queueManagerService.saveTask(sOrderAddTask, tenantId);*/
 	}
 	
 	/* (non-Javadoc)
 	 * @see com.mozu.qbintegration.service.QuickbooksService#addOrderAddTaskToQueue(java.lang.String, java.lang.Integer, java.lang.Integer, com.mozu.api.contracts.customer.CustomerAccount, com.mozu.api.contracts.commerceruntime.orders.Order, java.util.List)
 	 */
 	@Override
-	public void addOrderUpdateTaskToQueue(String orderId, Integer tenantId,	Integer siteId, CustomerAccount custAcct, Order order,List<String> itemListIds, MozuOrderDetails postedOrder) throws Exception {
+	public void addOrderUpdateTaskToQueue(String orderId, Integer tenantId,	Integer siteId, CustomerAccount custAcct, Order order,List<String> itemListIds, MozuOrderDetail postedOrder) throws Exception {
 		String custQBListID = getCustFromEntityList(custAcct, tenantId);
 		String requestXml = getQBOrderUpdateXML(order, custQBListID,itemListIds, postedOrder);
 		queueManagerService.addTask(tenantId, siteId, order.getId(), "ENTERED", "ORDER_UPDATE", requestXml);
-		//Check if there is a pending work item
-		/*if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
-				
-		WorkTask sOrderUpdateTask = new WorkTask();
-		// Just to make it unique
-		sOrderUpdateTask
-				.setEnteredTime(System.currentTimeMillis());
-		sOrderUpdateTask.setTaskId(orderId);
-		sOrderUpdateTask.setQbTaskStatus("ENTERED");
-		sOrderUpdateTask.setTenantId(tenantId);
-		sOrderUpdateTask.setSiteId(siteId);
-		sOrderUpdateTask.setQbTaskType("ORDER_UPDATE");
-		// Get customer from entity list - by this time the user
-		// to be present in entity list.
-		// TODO handle error when customer is not found for any
-		// reason.
-		String custQBListID = getCustFromEntityList(custAcct, tenantId);
-		sOrderUpdateTask.setQbTaskRequest(getQBOrderUpdateXML(order, custQBListID,
-						itemListIds, postedOrder));
-		queueManagerService.saveTask(sOrderUpdateTask, tenantId);*/
 	}
 
 	/* (non-Javadoc)
@@ -809,50 +732,19 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		String requestXml = getQBProductsGetXML(orderId, productCode);
 		queueManagerService.addTask(tenantId, siteId, orderId, "ENTERED", "ITEM_QUERY", requestXml, true);
 		
-		/*if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
-				
-		WorkTask itemQueryTask = new WorkTask();
-		// Just to make it unique
-		itemQueryTask
-				.setEnteredTime(System.currentTimeMillis());
-		itemQueryTask.setTaskId(orderId);
-		itemQueryTask.setQbTaskStatus("ENTERED");
-		itemQueryTask.setTenantId(tenantId);
-		itemQueryTask.setSiteId(siteId);
-		itemQueryTask.setQbTaskType("ITEM_QUERY");
-		itemQueryTask.setQbTaskRequest(getQBProductsGetXML(order, productCode));
-		queueManagerService.saveTask(itemQueryTask, tenantId);*/
-		
 	}
 
 	@Override
 	public void addCustAddTaskToQueue(String orderId, Integer tenantId,	Integer siteId,	CustomerAccount custAcct) throws Exception {
 		String requestXml = getQBCustomerSaveXML(orderId, custAcct);
 		queueManagerService.addTask(tenantId, siteId, orderId, "ENTERED", "CUST_ADD", requestXml);
-		//Check if there is a pending work item
-		/*if( queueManagerService.taskExists(tenantId, order.getId()) ) return;
-				
-		WorkTask custAddTask = new WorkTask();
-		custAddTask.setEnteredTime(System.currentTimeMillis());
-		custAddTask.setTaskId(orderId);
-		custAddTask.setQbTaskStatus("ENTERED"); // since at this
-												// moment
-												// I think we cannot
-												// have an AND in
-												// the
-												// filter
-		custAddTask.setTenantId(tenantId);
-		custAddTask.setSiteId(siteId);
-		custAddTask.setQbTaskType("CUST_ADD");
-		custAddTask.setQbTaskRequest();
-		queueManagerService.saveTask(custAddTask, tenantId);*/
 	}
 
 	/* (non-Javadoc)
 	 * @see com.mozu.qbintegration.service.QuickbooksService#saveOrderInEntityList(com.mozu.qbintegration.model.MozuOrderDetails, com.mozu.api.contracts.customer.CustomerAccount, java.lang.Integer, java.lang.Integer)
 	 */
 	@Override
-	public void saveOrderInEntityList(MozuOrderDetails orderDetails, String mapName,Integer tenantId, Integer siteId) {
+	public void saveOrderInEntityList(MozuOrderDetail orderDetails, String mapName,Integer tenantId, Integer siteId) {
 		saveOrUpdateOrderInEL(orderDetails, mapName, tenantId, siteId, Boolean.FALSE);
 	}
 	
@@ -860,12 +752,12 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	 * @see com.mozu.qbintegration.service.QuickbooksService#updateOrderInEntityList(com.mozu.qbintegration.model.MozuOrderDetails, com.mozu.api.contracts.customer.CustomerAccount, java.lang.Integer, java.lang.Integer)
 	 */
 	@Override
-	public void updateOrderInEntityList(MozuOrderDetails orderDetails, String mapName,	Integer tenantId, Integer siteId) {
+	public void updateOrderInEntityList(MozuOrderDetail orderDetails, String mapName,	Integer tenantId, Integer siteId) {
 		saveOrUpdateOrderInEL(orderDetails, mapName, tenantId, siteId, Boolean.TRUE);
 	}
 	
 	//Used for saving to orders as well as updated orders entity lists
-	private void saveOrUpdateOrderInEL(MozuOrderDetails orderDetails,String mapName, Integer tenantId, Integer siteId, Boolean isUpdate) {
+	private void saveOrUpdateOrderInEL(MozuOrderDetail orderDetails,String mapName, Integer tenantId, Integer siteId, Boolean isUpdate) {
 		JsonNode orderNode = getOrderNode(orderDetails, tenantId, siteId);
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
@@ -878,11 +770,11 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			} else {
 				
 				//2nd Oct '14 update - Now that the key is enteredTime, get the record first to get the id
-				MozuOrderDetails updateCriteria = new MozuOrderDetails();
+				MozuOrderDetail updateCriteria = new MozuOrderDetail();
 				updateCriteria.setOrderStatus("UPDATED");
 				updateCriteria.setMozuOrderNumber(orderDetails.getMozuOrderNumber());
 				
-				List<MozuOrderDetails> updatedOrdList = getMozuOrderDetails(tenantId, updateCriteria, EntityHelper.getOrderUpdatedEntityName());
+				List<MozuOrderDetail> updatedOrdList = getMozuOrderDetails(tenantId, updateCriteria, EntityHelper.getOrderUpdatedEntityName());
 				String enteredTime = updatedOrdList.get(0).getEnteredTime();
 				((ObjectNode)orderNode).put("enteredTime", enteredTime);
 				rtnEntry = entityResource.updateEntity(orderNode, mapName, enteredTime);
@@ -896,7 +788,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 	}
 
-	private JsonNode getOrderNode(MozuOrderDetails orderDetails, Integer tenantId, Integer siteId) {
+	private JsonNode getOrderNode(MozuOrderDetail orderDetails, Integer tenantId, Integer siteId) {
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode taskNode = nodeFactory.objectNode();
 		taskNode.put("enteredTime", orderDetails.getEnteredTime());
@@ -932,12 +824,10 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 	
 	@Override
-	public List<MozuOrderDetails> getMozuOrderDetails(Integer tenantId, 
-			MozuOrderDetails mozuOrderDetails, String mapName) throws Exception {
+	public List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, MozuOrderDetail mozuOrderDetails, String mapName) throws Exception {
 
 		// First get an entity for settings if already present.
-		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId)); 
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
 		
 		StringBuilder sb = new StringBuilder();
 		//Assuming status will never be null - it is meaningless to filter without it at this point.
@@ -948,14 +838,14 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			sb.append(" and mozuOrderNumber eq " + mozuOrderDetails.getMozuOrderNumber());
 		}
 
-		List<MozuOrderDetails> mozuOrders = new ArrayList<MozuOrderDetails>();
+		List<MozuOrderDetail> mozuOrders = new ArrayList<MozuOrderDetail>();
 		EntityCollection orderCollection = null;
 		
 		try {
 			orderCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "enteredTime desc", null);
 			if (null != orderCollection) {
 				for (JsonNode singleOrder : orderCollection.getItems()) {
-					mozuOrders.add(mapper.readValue(singleOrder.toString(), MozuOrderDetails.class));
+					mozuOrders.add(mapper.readValue(singleOrder.toString(), MozuOrderDetail.class));
 				}
 			}
 		} catch (Exception e) {
@@ -1039,32 +929,31 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 	@Override
-	public List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,
-			String mozuOrderNumber) throws Exception {
+	public List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,String mozuOrderNumber) throws Exception {
 		
 		//Step 1: Get original order from qb_orders EL
-		MozuOrderDetails criteria = new MozuOrderDetails();
+		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("POSTED");
 		criteria.setMozuOrderNumber(mozuOrderNumber);
 		
 		//Step 2: Get updated order from qb_updated_orders EL
-		MozuOrderDetails criteriaForUpDate = new MozuOrderDetails();
+		MozuOrderDetail criteriaForUpDate = new MozuOrderDetail();
 		criteriaForUpDate.setOrderStatus("UPDATED");
 		criteriaForUpDate.setMozuOrderNumber(mozuOrderNumber);
 		
 		//1. Get from EL the order
-		List<MozuOrderDetails> postedOrders = getMozuOrderDetails(tenantId, 
+		List<MozuOrderDetail> postedOrders = getMozuOrderDetails(tenantId, 
 				criteria, EntityHelper.getOrderEntityName());
 		
 		//2. Get from EL the updated order
-		List<MozuOrderDetails> updatedOrders = getMozuOrderDetails(tenantId, 
+		List<MozuOrderDetail> updatedOrders = getMozuOrderDetails(tenantId, 
 				criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
 		
 		//1. Assume one only since mozuOrderNumber is going to be unique for a tenant (or is it?)
-		MozuOrderDetails postedOrder = postedOrders.get(0);
+		MozuOrderDetail postedOrder = postedOrders.get(0);
 		
 		//2. Get the updated order
-		MozuOrderDetails updatedOrder = updatedOrders.get(0);
+		MozuOrderDetail updatedOrder = updatedOrders.get(0);
 		
 		//3. Populate one order detail each for each difference
 		List<OrderCompareDetail> getOrderCompareData = getOrderCompareData(postedOrder, updatedOrder);
@@ -1072,7 +961,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 	private List<OrderCompareDetail> getOrderCompareData(
-			MozuOrderDetails postedOrder, MozuOrderDetails updatedOrder) {
+			MozuOrderDetail postedOrder, MozuOrderDetail updatedOrder) {
 		List<OrderCompareDetail> compareDetails = new ArrayList<OrderCompareDetail>();
 		
 		if(postedOrder.getAmount() != null && !postedOrder.getAmount().equals(updatedOrder.getAmount())) {
@@ -1254,30 +1143,27 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				OrderCollection collection = resource.getOrders(0, 10, null, "orderNumber eq " + mozuOrderNum, null, null, null);
 				updatedOrder = collection.getItems().get(0);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				logger.error(e.getMessage(), e);
+				throw e;
 			}
 			
 			CustomerAccount custAcct = customerHandler.getCustomer(tenantId, updatedOrder.getCustomerAccountId());
 			
 			List<String> itemListIds = new ArrayList<String>();
 			for (OrderItem item : updatedOrder.getItems()) {
-				String itemListId = getProductFromEntityList(
-						item, tenantId, siteId);
+				String itemListId = getProductFromEntityList(item, tenantId, siteId);
 				itemListIds.add(itemListId);
 			}
 			
-			MozuOrderDetails mozuOrderDetails = new MozuOrderDetails();
+			MozuOrderDetail mozuOrderDetails = new MozuOrderDetail();
 			mozuOrderDetails.setOrderStatus("POSTED");
 			mozuOrderDetails.setMozuOrderNumber(mozuOrderNum);
 			
-			List<MozuOrderDetails> postedOrders = 
-					getMozuOrderDetails(tenantId, mozuOrderDetails, EntityHelper.getOrderEntityName());
+			List<MozuOrderDetail> postedOrders = getMozuOrderDetails(tenantId, mozuOrderDetails, EntityHelper.getOrderEntityName());
 			
-			MozuOrderDetails postedOrder = postedOrders.get(0);
+			MozuOrderDetail postedOrder = postedOrders.get(0);
 			
-			addOrderUpdateTaskToQueue(updatedOrder.getId(), tenantId, siteId, custAcct, 
-					updatedOrder, itemListIds, postedOrder);
+			addOrderUpdateTaskToQueue(updatedOrder.getId(), tenantId, siteId, custAcct, updatedOrder, itemListIds, postedOrder);
 			
 			logger.debug("Slotted an order update task for mozu order number: " + mozuOrderNum);
 			
@@ -1323,13 +1209,13 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			//Now first mark the orders in CONFLICT status as RETRIED since they are taken up for processing.
 			//For now they will remain in entity list in RETRIED status, and if retry fails a new record will
 			// be added anyway in CONFLICT status
-			MozuOrderDetails criteria = new MozuOrderDetails();
+			MozuOrderDetail criteria = new MozuOrderDetail();
 			criteria.setOrderStatus("CONFLICT");
 			criteria.setMozuOrderNumber(mozuOrderNum);
 			try {
-				List<MozuOrderDetails> conflictOrders = getMozuOrderDetails(tenantId, 
+				List<MozuOrderDetail> conflictOrders = getMozuOrderDetails(tenantId, 
 						criteria, EntityHelper.getOrderEntityName());
-				for(MozuOrderDetails singleOrder: conflictOrders) {
+				for(MozuOrderDetail singleOrder: conflictOrders) {
 					singleOrder.setOrderStatus("RETRIED");
 					JsonNode orderNode = getOrderNode(singleOrder, tenantId, siteId);
 					EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));

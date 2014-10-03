@@ -26,7 +26,7 @@ import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.QBHandler;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
@@ -233,7 +233,7 @@ public class QuickbooksServiceEndPoint {
 			// Make an entry in the order entity list with posted status
 			String orderId = workTask.getTaskId(); // this gets the order id
 	
-			MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "CONFLICT", null);
+			MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "CONFLICT", null);
 			qbService.saveOrderInEntityList(orderDetails,EntityHelper.getOrderEntityName(), tenantId,workTask.getSiteId());
 		}
 

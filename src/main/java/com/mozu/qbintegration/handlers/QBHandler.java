@@ -12,7 +12,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
-import com.mozu.qbintegration.model.MozuOrderDetails;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
@@ -104,7 +104,7 @@ public class QBHandler {
 			// CustomerAccount custAcct =
 			// qbService.getMozuCustomer(order,tenantId,
 			// workTask.getSiteId());
-			MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(),orderId, "CONFLICT", null);
+			MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(),orderId, "CONFLICT", null);
 			qbService.saveOrderInEntityList(orderDetails,EntityHelper.getOrderEntityName(), tenantId,workTask.getSiteId());
 
 			// Make entry in conflict reason table
@@ -188,7 +188,7 @@ public class QBHandler {
 		// customerHandler.getCustomer(tenantId,
 		// order.getCustomerAccountId());
 
-		MozuOrderDetails orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "POSTED",salesOrderResponse);
+		MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "POSTED",salesOrderResponse);
 		qbService.saveOrderInEntityList(orderDetails,EntityHelper.getOrderEntityName(), tenantId,workTask.getSiteId());
 
 		logger.debug((new StringBuilder())
@@ -246,7 +246,7 @@ public class QBHandler {
 		// CustomerAccount custAcct = qbService.getMozuCustomer(order,
 		// tenantId, workTask.getSiteId());
 
-		MozuOrderDetails orderDetails = orderHandler.getOrderUpdateDetails(tenantId, workTask.getSiteId(),orderId, "POSTED", orderModRsType);
+		MozuOrderDetail orderDetails = orderHandler.getOrderUpdateDetails(tenantId, workTask.getSiteId(),orderId, "POSTED", orderModRsType);
 		qbService.saveOrderInEntityList(orderDetails,EntityHelper.getOrderEntityName(), tenantId,workTask.getSiteId());
 
 		// Updated order in updated EL to POSTED -- that screen picks up
