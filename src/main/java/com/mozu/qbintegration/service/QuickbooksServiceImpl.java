@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.commerceruntime.discounts.AppliedDiscount;
+import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDiscount;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderCollection;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
@@ -216,11 +218,21 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		int counter = 0;
+		
+		//Need to accumulate item discounts -> order discount contains these as well. So 
+		//while adding pure order level discount, need to subtract.
+		Double productDiscounts = 0.0;
 		for (OrderItem item : items) {
 			itemRef = new ItemRef();
 			itemRef.setListID(itemListIDs.get(counter));
 			salesOrderLineAdd = new SalesOrderLineAdd();
-			salesOrderLineAdd.setAmount(numberFormat.format(item.getDiscountedTotal()));
+			if(item.getUnitPrice().getSaleAmount() != null) {
+				salesOrderLineAdd.setAmount(numberFormat.format(
+						item.getUnitPrice().getSaleAmount() * item.getQuantity()));
+			} else {
+				salesOrderLineAdd.setAmount(numberFormat.format(
+						item.getUnitPrice().getListAmount() * item.getQuantity()));
+			}
 			salesOrderLineAdd.setItemRef(itemRef);
 			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
 			
@@ -229,10 +241,35 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			// itemTaxableTotal
 			salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(
 					salesOrderLineAdd);
+			
+			//IMP Oct 4th 2014 - add discount line items. For now, just add generic discount DISC-PRODUCT
+			if(item.getDiscountTotal() > 0.0) {
+				productDiscounts += item.getDiscountTotal();
+				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getDiscountTotal()), "DISC-PRODUCT");
+			}
 			counter++;
 		}
-
+		
+		//IMP: Oct 4th 2014 - Now add shipping item!
+		addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(singleOrder.getShippingTotal()), "Shipping");
+		
+		//IMP: Oct 4th 2014 - Now add order level discounts! Subtraction is to get pure order discount.
+		addSOAddLineItemAmount(salesOrderAdd, 
+				numberFormat.format(singleOrder.getDiscountTotal() - productDiscounts), "DISC-ORDER");
+		
 		return getMarshalledValue(qbxml);
+	}
+	
+	/*
+	 * Get various amounts associated with order as line items
+	 */
+	private void addSOAddLineItemAmount(SalesOrderAdd salesOrderAdd, String amount, String fieldName) {
+		SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
+		salesOrderLineAdd.setAmount(amount);
+		ItemRef itemRef = new ItemRef();
+		itemRef.setFullName(fieldName);
+		salesOrderLineAdd.setItemRef(itemRef);
+		salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
 	}
 
 	@Override
@@ -286,6 +323,10 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		
 		int counter = 0;
+		
+		//Need to accumulate item discounts -> order discount contains these as well. So 
+		//while adding pure order level discount, need to subtract.
+		Double productDiscounts = 0.0;
 		for (OrderItem item : items) {
 			itemRef = new ItemRef();
 			
@@ -300,18 +341,55 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				}
 			}
 			
-			salesOrderLineMod.setAmount(numberFormat.format(item
-					.getDiscountedTotal()));
+			if(item.getUnitPrice().getSaleAmount() != null) {
+				salesOrderLineMod.setAmount(numberFormat.format(
+						item.getUnitPrice().getSaleAmount() * item.getQuantity()));
+			} else {
+				salesOrderLineMod.setAmount(numberFormat.format(
+						item.getUnitPrice().getListAmount() * item.getQuantity()));
+			}
+			
 			salesOrderLineMod.setItemRef(itemRef);
+			
+			//4-Oct-2014 - Set quantity for update as well.
+			salesOrderLineMod.setQuantity(item.getQuantity().toString());
 			// salesOrderLineAdd.setRatePercent("7.5"); // (getItemtaxTotal *
 			// 100)/
 			// itemTaxableTotal
 			salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
 			
+			//IMP Oct 4th 2014 - add discount line items. For now, just add generic discount DISC-PRODUCT
+			if(item.getDiscountTotal() > 0.0) {
+				productDiscounts += item.getDiscountTotal();
+				addSOModLineItemAmount(salesOrdermod, 
+						numberFormat.format(item.getDiscountTotal()), "DISC-PRODUCT");
+			}
+			
 			counter++;
 		}
-
+		
+		//IMP: Oct 4th 2014 - Now add shipping items!
+		addSOModLineItemAmount(salesOrdermod, numberFormat.format(singleOrder.getShippingTotal()), 
+				"Shipping");
+		
+		//IMP: Oct 4th 2014 - Now add order level discounts!
+		addSOModLineItemAmount(salesOrdermod, 
+				numberFormat.format(singleOrder.getDiscountTotal() - productDiscounts), "DISC-ORDER");
+		
 		return getMarshalledValue(qbxml);
+	}
+
+	/*
+	 * Get various amounts associated with updated order as line items
+	 */
+	private void addSOModLineItemAmount(SalesOrderMod salesOrdermod, String amount, String fieldName) {
+		SalesOrderLineMod salesOrderLineMod = new SalesOrderLineMod();
+		salesOrderLineMod.setAmount(amount);
+		ItemRef itemRef = new ItemRef();
+		itemRef.setFullName(fieldName);
+		salesOrderLineMod.setItemRef(itemRef);
+		salesOrderLineMod.setTxnLineID("-1");
+		salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
 	}
 
 	@Override
