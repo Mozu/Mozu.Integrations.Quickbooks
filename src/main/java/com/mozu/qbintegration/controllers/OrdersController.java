@@ -40,12 +40,14 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.security.Crypto;
 import com.mozu.base.controllers.ConfigurationSecurityInterceptor;
+import com.mozu.qbintegration.handlers.EntityHandler;
+import com.mozu.qbintegration.handlers.OrderHandler;
+import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.OrderJsonObject;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.EntityHelper;
 
 /**
  * @author Admin
@@ -65,6 +67,15 @@ public class OrdersController {
 
 	@Autowired
 	private QuickbooksService quickbooksService;
+	
+	@Autowired
+	OrderHandler orderHandler;
+	
+	@Autowired
+	private EntityHandler entityHandler;
+	
+	@Autowired
+	private OrderStateHandler orderStateHandler;
 	
 	final ObjectMapper mapper = new ObjectMapper();
 
@@ -124,8 +135,7 @@ public class OrdersController {
 
 		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("POSTED");
-		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
-				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
+		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, entityHandler.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -156,8 +166,8 @@ public class OrdersController {
 
 		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("CONFLICT");
-		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
-				.getMozuOrderDetails(tenantId, criteria, EntityHelper.getOrderEntityName());
+		List<MozuOrderDetail> mozuOrderDetails = orderHandler
+				.getMozuOrderDetails(tenantId, criteria, entityHandler.getOrderEntityName());
 		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -217,9 +227,8 @@ public class OrdersController {
 		
 		MozuOrderDetail criteria = new MozuOrderDetail();
 		criteria.setOrderStatus("UPDATED");
-		List<MozuOrderDetail> mozuOrderDetails = quickbooksService
-				.getMozuOrderDetails(tenantId, criteria, 
-						EntityHelper.getOrderUpdatedEntityName());
+		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, 
+						entityHandler.getOrderUpdatedEntityName());
 
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -266,7 +275,8 @@ public class OrdersController {
 		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
 		logger.debug("" + orderNumberList.size());
 		
-		quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		orderStateHandler.addUpdatesToQueue(orderNumberList, tenantId);
+		//quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId);
 		
 		return "Selected orders have been successfully updated in Quickbooks.";
 	}
@@ -291,16 +301,14 @@ public class OrdersController {
 	}
 
 	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
-	public @ResponseBody
-	String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+	public @ResponseBody String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 		
 		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
 		logger.debug("" + orderNumberList.size());
-		
-		quickbooksService.updateConflictOrdersInQuickbooks(orderNumberList, tenantId, siteId);
+		orderStateHandler.retryConflicOrders(tenantId, orderNumberList);
 		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
 		
 	}

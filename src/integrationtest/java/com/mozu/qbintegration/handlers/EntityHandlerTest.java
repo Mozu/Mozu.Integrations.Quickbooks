@@ -19,7 +19,6 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.EntityHelper;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -30,6 +29,9 @@ public class EntityHandlerTest {
 	
 	@Autowired
 	QuickbooksService quickbooksService;
+	
+	@Autowired
+	EntityHandler entityHandler;
 	
 	Integer tenantId = 0;
 	@BeforeClass
@@ -50,19 +52,28 @@ public class EntityHandlerTest {
 	}
 
 	@Test
-	public void cleanupEntity() {
-
+	public void installSchemaTest() {
 		try {
-			runCleanup(EntityHelper.getOrderEntityName(), "enteredTime");
-			runCleanup(EntityHelper.getTaskqueueEntityName(), "enteredTime");
-			runCleanup(EntityHelper.getOrderConflictEntityName(), "enteredTime");
-			runCleanup(EntityHelper.getOrderUpdatedEntityName(), "enteredTime");
-			runCleanup(EntityHelper.getCustomerEntityName(), "custEmail");
-			runCleanup(EntityHelper.getProductEntityName(), "productCode");
+			entityHandler.addSchemas(tenantId);
 		} catch(Exception exc) {
 			fail(exc.getMessage());
 		}
-		
+	}
+	
+	@Test
+	public void cleanupEntity() {
+
+		try {
+			runCleanup(entityHandler.getOrderEntityName(), "enteredTime");
+			runCleanup(entityHandler.getTaskqueueEntityName(), "id");
+			runCleanup(entityHandler.getTaskqueueLogEntityName(), "id");
+			runCleanup(entityHandler.getOrderConflictEntityName(), "enteredTime");
+			runCleanup(entityHandler.getOrderUpdatedEntityName(), "enteredTime");
+			runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
+			runCleanup(entityHandler.getProductEntityName(), "productCode");
+		} catch(Exception exc) {
+			fail(exc.getMessage());
+		}
 		
 	}
 	
@@ -72,9 +83,11 @@ public class EntityHandlerTest {
 		EntityCollection entities = entityResource.getEntities(entityName, 200, 0, null, null, null);
 		
 		for(JsonNode entity : entities.getItems()) {
-			String id  = entity.get(key).asText();
-			logger.info("Deleting id:"+id+" from "+entityName);
-			entityResource.deleteEntity(entityName, id);
+			if (entity.has(key)) {
+				String id  = entity.get(key).asText();
+				logger.info("Deleting id:"+id+" from "+entityName);
+				entityResource.deleteEntity(entityName, id);
+			}
 		}
 	}
 }

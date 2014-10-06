@@ -7,44 +7,24 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.ws.WebServiceContext;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
-
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.commerceruntime.products.Product;
-import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
+import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
-import com.mozu.qbintegration.handlers.QBHandler;
-import com.mozu.qbintegration.model.MozuOrderDetail;
-import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderConflictDetail;
-import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
-import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
-import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
+import com.mozu.qbintegration.handlers.OrderStateHandler;
+import com.mozu.qbintegration.handlers.ProductHandler;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.EntityHelper;
 import com.mozu.quickbooks.generated.ArrayOfString;
 import com.mozu.quickbooks.generated.Authenticate;
 import com.mozu.quickbooks.generated.AuthenticateResponse;
@@ -91,7 +71,14 @@ public class QuickbooksServiceEndPoint {
 	CustomerHandler customerHandler;
 
 	@Autowired
-	QBHandler qbHandler;
+	EntityHandler entityHandler;
+	
+	@Autowired
+	ProductHandler productHandler;
+	
+	
+	@Autowired
+	OrderStateHandler orderStateHandler;
 	
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 
@@ -154,22 +141,18 @@ public class QuickbooksServiceEndPoint {
 
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "sendRequestXML")
 	@ResponsePayload
-	public SendRequestXMLResponse sendRequestXML(SendRequestXML requestXML)	throws java.rmi.RemoteException {
+	public SendRequestXMLResponse sendRequestXML(SendRequestXML requestXML)	throws Exception {
 
 		// Get the tenantID
 		Integer tenantId = Integer.parseInt(requestXML.getTicket().split("~")[0]);
-
-		// Has the order id reference here
-		WorkTask criteria = new WorkTask();
-		criteria.setQbTaskStatus("ENTERED");
-		WorkTask workTask = queueManagerService.getNextTaskWithCriteria(tenantId, criteria);
+		
+		WorkTask workTask = queueManagerService.getNext(tenantId);
 
 		SendRequestXMLResponse response = new SendRequestXMLResponse();
 		if (workTask != null) {
 
-			workTask.setQbTaskStatus("PROCESSING"); // now this task is processing. will be changed to processed in
-			queueManagerService.updateTask(workTask, tenantId);
-			response.setSendRequestXMLResult(workTask.getQbTaskRequest());
+			String requestXml = getRequestXml(tenantId, workTask);
+			response.setSendRequestXMLResult(requestXml);
 		} else {
 			response.setSendRequestXMLResult(null); // all pending work completed
 		}
@@ -180,11 +163,10 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 
-		logger.debug(responseXML.getMessage());
+		logger.info(responseXML.getTicket()+" - "+responseXML.getMessage());
+		logger.info(responseXML.getTicket()+" - "+responseXML.getResponse());
 		Integer tenantId = Integer.parseInt(responseXML.getTicket().split("~")[0]);
-		WorkTask criteria = new WorkTask();
-		criteria.setQbTaskStatus("PROCESSING");
-		WorkTask workTask = queueManagerService.getNextTaskWithCriteria(tenantId, criteria);
+		WorkTask workTask = queueManagerService.getActiveTask(tenantId);
 
 		if (workTask == null) { // nothing to do but work is not complete so
 								// come back
@@ -195,46 +177,32 @@ public class QuickbooksServiceEndPoint {
 
 		try {
 
-			// Right place to mark this task as PROCESSED
-			workTask.setQbTaskResponse(responseXML.getResponse());
-			workTask.setQbTaskStatus("PROCESSED");
-			queueManagerService.updateTask(workTask, tenantId);
 			
-			switch(workTask.getQbTaskType().toLowerCase()) {
-				case "cust_query" :
-					qbHandler.processCustomerQuery(tenantId, workTask);
+			switch(workTask.getType().toLowerCase()) {
+				case "order":
+					orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), workTask.getAction().equalsIgnoreCase("update"));
 					break;
-				case "cust_add":
-					qbHandler.processCustomerAdd(tenantId, workTask);
+				case "product":
+					if (workTask.getAction().equalsIgnoreCase("add"))
+						productHandler.processItemAdd(tenantId, workTask, responseXML.getResponse());
+					else if (workTask.getAction().equalsIgnoreCase("refresh"))
+						productHandler.processItemQueryAll(tenantId, workTask,responseXML.getResponse());
 					break;
-				case "item_query":
-					qbHandler.processItemQuery(tenantId, workTask);
-					break;
-				case "item_add":
-					qbHandler.processItemQuery(tenantId, workTask);
-					break;
-				case "order_add":
-					qbHandler.processOrderAdd(tenantId, workTask);
-					break;
-				case "item_query_all":
-					qbHandler.processItemQueryAll(tenantId, workTask);
-					break;
-				case "order_update":
-					qbHandler.processCustomerQuery(tenantId, workTask);
-					break;
-				default:
-					throw new Exception("Not supported");
-			}
+			default:
+				throw new Exception("Not supported");
+		}
 			
 		} catch (Exception ex) {
 			// Any exception, just make the task as entered for now
-			workTask.setQbTaskStatus("ERRORED");
-			queueManagerService.updateTask(workTask, tenantId);
+			workTask.setStatus("ERRORED");
+			//queueManagerService.set(workTask, tenantId);
 			// Make an entry in the order entity list with posted status
-			String orderId = workTask.getTaskId(); // this gets the order id
+			String orderId = workTask.getId(); // this gets the order id
 	
-			MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, workTask.getSiteId(), orderId, "CONFLICT", null);
-			qbService.saveOrderInEntityList(orderDetails,EntityHelper.getOrderEntityName(), tenantId,workTask.getSiteId());
+			/*MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, orderId, "CONFLICT", null);
+			if (StringUtils.isEmpty(orderDetails.getConflictReason()))
+				orderDetails.setConflictReason(ex.getMessage());
+			orderHandler.saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);*/
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
@@ -272,6 +240,40 @@ public class QuickbooksServiceEndPoint {
 		CloseConnectionResponse response = new CloseConnectionResponse();
 		response.setCloseConnectionResult("Thank you for using QB Connector");
 		return response;
+	}
+	
+	private String getRequestXml(Integer tenantId, WorkTask workTask) throws Exception {
+		Order order = null;
+		if (workTask.getType().equalsIgnoreCase("order")) {
+			switch(workTask.getCurrentStep().toLowerCase()) {
+				case "cust_query" :
+					 order = orderHandler.getOrder(workTask.getId(), tenantId);
+					return customerHandler.getQBSearchGetXML(tenantId, workTask.getId(), order.getCustomerAccountId());
+				case "cust_add":
+					 order = orderHandler.getOrder(workTask.getId(), tenantId);
+					return customerHandler.getQBCustomerSaveXML(tenantId, workTask.getId(), order.getCustomerAccountId());
+				case "order_add":
+					return orderHandler.getQBOrderSaveXML(tenantId, workTask.getId());
+				case "order_update":
+					return orderHandler.getQBOrderUpdateXML(tenantId,workTask.getId());
+				case "item_query":
+					order = orderHandler.getOrder(workTask.getId(), tenantId);
+					for(OrderItem item : order.getItems()) { //TODO: change to multiple query
+						return productHandler.getQBProductsGetXML(workTask.getId(), item.getProduct().getProductCode());
+					}
+				default:
+					throw new Exception("Not supported");
+			}
+		} else {
+			switch(workTask.getAction().toLowerCase()) {
+				case "add":
+					return productHandler.getQBProductSaveXML(tenantId, workTask.getId());
+				case "refresh":
+					return productHandler.getAllQBProductsGetXML(tenantId);
+				default:
+					throw new Exception("Not supported");
+			}
+		}
 	}
 
 }
