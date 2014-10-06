@@ -32,7 +32,7 @@ public class ApplicationEventHandlerImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4519;
+		tenantId = 5872;
 		apiContext = new MozuApiContext(tenantId);
 	}
 
