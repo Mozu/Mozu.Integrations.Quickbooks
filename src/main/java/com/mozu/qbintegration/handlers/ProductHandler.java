@@ -5,6 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
@@ -302,9 +304,10 @@ public class ProductHandler {
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		for(OrderItem item : orderItems) {
+		List<String> productCodes = getProductCodes(orderItems);
+		for(String productCode : productCodes) {
 			ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
-			itemQueryRqType.getFullName().add(item.getProduct().getProductCode());
+			itemQueryRqType.getFullName().add(productCode);	
 			itemQueryRqType.setRequestID(orderId);
 	
 			qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
@@ -336,6 +339,26 @@ public class ProductHandler {
 			logger.error(e.getMessage(), e);
 			throw e;
 		}
+	}
+
+	public List<String> getProductCodes(List<OrderItem> orderItems) {
+		List<String> productCodes = new ArrayList<String>();
+		
+		for(OrderItem item : orderItems) {
+			
+			if (!StringUtils.isEmpty(item.getProduct().getVariationProductCode()))
+				productCodes.add(item.getProduct().getVariationProductCode());	
+			else
+				productCodes.add(item.getProduct().getProductCode());
+	
+			if (item.getProduct().getBundledProducts() != null && item.getProduct().getBundledProducts().size() > 0) {
+				for(BundledProduct bProduct : item.getProduct().getBundledProducts()) {
+					productCodes.add(bProduct.getProductCode());
+				}
+			}
+		}
+		
+		return productCodes;
 	}
 }
 
