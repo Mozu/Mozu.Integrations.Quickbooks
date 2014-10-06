@@ -160,7 +160,9 @@ public class OrderHandler {
 						savedOrderLine = new QuickBooksSavedOrderLine();
 						savedOrderLine.setProductCode(orderLineRet.getItemRef().getFullName());
 						savedOrderLine.setQbLineItemTxnID(orderLineRet.getTxnLineID());
-						savedOrderLine.setQuantity(Integer.valueOf(orderLineRet.getQuantity()));
+						if(orderLineRet.getQuantity() != null) { //Discount and Shipping might not hav qty - the way they are set up in QB matters
+							savedOrderLine.setQuantity(Integer.valueOf(orderLineRet.getQuantity()));
+						}
 						savedLines.add(savedOrderLine);
 					//}
 				}
@@ -332,9 +334,11 @@ public class OrderHandler {
 			itemRef.setListID(qbProductId);
 			salesOrderLineAdd = new SalesOrderLineAdd();
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				salesOrderLineAdd.setAmount(numberFormat.format(item.getUnitPrice().getSaleAmount()));
+				salesOrderLineAdd.setAmount(numberFormat.format(
+						item.getUnitPrice().getSaleAmount() * item.getQuantity()));
 			} else {
-				salesOrderLineAdd.setAmount(numberFormat.format(item.getUnitPrice().getListAmount()));
+				salesOrderLineAdd.setAmount(numberFormat.format(
+						item.getUnitPrice().getListAmount() * item.getQuantity()));
 			}
 			salesOrderLineAdd.setItemRef(itemRef);
 			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
@@ -409,9 +413,11 @@ public class OrderHandler {
 			}
 			
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				salesOrderLineMod.setAmount(numberFormat.format(item.getUnitPrice().getSaleAmount()));
+				salesOrderLineMod.setAmount(numberFormat.format(
+						item.getUnitPrice().getSaleAmount() * item.getQuantity()));
 			} else {
-				salesOrderLineMod.setAmount(numberFormat.format(item.getUnitPrice().getListAmount()));
+				salesOrderLineMod.setAmount(numberFormat.format(
+						item.getUnitPrice().getListAmount() * item.getQuantity()));
 			}
 			salesOrderLineMod.setQuantity(item.getQuantity().toString());
 			salesOrderLineMod.setItemRef(itemRef);
@@ -435,7 +441,7 @@ public class OrderHandler {
 		ItemRef itemRef = new ItemRef();
 		itemRef.setFullName(fieldName);
 		salesOrderLineAdd.setItemRef(itemRef);
-		salesOrderLineAdd.setQuantity(String.valueOf(qty));
+		//salesOrderLineAdd.setQuantity(String.valueOf(qty));
 		salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
 	}
 	
@@ -446,7 +452,7 @@ public class OrderHandler {
 		itemRef.setFullName(fieldName);
 		salesOrderLineMod.setItemRef(itemRef);
 		salesOrderLineMod.setTxnLineID("-1");
-		salesOrderLineMod.setQuantity(String.valueOf(qty));
+		//salesOrderLineMod.setQuantity(String.valueOf(qty));
 		salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
 	}
 	

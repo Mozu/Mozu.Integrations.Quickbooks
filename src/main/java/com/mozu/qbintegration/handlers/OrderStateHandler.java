@@ -130,10 +130,13 @@ public class OrderStateHandler {
 		
 		for(String mozuOrderNum: orderNumberList) {
 			
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "mozuOrderId eq "+mozuOrderNum, "enteredTime desc", 200);
+			String filter = (new StringBuilder()).append("mozuOrderId eq ").
+					append(mozuOrderNum).append(" and orderStatus eq CONFLICT").toString();
+			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, 
+					entityHandler.getOrderEntityName(), filter, "enteredTime desc", 200);
 			for(JsonNode node : nodes) { //there should be only one ever...just to cover the .001% :)
 				MozuOrderDetail conflictOrder = mapper.readValue(node.toString(), MozuOrderDetail.class);
-				conflictOrder.setOrderStatus("RETIRED");
+				conflictOrder.setOrderStatus("RETRIED");
 				entityHandler.updateEntity(tenantId, entityHandler.getOrderEntityName(), conflictOrder.getEnteredTime(), conflictOrder);
 				logger.debug("Updated order number: " + mozuOrderNum + " to RETRIED for tenant ID: " + tenantId);
 			}
@@ -289,5 +292,36 @@ public class OrderStateHandler {
 			default:
 				throw new Exception("Not supported");
 		}
+	}
+
+	/**
+	 * Delete an order that is deleted in mozu.
+	 * 
+	 * @param entityId
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	public void deleteOrder(String entityId, Integer tenantId) throws Exception {
+		//Check if order has been processed, if not put in process Queue
+		boolean isProcessed = isOrderProcessed(tenantId, entityId);
+		boolean isOrderInConflict = isOrderInConflict(tenantId, entityId);
+		
+		if (isProcessed && !isOrderInConflict) { //Delete only if it has been successfully posted to QB
+			//Get Posted order
+			List<JsonNode> nodes = entityHandler.getEntityCollection(
+					tenantId, entityHandler.getOrderEntityName(), 
+					"mozuOrderId eq " + entityId + " and orderStatus eq POSTED");
+			
+			String quickbooksOrderListId = null;
+			if (nodes.size() > 0) {
+				MozuOrderDetail previousOrder = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
+				quickbooksOrderListId = previousOrder.getQuickbooksOrderListId();
+			} else {
+				throw new Exception("Did not find an order with id: " + entityId + " in POSTED status. " +
+						"Tenant id: " + tenantId + ". So nothing to delete.");
+			}
+			
+		}
+		
 	}
 }
