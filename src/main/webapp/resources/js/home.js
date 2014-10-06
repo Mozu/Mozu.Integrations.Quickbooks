@@ -425,14 +425,13 @@ var homeViewModel = function() {
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getConflictOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
-
-			            {    
-		            	   "mData": "mozuOrderNumber",
-		            	   "bSearchable": false,
-		            	   "bSortable": false,
-		            	   "mRender": function (data, type, full) {			
-		            		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" />';
-			            }
+	            {    
+            	   "mData": "mozuOrderId",
+            	   "bSearchable": false,
+            	   "bSortable": false,
+            	   "mRender": function (data, type, full) {			
+            		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" />';
+            	   }
 			    },
 			    {
 			    	"mData" : "mozuOrderNumber"
@@ -468,13 +467,20 @@ var homeViewModel = function() {
 					"mData" : "amount"
 				},
 				{    
+				   "mData": "conflictReason"
+				   /*"mRender": function (data, type, row) {
+				    	var dataId = data ;
+				    	return "<span title='"+data+""'>"+data.substring(0,10)+"...</span>";
+				   }*/
+				},
+				{    
 				   //"mData": "conflictReason",
 				    "mData": "mozuOrderNumber",
 				    "bSearchable": false,
 				    "bSortable": false,
 				    "mRender": function (data, type, row) {
 				    	var dataId = data ;
-				    	return "<a href='javascript:funEdit(" + row.mozuOrderNumber + ")'>Edit</a>";
+				    	return "<a href='javascript:funEdit(\"" + row.mozuOrderId + "\")'>Edit</a>";
 				   }
 				 }
 			]
@@ -495,7 +501,7 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			            {    
-		            	   "mData": "mozuOrderNumber",
+		            	   "mData": "mozuOrderId",
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
@@ -544,7 +550,7 @@ var homeViewModel = function() {
 						    "bSortable": false,
 						    "mRender": function (data, type, row) {
 						    	var dataId = data ;
-						    	return "<a href='javascript:compareDetails(" + row.mozuOrderNumber + ")'>Review</a>";
+						    	return "<a href='javascript:compareDetails(\"" + row.mozuOrderId + "\")'>Review</a>";
 						   }
 						}
 			]
