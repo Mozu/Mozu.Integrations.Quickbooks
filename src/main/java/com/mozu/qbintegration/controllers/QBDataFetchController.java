@@ -9,6 +9,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mozu.qbintegration.handlers.ProductHandler;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
@@ -37,8 +39,10 @@ import com.mozu.qbintegration.tasks.WorkTask;
 @Controller
 public class QBDataFetchController {
 	
-	private static final Logger logger = LoggerFactory
-			.getLogger(OrdersController.class);
+	private static final Logger logger = LoggerFactory.getLogger(OrdersController.class);
+	
+	@Autowired
+	ProductHandler productHandler;
 	
 	@Autowired
 	private QuickbooksService quickbooksService;
@@ -56,7 +60,7 @@ public class QBDataFetchController {
 			@RequestBody ProductToQuickbooks productToQuickbooks,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
-		quickbooksService.saveNewProductToQB(productToQuickbooks, tenantId, siteId);
+		productHandler.addProductToQB(tenantId, productToQuickbooks );
 				
 		return (mapper.createObjectNode()).put("savedProduct", mapper.writeValueAsString(productToQuickbooks));
 		
@@ -66,21 +70,12 @@ public class QBDataFetchController {
 	public @ResponseBody
 	String getPostedProducts(HttpServletRequest httpRequest,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 
-		String requestXML = quickbooksService.getAllQBProductsGetXML(tenantId,
-				siteId);
+		//String requestXML = productHandler.getAllQBProductsGetXML(tenantId);
 
-		WorkTask itemQueryTask = new WorkTask();
-		// Just to make it unique
-		itemQueryTask.setEnteredTime(System.currentTimeMillis());
-		itemQueryTask.setTaskId("");
-		itemQueryTask.setQbTaskStatus("ENTERED");
-		itemQueryTask.setTenantId(tenantId);
-		itemQueryTask.setSiteId(siteId);
-		itemQueryTask.setQbTaskType("ITEM_QUERY_ALL");
-		itemQueryTask.setQbTaskRequest(requestXML);
-		queueManagerService.saveTask(itemQueryTask, tenantId);
+		queueManagerService.addTask(tenantId, String.valueOf(tenantId)+"-Product", "Product", "ITEM", "Refresh");
+		
 		logger.debug("Saved get all items from quickbooks task at " + new Date());
 		return "The request to refresh products has been scheduled.";
 		
@@ -113,7 +108,7 @@ public class QBDataFetchController {
 		
 		//User wants us to make the product code to an existing quickbooks product list id
 		// SO do that mapping in EL.
-		quickbooksService.mapProductToQBInEL(productToMapToEB, tenantId, siteId);
+		productHandler.mapProductToQBInEL(productToMapToEB, tenantId);
 				
 		return (mapper.createObjectNode()).put("savedProduct", mapper.writeValueAsString(productToMapToEB));
 		

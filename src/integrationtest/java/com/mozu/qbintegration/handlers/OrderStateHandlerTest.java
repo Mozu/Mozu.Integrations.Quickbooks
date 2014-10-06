@@ -1,4 +1,4 @@
-package com.mozu.qbintegration.service;
+package com.mozu.qbintegration.handlers;
 
 import static org.junit.Assert.*;
 
@@ -12,13 +12,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mozu.api.ApiContext;
+import com.mozu.api.MozuApiContext;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })
-public class QueueManagerServiceTest {
+public class OrderStateHandlerTest {
 
 	@Autowired
-	QueueManagerService queueManagerService;
-	Integer tenantId = 0;
+	OrderStateHandler orderStateHandler;
+	
+	Integer tenantId;
+	String orderId;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -31,6 +36,7 @@ public class QueueManagerServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		tenantId = 4508;
+		orderId = "05323246157c280c9426aa680000119c";
 	}
 
 	@After
@@ -38,14 +44,13 @@ public class QueueManagerServiceTest {
 	}
 
 	@Test
-	public void queueTaskExiststest() {
+	public void processOrderTest() {
 		try {
-			//boolean exists = queueManagerService.taskExists(tenantId, "052ca9c178bf8a0d9c9350b40000119c");
-			//assertEquals(exists, true);
+			ApiContext apiContext = new MozuApiContext(tenantId);
+			orderStateHandler.processOrder(orderId, apiContext );
 		} catch(Exception exc) {
 			fail(exc.getMessage());
 		}
-		
 	}
 
 }

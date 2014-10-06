@@ -21,10 +21,11 @@ import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
+import com.mozu.qbintegration.handlers.EntityHandler;
+import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.EntityHelper;
 
 @Component
 public class OrderEventHandlerImpl implements OrderEventHandler {
@@ -37,6 +38,9 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	@Autowired
 	private QueueManagerService queueManagerService;
 
+	@Autowired
+	private OrderStateHandler orderStateHandler;
+	
 	@PostConstruct
 	public void initialize() {
 		try {
@@ -68,7 +72,8 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		final Integer tenantId = apiContext.getTenantId();
 		final Integer siteId = apiContext.getSiteId();
 		try {
-			quickbooksService.saveOrderInQuickbooks(event.getEntityId(),  tenantId, siteId);
+			//quickbooksService.saveOrderInQuickbooks(event.getEntityId(),  tenantId);
+			orderStateHandler.processOrder(event.getEntityId(), apiContext);
 			status = new EventHandlerStatus(HttpStatus.SC_OK);
 		} catch (Exception e) {
 			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
@@ -88,10 +93,9 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	public EventHandlerStatus updated(final ApiContext apiContext, Event event) {
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
 		final Integer tenantId = apiContext.getTenantId();
-		final Integer siteId = apiContext.getSiteId();
 		final String orderId = event.getEntityId();
 		try {
-			OrderResource orderResource = new OrderResource(apiContext);
+			/*OrderResource orderResource = new OrderResource(apiContext);
 			Order order = null;
 			order = orderResource.getOrder(orderId);
 			if(order.getAcceptedDate() != null) { //log only if order has been previously submitted (accepted)
@@ -99,7 +103,7 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 				final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
 				
 				//Check if order has been processed, if not put in process Queue
-				boolean isProcessed = quickbooksService.isOrderProcessed(tenantId, siteId, order.getOrderNumber());
+				boolean isProcessed = quickbooksService.isOrderProcessed(tenantId, order.getOrderNumber());
 				
 				if (isProcessed) {
 					MozuOrderDetail mozuOrderDetails = populateOrderDetails(order, orderingCust.getEmailAddress());
@@ -115,18 +119,19 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 							criteriaForUpDate, EntityHelper.getOrderUpdatedEntityName());
 					String mapName = EntityHelper.getOrderUpdatedEntityName();
 					if(updatedOrders.isEmpty()) {
-						quickbooksService.saveOrderInEntityList(mozuOrderDetails, mapName , tenantId, siteId);
+						quickbooksService.saveOrderInEntityList(mozuOrderDetails, mapName , tenantId);
 					} else {
 						mozuOrderDetails.setEnteredTime(updatedOrders.get(0).getEnteredTime());
-						quickbooksService.updateOrderInEntityList(mozuOrderDetails, mapName, tenantId, siteId);
+						quickbooksService.updateOrderInEntityList(mozuOrderDetails, mapName, tenantId);
 					}
 				} else {
-					quickbooksService.saveOrderInQuickbooks(order, tenantId, siteId);
+					quickbooksService.saveOrderInQuickbooks(order, tenantId);
 				}
-			}
+			}*/
+			orderStateHandler.processOrder(orderId, apiContext);
 			status = new EventHandlerStatus(HttpStatus.SC_OK);
 		} catch (Exception e) {
-			logger.error("Exception while processing customer update, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
+			logger.error("Exception while processing customer update, tenantID: "+ tenantId + ", exception:"	+ e.getMessage(), e);
 			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
 		}
 

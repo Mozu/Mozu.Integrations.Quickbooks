@@ -234,9 +234,9 @@ public class MozuOrderDetail {
 	/**
 	 * @return the savedOrderLines
 	 */
-	public String getSavedOrderLines() {
+	/*public String getSavedOrderLines() {
 		return savedOrderLines;
-	}
+	}*/
 
 	/**
 	 * @param savedOrderLines the savedOrderLines to set
