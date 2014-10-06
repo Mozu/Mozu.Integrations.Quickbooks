@@ -220,7 +220,7 @@ public class QuickbooksServiceEndPoint {
 					qbHandler.processItemQueryAll(tenantId, workTask);
 					break;
 				case "order_update":
-					qbHandler.processCustomerQuery(tenantId, workTask);
+					qbHandler.processOrderUpdate(tenantId, workTask);
 					break;
 				default:
 					throw new Exception("Not supported");
