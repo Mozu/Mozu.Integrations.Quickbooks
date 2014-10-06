@@ -180,7 +180,8 @@ public class QuickbooksServiceEndPoint {
 			
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
-					orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), workTask.getAction().equalsIgnoreCase("update"));
+					orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), 
+							workTask.getAction());
 					break;
 				case "product":
 					if (workTask.getAction().equalsIgnoreCase("add"))
@@ -257,6 +258,8 @@ public class QuickbooksServiceEndPoint {
 					return orderHandler.getQBOrderUpdateXML(tenantId,workTask.getId());
 				case "item_query":
 					return productHandler.getQBProductsGetXML(workTask.getId(), order.getItems());
+				case "order_delete":
+					return orderHandler.getQBOrderDeleteXML(tenantId, workTask.getId());
 				default:
 					throw new Exception("Not supported");
 			}

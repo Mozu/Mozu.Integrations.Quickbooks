@@ -53,7 +53,19 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 
 	@Override
 	public EventHandlerStatus cancelled(ApiContext apiContext, Event event) {
-		return null;
+		
+		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
+		final Integer tenantId = apiContext.getTenantId();
+		final Integer siteId = apiContext.getSiteId();
+		try {
+			orderStateHandler.deleteOrder(event.getEntityId(), tenantId);
+		} catch (Exception e) {
+			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
+			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		}
+					
+		return status;
+		
 	}
 
 	@Override
