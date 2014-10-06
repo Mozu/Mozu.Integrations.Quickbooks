@@ -85,19 +85,19 @@ public class OrderStateHandler {
 				orderHandler.updateOrderInEntityList(mozuOrderDetails, entityHandler.getOrderUpdatedEntityName(), tenantId);
 			} else if (!isOrderInProcessing(tenantId, orderId)) { //Add to queue for processing
 				//quickbooksService.saveOrderInQuickbooks(order, tenantId);
-				transitionState(orderId, tenantId, null, false );
+				transitionState(orderId, tenantId, null, "Add" );
 			}
 		}
 	}
 	
-	public void transitionState(String orderId, Integer tenantId, String qbResponse, boolean isUpdate) throws Exception {
+	public void transitionState(String orderId, Integer tenantId, String qbResponse, String action) throws Exception {
 		Order order = orderHandler.getOrder(orderId, tenantId);
 		final CustomerAccount orderingCust = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 		
-		transitionState(tenantId,order, orderingCust, qbResponse, isUpdate);
+		transitionState(tenantId,order, orderingCust, qbResponse, action);
 	}
 	
-	public void transitionState( Integer tenantId, Order order,CustomerAccount custAcct,String qbResponse, boolean isUpdate) throws Exception {
+	public void transitionState( Integer tenantId, Order order,CustomerAccount custAcct,String qbResponse, String action) throws Exception {
 		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), order.getId());
 		String currentStep = StringUtils.EMPTY;
 		if (node != null) {
@@ -110,11 +110,11 @@ public class OrderStateHandler {
 		if (StringUtils.isNotEmpty(qbResponse))
 			queryResult = processCurrentStep(tenantId, order, custAcct, currentStep,qbResponse);
 		
-		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, queryResult, isUpdate); //Need to incorporate reponse from QB
+		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, queryResult, action); //Need to incorporate reponse from QB
 		
 		
 		if (node == null) {
-			queueManagerService.addTask(tenantId, order.getId(), "Order", nextStep, (isUpdate ? "Update" : "Add"));
+			queueManagerService.addTask(tenantId, order.getId(), "Order", nextStep, action);
 		} else {
 			String status = "PROCESSING";
 			if (nextStep.equals(currentStep) || nextStep.equalsIgnoreCase("conflict"))
@@ -152,7 +152,7 @@ public class OrderStateHandler {
 	public void addUpdatesToQueue(List<String> orderNumberList,Integer tenantId) throws Exception {
 		
 		for(String mozuOrderNum: orderNumberList) {
-			transitionState(mozuOrderNum, tenantId, null, true);
+			transitionState(mozuOrderNum, tenantId, null, "Update");
 			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+mozuOrderNum);
 			for(JsonNode node : nodes) {
 				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
@@ -208,20 +208,24 @@ public class OrderStateHandler {
 		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), id, orderDetails);
 	}
 	
-	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, boolean queryResult, boolean isUpdate) throws Exception {
+	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, 
+			boolean queryResult, String action) throws Exception {
 		
 		if (currentStep.equalsIgnoreCase("cust_query") && !queryResult)
 			return "CUST_ADD";
-		else if ((currentStep.equalsIgnoreCase("item_query") ||  currentStep.equalsIgnoreCase("order_add") || currentStep.equalsIgnoreCase("order_update")) && !queryResult)
+		else if ((currentStep.equalsIgnoreCase("item_query") ||  currentStep.equalsIgnoreCase("order_add") || 
+				currentStep.equalsIgnoreCase("order_update")) && !queryResult)
 			return "CONFLICT";
 		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) {
 			return "CUST_QUERY";
 		} else if (!allItemsFound(tenantId, order.getItems())) {
 			return "ITEM_QUERY";
-		} else if (isUpdate) {
+		} else if ("Update".equalsIgnoreCase(action)) {
 			return "ORDER_UPDATE";
-		} else {
+		} else if ("Add".equalsIgnoreCase(action)){
 			return "ORDER_ADD";
+		} else {
+			return "ORDER_DELETE";
 		}
 	}
 	
@@ -287,6 +291,8 @@ public class OrderStateHandler {
 				return orderHandler.processOrderAdd(tenantId, order.getId(),qbResponse); //TODO : pass order object
 			case "order_update":
 				return orderHandler.processOrderUpdate(tenantId, order.getId(),qbResponse); //TODO : pass order object
+			case "order_delete":
+				return orderHandler.processOrderDelete(tenantId, order.getId(),qbResponse);
 			case "item_query":
 				return productHandler.processItemQuery(tenantId,qbResponse);
 			default:
@@ -307,20 +313,10 @@ public class OrderStateHandler {
 		boolean isOrderInConflict = isOrderInConflict(tenantId, entityId);
 		
 		if (isProcessed && !isOrderInConflict) { //Delete only if it has been successfully posted to QB
-			//Get Posted order
-			List<JsonNode> nodes = entityHandler.getEntityCollection(
-					tenantId, entityHandler.getOrderEntityName(), 
-					"mozuOrderId eq " + entityId + " and orderStatus eq POSTED");
-			
-			String quickbooksOrderListId = null;
-			if (nodes.size() > 0) {
-				MozuOrderDetail previousOrder = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
-				quickbooksOrderListId = previousOrder.getQuickbooksOrderListId();
-			} else {
-				throw new Exception("Did not find an order with id: " + entityId + " in POSTED status. " +
-						"Tenant id: " + tenantId + ". So nothing to delete.");
-			}
-			
+			transitionState(entityId, tenantId, null, "cancel");
+		} else {
+			throw new Exception("Did not find an order with id: " + entityId + " in POSTED or CONFLICT status. " +
+					"Tenant id: " + tenantId + ". So nothing to Cancel.");
 		}
 		
 	}

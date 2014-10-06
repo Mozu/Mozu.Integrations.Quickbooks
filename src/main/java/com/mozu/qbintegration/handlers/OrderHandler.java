@@ -41,6 +41,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
+import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.service.QuickbooksServiceImpl;
 import com.mozu.qbintegration.tasks.WorkTask;
 import com.mozu.qbintegration.utils.XMLHelper;
@@ -456,4 +458,58 @@ public class OrderHandler {
 		salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
 	}
 	
+	/*
+	 * Get order delete XML
+	 */
+	public String getQBOrderDeleteXML(final Integer tenantId, final String orderId) throws Exception {
+		
+		QBXML qbxml = null; 
+		MozuOrderDetail criteria = new MozuOrderDetail();
+		criteria.setOrderStatus("POSTED");
+		criteria.setMozuOrderId(orderId);
+		List<MozuOrderDetail> results = getMozuOrderDetails(tenantId, criteria, entityHandler.getOrderEntityName());
+		
+		if(!results.isEmpty()) {
+			MozuOrderDetail singleResult = results.get(0);
+			TxnDelRqType deleteTx = new TxnDelRqType();
+			deleteTx.setRequestID(orderId);
+			deleteTx.setTxnDelType("SalesOrder");
+			deleteTx.setTxnID(singleResult.getQuickbooksOrderListId());
+			
+			qbxml = new QBXML();
+			QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
+			qbxmlMsgsRq.setOnError("stopOnError");
+			qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
+			qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(deleteTx);
+			
+		} else {
+			throw new Exception("No orders found in posted status to delete with order id: " + orderId
+					+ " for tenant id: " + tenantId);
+		}
+			
+		return XMLHelper.getMarshalledValue(qbxml);
+	}
+
+
+	/*
+	 * Process the response of cancelling a sales order in QB. 
+	 * Initiated on Order Cancelled event in mozu
+	 */
+	public boolean processOrderDelete(Integer tenantId, String id,
+			String qbResponse) throws Exception {
+		QBXML deleteTxResp = (QBXML) XMLHelper.getUnmarshalledValue(qbResponse);
+
+		TxnDelRsType deleteTxRespType = (TxnDelRsType) deleteTxResp
+				.getQBXMLMsgsRs()
+				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+				.get(0);
+
+		// An error occurred while processing the order
+		if (deleteTxRespType.getStatusSeverity().equalsIgnoreCase("error")) {
+			return false;
+		} else {
+			return true;
+		}
+		
+	}
 }
