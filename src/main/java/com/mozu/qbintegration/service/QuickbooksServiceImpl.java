@@ -71,38 +71,9 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	EntityHandler entityHandler;
 	
 	public QuickbooksServiceImpl() {
-		/*contextObj = JAXBContext.newInstance(QBXML.class);
-		marshallerObj = contextObj.createMarshaller();
-		marshallerObj.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);*/
+
 	}
 
-
-	/**
-	 * Get the product quickbooks list id based on product code
-	 * 
-	 * @param orderItem
-	 * @return
-	 */
-	/*@Override
-	public String getProductFromEntityList(OrderItem orderItem,	Integer tenantId) {
-		String entityIdValue = orderItem.getProduct().getProductCode();
-		String mapName = EntityHelper.getProductEntityName();
-
-		EntityResource entityResource = new EntityResource(new MozuApiContext(
-				tenantId));
-		String qbListID = null;
-		try {
-			JsonNode entity = entityResource.getEntity(mapName, entityIdValue);
-			JsonNode result = entity.findValue("qbProdustListID");
-			if (result != null) {
-				qbListID = result.asText();
-			}
-		} catch (Exception e) {
-			logger.error("Error retrieving entity for product code: "
-					+ entityIdValue);
-		}
-		return qbListID;
-	}*/
 
 	@Override
 	public GeneralSettings saveOrUpdateSettingsInEntityList(
@@ -313,8 +284,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			EntityResource entityResource = new EntityResource(
 					new MozuApiContext(tenantId));
 			String mapName = entityHandler.getProductEntityName();
-			EntityCollection mozuProductCollection = entityResource
-					.getEntities(mapName, 1000, 0, null, null, null);
+			EntityCollection mozuProductCollection = entityResource.getEntities(mapName, 1000, 0, null, null, null);
 
 			if (null != mozuProductCollection) {
 				MozuProduct mozuProduct = null;

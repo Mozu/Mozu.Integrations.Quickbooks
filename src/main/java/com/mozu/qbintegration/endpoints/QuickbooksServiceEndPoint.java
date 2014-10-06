@@ -188,9 +188,10 @@ public class QuickbooksServiceEndPoint {
 					else if (workTask.getAction().equalsIgnoreCase("refresh"))
 						productHandler.processItemQueryAll(tenantId, workTask,responseXML.getResponse());
 					break;
-			default:
-				throw new Exception("Not supported");
-		}
+				default:
+					throw new Exception("Not supported");
+
+			}
 			
 		} catch (Exception ex) {
 			// Any exception, just make the task as entered for now
