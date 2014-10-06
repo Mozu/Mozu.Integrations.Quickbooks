@@ -244,24 +244,19 @@ public class QuickbooksServiceEndPoint {
 	}
 	
 	private String getRequestXml(Integer tenantId, WorkTask workTask) throws Exception {
-		Order order = null;
 		if (workTask.getType().equalsIgnoreCase("order")) {
+			Order order = orderHandler.getOrder(workTask.getId(), tenantId);
 			switch(workTask.getCurrentStep().toLowerCase()) {
 				case "cust_query" :
-					 order = orderHandler.getOrder(workTask.getId(), tenantId);
 					return customerHandler.getQBSearchGetXML(tenantId, workTask.getId(), order.getCustomerAccountId());
 				case "cust_add":
-					 order = orderHandler.getOrder(workTask.getId(), tenantId);
 					return customerHandler.getQBCustomerSaveXML(tenantId, workTask.getId(), order.getCustomerAccountId());
 				case "order_add":
 					return orderHandler.getQBOrderSaveXML(tenantId, workTask.getId());
 				case "order_update":
 					return orderHandler.getQBOrderUpdateXML(tenantId,workTask.getId());
 				case "item_query":
-					order = orderHandler.getOrder(workTask.getId(), tenantId);
-					for(OrderItem item : order.getItems()) { //TODO: change to multiple query
-						return productHandler.getQBProductsGetXML(workTask.getId(), item.getProduct().getProductCode());
-					}
+					return productHandler.getQBProductsGetXML(workTask.getId(), order.getItems());
 				default:
 					throw new Exception("Not supported");
 			}

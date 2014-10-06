@@ -127,22 +127,18 @@ public class ProductHandler {
 	
 	public boolean processItemQuery(Integer tenantId, String qbTaskResponse) throws Exception {
 		QBXML itemSearchEle = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
-		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle.getQBXMLMsgsRs()
-																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																			.get(0);
-
-		if (500 == itemSearchResponse.getStatusCode().intValue()
-				&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
-			
-			return false;
-
-		} else {
-
-			saveProductInEntityList(itemSearchResponse, tenantId);
-
-			return true;
-			
+		List<Object> results = itemSearchEle.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
+		boolean foundAllItems = true;
+		for(Object obj : results) {
+			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
+			if (500 == itemSearchResponse.getStatusCode().intValue()&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
+				foundAllItems = false;
+			} else {
+				saveProductInEntityList(itemSearchResponse, tenantId);
+			}
 		}
+
+		return foundAllItems;
 	}
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask, String qbTaskResponse) throws Exception {
@@ -299,19 +295,20 @@ public class ProductHandler {
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	public String getQBProductsGetXML(final String orderId, String productCode) throws Exception {
+	public String getQBProductsGetXML(final String orderId, List<OrderItem> orderItems) throws Exception {
 
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
-		itemQueryRqType.getFullName().add(productCode);
-		itemQueryRqType.setRequestID(orderId);
-
-		qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
-
+		for(OrderItem item : orderItems) {
+			ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
+			itemQueryRqType.getFullName().add(item.getProduct().getProductCode());
+			itemQueryRqType.setRequestID(orderId);
+	
+			qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
+		}
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 	
