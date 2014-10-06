@@ -251,14 +251,11 @@ public class OrderHandler {
 				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
 			} else {
 				
-				//2nd Oct '14 update - Now that the key is enteredTime, get the record first to get the id
-				/*MozuOrderDetail updateCriteria = new MozuOrderDetail();
-				updateCriteria.setOrderStatus("UPDATED");
-				updateCriteria.setMozuOrderId(orderDetails.getMozuOrderId());*/
-				
-				List<MozuOrderDetail> updatedOrdList = getMozuOrderDetails(tenantId, orderDetails, entityHandler.getOrderUpdatedEntityName());
-				if (updatedOrdList.size() > 0) {
-					entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), updatedOrdList.get(0).getEnteredTime());
+				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+orderDetails.getMozuOrderId());
+
+				if (nodes.size() > 0) { //Delete existing update
+					MozuOrderDetail existing = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
+					entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), existing.getEnteredTime());
 				} 
 				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
 			}

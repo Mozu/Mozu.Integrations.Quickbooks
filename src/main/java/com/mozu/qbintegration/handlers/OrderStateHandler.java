@@ -171,21 +171,28 @@ public class OrderStateHandler {
 		QBXML qbXml = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
 		Object object = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs().get(0);
 		if (object instanceof ItemQueryRsType) {
-			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)object;
-	
-			OrderConflictDetail conflictDetail = new OrderConflictDetail();
-			conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
-			conflictDetail.setNatureOfConflict("Not Found");
-			for(OrderItem item : order.getItems()) {
-				if (itemSearchResponse.getStatusMessage().toLowerCase().contains(item.getProduct().getProductCode().toLowerCase()))
-						conflictDetail.setDataToFix(item.getProduct().getProductCode());
+			
+			List<Object> searchResults = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
+			
+			for(Object obj : searchResults) {
+				ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
+				
+				if (500 == itemSearchResponse.getStatusCode().intValue()&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
+					OrderConflictDetail conflictDetail = new OrderConflictDetail();
+					conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+					conflictDetail.setNatureOfConflict("Not Found");
+					for(OrderItem item : order.getItems()) {
+						if (itemSearchResponse.getStatusMessage().toLowerCase().contains(item.getProduct().getProductCode().toLowerCase()))
+								conflictDetail.setDataToFix(item.getProduct().getProductCode());
+					}
+					conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
+			
+					conflictDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+					conflictDetail.setMozuOrderId(order.getId());
+					entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), conflictDetail.getEnteredTime(), conflictDetail);
+					logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
+				}
 			}
-			conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
-	
-			conflictDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-			conflictDetail.setMozuOrderId(order.getId());
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), conflictDetail.getEnteredTime(), conflictDetail);
-			logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
 			
 			orderDetails.setConflictReason("Product(s) are missing");
 		} else if (object instanceof SalesOrderAddRsType) {
