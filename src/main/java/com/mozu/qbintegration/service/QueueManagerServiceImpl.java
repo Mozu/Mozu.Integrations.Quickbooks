@@ -4,7 +4,6 @@
  */
 package com.mozu.qbintegration.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -15,11 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.mzdb.EntityCollection;
-import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.tasks.WorkTask;

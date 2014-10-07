@@ -3,9 +3,7 @@
  */
 package com.mozu.qbintegration.controllers;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -121,114 +119,35 @@ public class OrdersController {
 		return null;
 	}
 	
-	
-	@RequestMapping(value = "/getPostedOrders", method = RequestMethod.GET)
-	public @ResponseBody
-	String getPostedOrders(HttpServletRequest httpRequest, ModelMap model, @RequestParam(value = "iDisplayStart") String iDisplayStart,
-			@RequestParam(value = "iDisplayLength") String iDisplayLength,
-			@RequestParam(value = "sSearch") String sSearch) throws Exception {
-
-		final Integer tenantId = Integer.parseInt(httpRequest
-				.getParameter("tenantId"));
-		final Integer siteId = Integer.parseInt(httpRequest
-				.getParameter("siteId")); // TODO do at site level
-
-		MozuOrderDetail criteria = new MozuOrderDetail();
-		criteria.setOrderStatus("POSTED");
-		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, entityHandler.getOrderEntityName());
-		
-		OrderJsonObject orderJsonObject = new OrderJsonObject();
-		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
-		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
-		orderJsonObject.setAaData(mozuOrderDetails);
-
-		String value = null;
-		try {
-			value = mapper.writeValueAsString(orderJsonObject);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			value = "";
-		}
-		return value;
-	}
-	
-	@RequestMapping(value = "/getConflictOrders", method = RequestMethod.GET)
-	public @ResponseBody
-	String getConflictOrders(HttpServletRequest httpRequest, ModelMap model, 
-			@RequestParam(value = "iDisplayStart") String iDisplayStart,
-			@RequestParam(value = "iDisplayLength") String iDisplayLength,
-			@RequestParam(value = "sSearch") String sSearch) throws Exception {
-
-		final Integer tenantId = Integer.parseInt(httpRequest
-				.getParameter("tenantId"));
-		final Integer siteId = Integer.parseInt(httpRequest
-				.getParameter("siteId")); // TODO do at site level
-
-		MozuOrderDetail criteria = new MozuOrderDetail();
-		criteria.setOrderStatus("CONFLICT");
-		List<MozuOrderDetail> mozuOrderDetails = orderHandler
-				.getMozuOrderDetails(tenantId, criteria, entityHandler.getOrderEntityName());
-		
-		OrderJsonObject orderJsonObject = new OrderJsonObject();
-		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
-		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
-		orderJsonObject.setAaData(mozuOrderDetails);
-
-		String value = null;
-		try {
-			value = mapper.writeValueAsString(orderJsonObject);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			value = "";
-		}
-		return value;
-	}
-	
-	@RequestMapping(value = "/getOrderConflictsDetails", method = RequestMethod.GET)
-	public @ResponseBody
-	String getConflictOrdersDetails(HttpServletRequest httpRequest, ModelMap model, 
-			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {	
-
-		List<OrderConflictDetail> conflictDetails = 
-				quickbooksService.getOrderConflictReasons(tenantId, mozuOrderNumber);
-		
-		String value = null;
-		try {
-			value = mapper.writeValueAsString(conflictDetails);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			value = "";
-		}
-		return value;
-	}
-	
 	/**
-	 * Display orders updated in mozu after those were posted to QB. Just pull the 
-	 * orders in updated status.
+	 * Display orders filtered on certain status, that is passed as parameter to the method.
 	 * 
 	 * @param httpRequest
 	 * @param model
 	 * @param mozuOrderNumber
 	 * @param tenantId
 	 * @param siteId
+	 * @param action posted, updated, conflict, cancelled
+	 * 
 	 * @return
 	 * @throws Exception 
 	 */
-	@RequestMapping(value = "/getUpdatedOrders", method = RequestMethod.GET)
+	@RequestMapping(value = "/getOrdersFilteredByAction", method = RequestMethod.GET)
 	public @ResponseBody
-	String getUpdatedOrders(HttpServletRequest httpRequest, ModelMap model, 
+	String getOrdersFilteredByAction(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "iDisplayStart") String iDisplayStart,
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
 			@RequestParam(value = "sSearch") String sSearch,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
+			@RequestParam(value = "siteId") Integer siteId,
+			@RequestParam(value = "action") String action) throws Exception {	
 		
 		MozuOrderDetail criteria = new MozuOrderDetail();
-		criteria.setOrderStatus("UPDATED");
+		
+		criteria.setOrderStatus(action); //POSTED, UPDATED, CONFLICT, CANCELLED
 		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, 
-						entityHandler.getOrderUpdatedEntityName());
+						"UPDATED".equalsIgnoreCase(action)? 
+								entityHandler.getOrderUpdatedEntityName() : entityHandler.getOrderEntityName());
 
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -241,6 +160,26 @@ public class OrdersController {
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage(), e);
 			throw e;
+		}
+		return value;
+	}
+	
+	@RequestMapping(value = "/getOrderConflictsDetails", method = RequestMethod.GET)
+	public @ResponseBody
+	String getConflictOrdersDetails(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) {
+
+		List<OrderConflictDetail> conflictDetails = 
+				quickbooksService.getOrderConflictReasons(tenantId, mozuOrderNumber);
+		
+		String value = null;
+		try {
+			value = mapper.writeValueAsString(conflictDetails);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			value = "";
 		}
 		return value;
 	}
@@ -281,6 +220,19 @@ public class OrdersController {
 		return "Selected orders have been successfully updated in Quickbooks.";
 	}
 	
+	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
+	public @ResponseBody String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {
+		
+		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		logger.debug("" + orderNumberList.size());
+		orderStateHandler.retryConflicOrders(tenantId, orderNumberList);
+		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
+		
+	}
+	
 	private List<String> getMozuOrderNumbers(String mozuOrderNumbers) throws Exception {
 		ArrayNode ordersNode = null;
 		List<String> orderNumberList = new ArrayList<String>();
@@ -298,19 +250,6 @@ public class OrdersController {
 			throw e;
 		} 
 		return orderNumberList; 
-	}
-
-	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
-	public @ResponseBody String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
-			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) throws Exception {
-		
-		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
-		logger.debug("" + orderNumberList.size());
-		orderStateHandler.retryConflicOrders(tenantId, orderNumberList);
-		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
-		
 	}
 	
 }

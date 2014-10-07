@@ -1,10 +1,8 @@
 package com.mozu.qbintegration.handlers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,19 +14,14 @@ import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderCollection;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.customer.CustomerAccount;
-import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
@@ -326,7 +319,7 @@ public class OrderStateHandler {
 		if (isProcessed && !isOrderInConflict) { //Delete only if it has been successfully posted to QB
 			transitionState(entityId, tenantId, null, "cancel");
 		} else {
-			throw new Exception("Did not find an order with id: " + entityId + " in POSTED or CONFLICT status. " +
+			throw new Exception("Did not find an order with id: " + entityId + " in POSTED or NON-CONFLICT status. " +
 					"Tenant id: " + tenantId + ". So nothing to Cancel.");
 		}
 		

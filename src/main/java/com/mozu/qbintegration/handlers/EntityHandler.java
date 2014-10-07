@@ -20,7 +20,6 @@ import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.utils.JsonUtils;
-import com.mozu.qbintegration.events.impl.OrderEventHandlerImpl;
 
 @Component
 public class EntityHandler {

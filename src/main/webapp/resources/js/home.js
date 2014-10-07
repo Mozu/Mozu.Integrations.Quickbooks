@@ -369,7 +369,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "Orders/getPostedOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 
 			{
@@ -423,7 +423,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "Orders/getConflictOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 	            {    
             	   "mData": "mozuOrderId",
@@ -497,7 +497,7 @@ var homeViewModel = function() {
 			"bDestroy"	: true,
 			"sort" : "position",
 			"sSearch":true,
-			"sAjaxSource" : "Orders/getUpdatedOrders?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=UPDATED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 
 			            {    
@@ -555,6 +555,54 @@ var homeViewModel = function() {
 						}
 			]
 		});
+		$table.fnDraw();
+	};
+	
+	self.getOrdersCancelled = function() {
+
+		var $table = $('#orderCancelledTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"sort" : "position",
+			"sSearch":true,
+			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			"aoColumns" : [
+				            {    
+			            	   "mData": "mozuOrderNumber",
+				            },
+				            {
+								"mData" : "customerEmail"
+							}, 
+							{
+								"mData" : "orderDate",
+									"mRender": function (data, type, row) {
+								   
+										var myISODate =  new Date(data) ;
+								
+									      return myISODate.getDate()+'-'+
+									      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+									      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+									      +':'+myISODate.getSeconds();
+									}
+							}, 
+							{
+								"mData" : "orderUpdatedDate",
+								"mRender": function (data, type, row) {
+								    	
+								 var myISODate =  new Date(data) ;
+							
+								      return myISODate.getDate()+'-'+
+								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
+								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
+								      +':'+myISODate.getSeconds();
+								}
+							},
+							{
+								"mData" : "amount"
+							}
+			            ]
+			});
 		$table.fnDraw();
 	};
 	
