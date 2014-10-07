@@ -18,6 +18,7 @@ import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderCollection;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
@@ -162,6 +163,7 @@ public class OrderStateHandler {
 		}
 		
 	}
+
 	private void addToConflictQueue(Integer tenantId, Order order, String qbResponse) throws Exception {
 		MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, order.getId(), "CONFLICT", null);
 		
@@ -171,21 +173,31 @@ public class OrderStateHandler {
 		QBXML qbXml = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
 		Object object = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs().get(0);
 		if (object instanceof ItemQueryRsType) {
-			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)object;
-	
-			OrderConflictDetail conflictDetail = new OrderConflictDetail();
-			conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
-			conflictDetail.setNatureOfConflict("Not Found");
-			for(OrderItem item : order.getItems()) {
-				if (itemSearchResponse.getStatusMessage().toLowerCase().contains(item.getProduct().getProductCode().toLowerCase()))
-						conflictDetail.setDataToFix(item.getProduct().getProductCode());
+			
+			List<Object> searchResults = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
+			List<String> productCodes = productHandler.getProductCodes(order.getItems());
+			for(Object obj : searchResults) {
+				ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
+				
+				if (500 == itemSearchResponse.getStatusCode().intValue()&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
+					OrderConflictDetail conflictDetail = new OrderConflictDetail();
+					conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
+					conflictDetail.setNatureOfConflict("Not Found");
+					for(String productCode : productCodes) {
+						if (itemSearchResponse.getStatusMessage().toLowerCase().contains(productCode.toLowerCase())) {
+							conflictDetail.setDataToFix(productCode);
+							break;
+						}
+					}
+					
+					conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
+			
+					conflictDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+					conflictDetail.setMozuOrderId(order.getId());
+					entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), conflictDetail.getEnteredTime(), conflictDetail);
+					logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
+				}
 			}
-			conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
-	
-			conflictDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-			conflictDetail.setMozuOrderId(order.getId());
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), conflictDetail.getEnteredTime(), conflictDetail);
-			logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
 			
 			orderDetails.setConflictReason("Product(s) are missing");
 		} else if (object instanceof SalesOrderAddRsType) {
@@ -236,11 +248,10 @@ public class OrderStateHandler {
 	}
 
 	private boolean allItemsFound(Integer tenantId, List<OrderItem> orderItems) throws Exception {
-		for (OrderItem item : orderItems) {
-			String itemListId = productHandler.getQBId(tenantId, item.getProduct().getProductCode());
-			if (null == itemListId) {
-				return false;
-			} 
+		List<String> productCodes = productHandler.getProductCodes(orderItems);
+		for(String productCode : productCodes) {
+			String itemListId = productHandler.getQBId(tenantId, productCode);
+			if (itemListId == null) return false;
 		}
 		
 		return true;

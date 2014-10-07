@@ -5,6 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
@@ -127,22 +129,18 @@ public class ProductHandler {
 	
 	public boolean processItemQuery(Integer tenantId, String qbTaskResponse) throws Exception {
 		QBXML itemSearchEle = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
-		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle.getQBXMLMsgsRs()
-																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																			.get(0);
-
-		if (500 == itemSearchResponse.getStatusCode().intValue()
-				&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
-			
-			return false;
-
-		} else {
-
-			saveProductInEntityList(itemSearchResponse, tenantId);
-
-			return true;
-			
+		List<Object> results = itemSearchEle.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
+		boolean foundAllItems = true;
+		for(Object obj : results) {
+			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
+			if (500 == itemSearchResponse.getStatusCode().intValue()&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
+				foundAllItems = false;
+			} else {
+				saveProductInEntityList(itemSearchResponse, tenantId);
+			}
 		}
+
+		return foundAllItems;
 	}
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask, String qbTaskResponse) throws Exception {
@@ -299,19 +297,21 @@ public class ProductHandler {
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	public String getQBProductsGetXML(final String orderId, String productCode) throws Exception {
+	public String getQBProductsGetXML(final String orderId, List<OrderItem> orderItems) throws Exception {
 
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
-		itemQueryRqType.getFullName().add(productCode);
-		itemQueryRqType.setRequestID(orderId);
-
-		qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
-
+		List<String> productCodes = getProductCodes(orderItems);
+		for(String productCode : productCodes) {
+			ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
+			itemQueryRqType.getFullName().add(productCode);	
+			itemQueryRqType.setRequestID(orderId);
+	
+			qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
+		}
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 	
@@ -339,6 +339,26 @@ public class ProductHandler {
 			logger.error(e.getMessage(), e);
 			throw e;
 		}
+	}
+
+	public List<String> getProductCodes(List<OrderItem> orderItems) {
+		List<String> productCodes = new ArrayList<String>();
+		
+		for(OrderItem item : orderItems) {
+			
+			if (!StringUtils.isEmpty(item.getProduct().getVariationProductCode()))
+				productCodes.add(item.getProduct().getVariationProductCode());	
+			else
+				productCodes.add(item.getProduct().getProductCode());
+	
+			if (item.getProduct().getBundledProducts() != null && item.getProduct().getBundledProducts().size() > 0) {
+				for(BundledProduct bProduct : item.getProduct().getBundledProducts()) {
+					productCodes.add(bProduct.getProductCode());
+				}
+			}
+		}
+		
+		return productCodes;
 	}
 }
 
