@@ -144,27 +144,33 @@ public class QuickbooksServiceEndPoint {
 	public SendRequestXMLResponse sendRequestXML(SendRequestXML requestXML)	throws Exception {
 
 		// Get the tenantID
-		Integer tenantId = Integer.parseInt(requestXML.getTicket().split("~")[0]);
-		
-		WorkTask workTask = queueManagerService.getNext(tenantId);
-
-		SendRequestXMLResponse response = new SendRequestXMLResponse();
-		if (workTask != null) {
-
-			String requestXml = getRequestXml(tenantId, workTask);
-			response.setSendRequestXMLResult(requestXml);
-		} else {
-			response.setSendRequestXMLResult(null); // all pending work completed
+		try {
+			Integer tenantId = Integer.parseInt(requestXML.getTicket().split("~")[0]);
+			
+			WorkTask workTask = queueManagerService.getNext(tenantId);
+	
+			SendRequestXMLResponse response = new SendRequestXMLResponse();
+			if (workTask != null) {
+	
+				String requestXml = getRequestXml(tenantId, workTask);
+				logger.info(requestXML.getTicket()+"- Task Request - "+requestXml);
+				response.setSendRequestXMLResult(requestXml);
+			} else {
+				response.setSendRequestXMLResult(null); // all pending work completed
+			}
+			return response;
+		} catch (Exception exc) {
+			logger.error(exc.getMessage(), exc);
+			throw exc;
 		}
-		return response;
 	}
 
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "receiveResponseXML")
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 
-		logger.info(responseXML.getTicket()+" - "+responseXML.getMessage());
-		logger.info(responseXML.getTicket()+" - "+responseXML.getResponse());
+		logger.info(responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
+		logger.info(responseXML.getTicket()+" - Task Response - "+responseXML.getResponse());
 		Integer tenantId = Integer.parseInt(responseXML.getTicket().split("~")[0]);
 		WorkTask workTask = queueManagerService.getActiveTask(tenantId);
 
@@ -180,8 +186,14 @@ public class QuickbooksServiceEndPoint {
 			
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
-					orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), 
-							workTask.getAction());
+					try{
+						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), 
+								workTask.getAction());
+					} catch(Exception ex) {
+						orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
+						queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
+						throw ex;
+					}
 					break;
 				case "product":
 					if (workTask.getAction().equalsIgnoreCase("add"))
@@ -195,16 +207,8 @@ public class QuickbooksServiceEndPoint {
 			}
 			
 		} catch (Exception ex) {
-			// Any exception, just make the task as entered for now
-			workTask.setStatus("ERRORED");
-			//queueManagerService.set(workTask, tenantId);
-			// Make an entry in the order entity list with posted status
-			String orderId = workTask.getId(); // this gets the order id
-	
-			/*MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, orderId, "CONFLICT", null);
-			if (StringUtils.isEmpty(orderDetails.getConflictReason()))
-				orderDetails.setConflictReason(ex.getMessage());
-			orderHandler.saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);*/
+			logger.error(ex.getMessage(), ex);
+			throw ex;
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
@@ -257,7 +261,7 @@ public class QuickbooksServiceEndPoint {
 				case "order_update":
 					return orderHandler.getQBOrderUpdateXML(tenantId,workTask.getId());
 				case "item_query":
-					return productHandler.getQBProductsGetXML(workTask.getId(), order.getItems());
+					return productHandler.getQBProductsGetXML(tenantId, order);
 				case "order_delete":
 					return orderHandler.getQBOrderDeleteXML(tenantId, workTask.getId());
 				default:
