@@ -245,8 +245,15 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		updatedOrdersLink.setPath(new String[] {"Quickbooks","Orders","Updates"});
 		updatedOrdersLink.setWindowTitle("Quickbooks order Management");
 		updatedOrdersLink.setHref(serverUrl+"/Orders?tab=updates");
-
 		addUpdateSubNavLink(updatedOrdersLink, collection, entityResource);
+		
+		SubnavLink cancelledOrdersLink = new SubnavLink();
+		cancelledOrdersLink.setParentId("orders");
+		cancelledOrdersLink.setAppId(application.getAppId());
+		cancelledOrdersLink.setPath(new String[] {"Quickbooks","Orders","Cancelled"});
+		cancelledOrdersLink.setWindowTitle("Quickbooks order Management");
+		cancelledOrdersLink.setHref(serverUrl+"/Orders?tab=cancels");
+		addUpdateSubNavLink(cancelledOrdersLink, collection, entityResource);
 	}
 	
 	private void addUpdateSubNavLink(SubnavLink subNavLink,EntityContainerCollection collection,EntityResource entityResource ) throws Exception {
