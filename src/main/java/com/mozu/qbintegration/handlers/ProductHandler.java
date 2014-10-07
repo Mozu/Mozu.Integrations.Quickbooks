@@ -20,21 +20,21 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.commerceruntime.products.Product;
-import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
-import com.mozu.qbintegration.model.MozuOrderDetail;
+import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.IncomeAccountRef;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemDiscountRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
@@ -42,7 +42,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.service.QueueManagerService;
-import com.mozu.qbintegration.service.QuickbooksServiceImpl;
 import com.mozu.qbintegration.tasks.WorkTask;
 import com.mozu.qbintegration.utils.XMLHelper;
 
@@ -70,30 +69,12 @@ public class ProductHandler {
 		return qbListID;
 	}
 	
-	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse,Integer tenantId) {
+	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse,Integer tenantId) throws Exception {
 		String itemListId = null;
-		Object invObj = itemSearchResponse
-				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet()
-				.get(0);
+		List<Object> invObj = itemSearchResponse
+				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
 
-		OrderItem item = new OrderItem();
-		Product product = new Product();
-		item.setProduct(product);
-
-		if (invObj instanceof ItemServiceRet) {
-			ItemServiceRet itemServiceRet = (ItemServiceRet) invObj;
-			product.setProductCode(itemServiceRet.getFullName());
-			product.setName(itemServiceRet.getName());
-			itemListId = itemServiceRet.getListID();
-		} else if (invObj instanceof ItemInventoryRet) {
-			ItemInventoryRet itemInvRet = (ItemInventoryRet) invObj;
-			product.setProductCode(itemInvRet.getFullName());
-			product.setName(itemInvRet.getName());
-			itemListId = itemInvRet.getListID();
-		}
-		// Save the item list id in entity list
-		saveProductInEntityList(item, itemListId, tenantId );
-
+		processItemQueryResult(tenantId, invObj);
 	}
 	
 	public void processItemQueryAll(Integer tenantId, WorkTask workTask, String qbTaskResponse) throws Exception {
@@ -102,8 +83,16 @@ public class ProductHandler {
 																.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																.get(0);
 		
+
 		List<Object> itemServiceRetCollection = itemSearchResponse.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
-		for (Object object : itemServiceRetCollection) {
+		processItemQueryResult(tenantId, itemServiceRetCollection);
+		
+		queueManagerService.updateTask(tenantId, workTask.getId(), "Refresh", "COMPLETED");
+	}
+	
+	
+	private void processItemQueryResult(Integer tenantId, List<Object> objects) throws Exception {
+		for (Object object : objects) {
 			String productName = null;
 			String productQbListID = null;
 			if (object instanceof ItemServiceRet) {
@@ -114,6 +103,14 @@ public class ProductHandler {
 				ItemInventoryRet itemInventoryRet = (ItemInventoryRet) object;
 				productName = itemInventoryRet.getFullName();
 				productQbListID = itemInventoryRet.getListID();
+			} else if (object instanceof ItemOtherChargeRet) {
+				ItemOtherChargeRet itemInvRet = (ItemOtherChargeRet) object;
+				productName = itemInvRet.getFullName();
+				productQbListID = itemInvRet.getName();
+			} else if (object instanceof ItemDiscountRet) {
+				ItemDiscountRet itemInvRet = (ItemDiscountRet) object;
+				productName =  itemInvRet.getFullName();
+				productQbListID = itemInvRet.getName();
 			} else
 				continue;
 			MozuProduct mozuProduct = new MozuProduct();
@@ -123,8 +120,6 @@ public class ProductHandler {
 			saveAllProductInEntityList(mozuProduct, tenantId);
 			logger.debug("Saved product through refresh all: "+ productName);
 		}
-		
-		queueManagerService.updateTask(tenantId, workTask.getId(), "Refresh", "COMPLETED");
 	}
 	
 	public boolean processItemQuery(Integer tenantId, String qbTaskResponse) throws Exception {
@@ -297,18 +292,19 @@ public class ProductHandler {
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	public String getQBProductsGetXML(final String orderId, List<OrderItem> orderItems) throws Exception {
+	public String getQBProductsGetXML(Integer tenantId, Order order) throws Exception {
 
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		List<String> productCodes = getProductCodes(orderItems);
-		for(String productCode : productCodes) {
+		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order, true);
+		for(MozuOrderItem orderItem : productCodes) {
+			if (!StringUtils.isEmpty(orderItem.getQbItemCode())) continue;
 			ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
-			itemQueryRqType.getFullName().add(productCode);	
-			itemQueryRqType.setRequestID(orderId);
+			itemQueryRqType.getFullName().add(orderItem.getProductCode());	
+			itemQueryRqType.setRequestID(order.getId());
 	
 			qbxmlMsgsRqType.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(itemQueryRqType);
 		}
@@ -341,22 +337,100 @@ public class ProductHandler {
 		}
 	}
 
-	public List<String> getProductCodes(List<OrderItem> orderItems) {
-		List<String> productCodes = new ArrayList<String>();
+	public List<MozuOrderItem> getProductCodes(Order order) throws Exception {
+		return getProductCodes(0, order, false);
+	}
+	
+	public List<MozuOrderItem> getProductCodes(Integer tenantId, Order order, boolean queryQBProduct) throws Exception {
+		List<MozuOrderItem> productCodes = new ArrayList<MozuOrderItem>();
 		
-		for(OrderItem item : orderItems) {
+		String qbDiscProductCode = null;
+		String shippingProductCode = null;
+		
+		if (queryQBProduct) {
+			qbDiscProductCode = getQBId(tenantId, "DISC-PRODUCT");
+			shippingProductCode = getQBId(tenantId, "Shipping");
+		}
+		
+		for(OrderItem item : order.getItems()) {
+			
+			String productCode = null;
 			
 			if (!StringUtils.isEmpty(item.getProduct().getVariationProductCode()))
-				productCodes.add(item.getProduct().getVariationProductCode());	
+				productCode = item.getProduct().getVariationProductCode();	
 			else
-				productCodes.add(item.getProduct().getProductCode());
+				productCode = item.getProduct().getProductCode();
 	
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode(productCode);
+			if (queryQBProduct)
+				mzItem.setQbItemCode(this.getQBId(tenantId, productCode));
+			
+			if(item.getUnitPrice().getSaleAmount() != null) {
+				mzItem.setAmount(item.getUnitPrice().getSaleAmount() * item.getQuantity());
+			} else {
+				mzItem.setAmount(item.getUnitPrice().getListAmount() * item.getQuantity());
+			}
+			
+			mzItem.setQty(item.getQuantity());
+			
+			productCodes.add(mzItem);
+			
+			//Add bundles components as separate line items with 0.00 value
 			if (item.getProduct().getBundledProducts() != null && item.getProduct().getBundledProducts().size() > 0) {
 				for(BundledProduct bProduct : item.getProduct().getBundledProducts()) {
-					productCodes.add(bProduct.getProductCode());
+					mzItem = new MozuOrderItem();
+
+					mzItem.setProductCode(bProduct.getProductCode());
+					if (queryQBProduct)
+						mzItem.setQbItemCode(getQBId(tenantId, bProduct.getProductCode()));
+					mzItem.setAmount(0.0);
+					mzItem.setQty(item.getQuantity()*bProduct.getQuantity());
+					productCodes.add(mzItem);
 				}
 			}
+
+			//Add discounts as seperate line item
+			if(item.getDiscountTotal() > 0.0) {
+				mzItem.setProductCode("DISC-PRODUCT");
+				mzItem.setQbItemCode(qbDiscProductCode);
+				mzItem.setAmount(item.getDiscountTotal());
+				mzItem.setMisc(true);
+				productCodes.add(mzItem);
+			}
 		}
+		
+		
+		if (order.getShippingTotal() > 0.0) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode("Shipping");
+			mzItem.setQbItemCode(shippingProductCode);
+			mzItem.setAmount(order.getShippingTotal());
+			mzItem.setMisc(true);
+			productCodes.add(mzItem);
+		}
+		
+		
+		if (order.getAdjustment() != null && order.getAdjustment().getAmount() > 0.0) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode("DISC-PRODUCT");
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(order.getAdjustment().getAmount());
+			mzItem.setMisc(true);
+			productCodes.add(mzItem);
+			
+		}
+		
+		if (order.getShippingAdjustment() != null && order.getShippingAdjustment().getAmount() > 0.0) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode("DISC-PRODUCT");
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(order.getShippingAdjustment().getAmount());
+			mzItem.setMisc(true);
+			productCodes.add(mzItem);
+		}
+		
+		
 		
 		return productCodes;
 	}

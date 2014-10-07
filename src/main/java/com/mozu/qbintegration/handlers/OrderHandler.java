@@ -30,6 +30,7 @@ import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.MozuOrderDetail;
+import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemRef;
@@ -317,55 +318,30 @@ public class OrderHandler {
 		customerRef.setListID(customerQBListID);
 		salesOrderAdd.setCustomerRef(customerRef);
 
-		List<OrderItem> items = order.getItems();
-		ItemRef itemRef = null;
-		SalesOrderLineAdd salesOrderLineAdd = null;
-
+		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		Double productDiscounts = 0.0;
-		for (OrderItem item : items) {
-			itemRef = new ItemRef();
-			String qbProductId =  getQBProduct(tenantId, item);
-			
-			itemRef.setListID(qbProductId);
-			salesOrderLineAdd = new SalesOrderLineAdd();
-			if(item.getUnitPrice().getSaleAmount() != null) {
-				salesOrderLineAdd.setAmount(numberFormat.format(item.getUnitPrice().getSaleAmount() * item.getQuantity()));
+		//Double productDiscounts = 0.0;
+		for (MozuOrderItem item : orderItems) {
+			if (item.isMic()) {
+				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getAmount()), item.getQbItemCode());
 			} else {
-				salesOrderLineAdd.setAmount(numberFormat.format(item.getUnitPrice().getListAmount() * item.getQuantity()));
+				ItemRef itemRef = new ItemRef();
+				
+				itemRef.setListID(item.getQbItemCode());
+				SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
+				salesOrderLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
+				salesOrderLineAdd.setItemRef(itemRef);
+				salesOrderLineAdd.setQuantity(item.getQty().toString());
+				salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
+
 			}
-			salesOrderLineAdd.setItemRef(itemRef);
-			salesOrderLineAdd.setQuantity(item.getQuantity().toString());
-			salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
-			
-			if(item.getDiscountTotal() > 0.0) {
-				productDiscounts += item.getDiscountTotal();
-				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getDiscountTotal()), "DISC-PRODUCT");
-			}
-			
-			if (item.getProduct().getBundledProducts() != null) {
-				for(BundledProduct bProduct : item.getProduct().getBundledProducts()) {
-					qbProductId =  productHandler.getQBId(tenantId, bProduct.getProductCode());
-					itemRef.setListID(qbProductId);
-					salesOrderLineAdd = new SalesOrderLineAdd();
-					salesOrderLineAdd.setAmount("0.00");
-					salesOrderLineAdd.setItemRef(itemRef);
-					salesOrderLineAdd.setQuantity(String.valueOf(item.getQuantity()*bProduct.getQuantity()));
-					salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
-				}
-			}
-		
 			
 		}
 
-		addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(order.getShippingTotal()), "Shipping");
-		if (order.getDiscountTotal() > 0.0)
-			addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(order.getDiscountTotal() - productDiscounts), "DISC-ORDER");
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
 	public String getQBOrderUpdateXML(int tenantId, String orderId) throws Exception {
-		//Order singleOrder, String customerQBListID, List<String> itemListIDs,
 		Order order = getOrder(orderId, tenantId);
 		CustomerAccount account = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 		
@@ -397,59 +373,36 @@ public class OrderHandler {
 		salesOrdermod.setTxnID(postedOrder.getQuickbooksOrderListId());
 		salesOrdermod.setEditSequence(postedOrder.getEditSequence());
 		
-		List<OrderItem> items = order.getItems();
-		ItemRef itemRef = null;
-		SalesOrderLineMod salesOrderLineMod = null;
-
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		Double productDiscounts = 0.0;
-		for (OrderItem item : items) {
-			itemRef = new ItemRef();
-			String qbProductId = getQBProduct(tenantId, item);
-			itemRef.setListID(qbProductId);
-			salesOrderLineMod = new SalesOrderLineMod();
-			
-			if(postedOrder.getSavedOrderLinesList() != null) {
-				for(QuickBooksSavedOrderLine singleLine: postedOrder.getSavedOrderLinesList()) {
-					if(singleLine.getProductCode().toLowerCase().equals(item.getProduct().getProductCode().toLowerCase())) {
-						salesOrderLineMod.setTxnLineID(singleLine.getQbLineItemTxnID());
+		//Double productDiscounts = 0.0;
+		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
+		for (MozuOrderItem item : orderItems) {
+			if (item.isMic()) {
+				addSOModLineItemAmount(salesOrdermod, numberFormat.format(item.getAmount()), item.getQbItemCode());
+			} else {
+				ItemRef itemRef = new ItemRef();
+				itemRef.setListID(item.getQbItemCode());
+				SalesOrderLineMod salesOrderLineMod = new SalesOrderLineMod();
+				
+				if(postedOrder.getSavedOrderLinesList() != null) {
+					for(QuickBooksSavedOrderLine singleLine: postedOrder.getSavedOrderLinesList()) {
+						if(singleLine.getProductCode().equalsIgnoreCase(item.getProductCode())) {
+							salesOrderLineMod.setTxnLineID(singleLine.getQbLineItemTxnID());
+						}
+					}
+					if (StringUtils.isEmpty(salesOrderLineMod.getTxnLineID())) {
+						salesOrderLineMod.setTxnLineID("-1");
 					}
 				}
-				if (StringUtils.isEmpty(salesOrderLineMod.getTxnLineID())) {
-					salesOrderLineMod.setTxnLineID("-1");
-				}
-			}
-			
-			if(item.getUnitPrice().getSaleAmount() != null) {
-				salesOrderLineMod.setAmount(numberFormat.format(item.getUnitPrice().getSaleAmount() * item.getQuantity()));
-			} else {
-				salesOrderLineMod.setAmount(numberFormat.format(item.getUnitPrice().getListAmount() * item.getQuantity()));
-			}
-			salesOrderLineMod.setQuantity(item.getQuantity().toString());
-			salesOrderLineMod.setItemRef(itemRef);
-			
-			salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
-			if(item.getDiscountTotal() > 0.0) {
-				productDiscounts += item.getDiscountTotal();
-				addSOModLineItemAmount(salesOrdermod, numberFormat.format(item.getDiscountTotal()), "DISC-PRODUCT");
-			}
-			
-			if (item.getProduct().getBundledProducts() != null) {
-				for(BundledProduct bProduct : item.getProduct().getBundledProducts()) {
-					qbProductId =  productHandler.getQBId(tenantId, bProduct.getProductCode());
-					itemRef.setListID(qbProductId);
-					salesOrderLineMod = new SalesOrderLineMod();
-					salesOrderLineMod.setAmount("0.00");
-					salesOrderLineMod.setItemRef(itemRef);
-					salesOrderLineMod.setQuantity(String.valueOf(item.getQuantity()*bProduct.getQuantity()));
-					salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
-				}
+				
+				salesOrderLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
+				salesOrderLineMod.setQuantity(item.getQty().toString());
+				salesOrderLineMod.setItemRef(itemRef);
+				
+				salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
+
 			}
 		}
-
-		addSOModLineItemAmount(salesOrdermod, numberFormat.format(order.getShippingTotal()), "Shipping");
-		if (order.getDiscountTotal() > 0.0)
-			addSOModLineItemAmount(salesOrdermod, numberFormat.format(order.getDiscountTotal() - productDiscounts), "DISC-ORDER");
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
@@ -529,15 +482,4 @@ public class OrderHandler {
 		
 	}
 
-	private String getQBProduct(Integer tenantId, OrderItem item) throws Exception {
-		String qbProductId = null;
-		String productCode = null;
-		if (!StringUtils.isEmpty(item.getProduct().getVariationProductCode()))
-			productCode = item.getProduct().getVariationProductCode();
-		else
-			productCode = item.getProduct().getProductCode();
-		
-		qbProductId =  productHandler.getQBId(tenantId, productCode);
-		return qbProductId;
-	}
 }

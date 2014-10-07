@@ -63,7 +63,7 @@ dependencies {
 
 	compile ("com.mozu:mozu-api-toolkit:1.0.3")
 	
-    compile ("com.mozu:mozu-api-java:1.11.0-RC1") {
+    compile ("com.mozu:mozu-api-java:1.11.3") {
         exclude group: 'mysql'
         exclude group: 'xerces'
         exclude group: 'berkeleydb'
