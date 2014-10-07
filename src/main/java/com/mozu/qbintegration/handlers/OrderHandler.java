@@ -3,7 +3,6 @@ package com.mozu.qbintegration.handlers;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -11,17 +10,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderCollection;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.customer.CustomerAccount;
@@ -44,8 +39,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
-import com.mozu.qbintegration.service.QuickbooksServiceImpl;
-import com.mozu.qbintegration.tasks.WorkTask;
 import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
@@ -511,7 +504,7 @@ public class OrderHandler {
 	 * Process the response of cancelling a sales order in QB. 
 	 * Initiated on Order Cancelled event in mozu
 	 */
-	public boolean processOrderDelete(Integer tenantId, String id,
+	public boolean processOrderDelete(Integer tenantId, String orderId,
 			String qbResponse) throws Exception {
 		QBXML deleteTxResp = (QBXML) XMLHelper.getUnmarshalledValue(qbResponse);
 
@@ -524,10 +517,31 @@ public class OrderHandler {
 		if (deleteTxRespType.getStatusSeverity().equalsIgnoreCase("error")) {
 			return false;
 		} else {
+			
+			MozuOrderDetail orderCancelDetails = getOrderCancelDetails(tenantId, orderId, "CANCELLED", deleteTxRespType);
+			saveOrderInEntityList(orderCancelDetails, entityHandler.getOrderEntityName(), tenantId);
+	
+			logger.debug((new StringBuilder())
+					.append("Processed cancelling order with id: ")
+					.append(orderId)
+					.append(" with QB status code: ")
+					.append(deleteTxRespType.getStatusCode())
+					.append(" with status: ")
+					.append(deleteTxRespType.getStatusMessage())
+					.append(" for tenantId: ")
+					.append(tenantId)
+					.toString());
+			
 			return true;
 		}
 		
 	}
+
+	private MozuOrderDetail getOrderCancelDetails(Integer tenantId,
+			String orderId, String status, TxnDelRsType deleteTxRespType) throws Exception {
+		return getOrderDetails(tenantId, orderId, status, "", "", null);
+	}
+
 
 	private String getQBProduct(Integer tenantId, OrderItem item) throws Exception {
 		String qbProductId = null;

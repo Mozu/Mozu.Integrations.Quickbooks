@@ -36,9 +36,11 @@
 						<span class="subTabs" style="margin-left: 10px; margin-top: 10px;">
 			                 <span class="link" id="postedTab" data-bind="click: getOrders" data-toggle="tab" data-tab-id="postedDivTab">Posted</span>
 			                 &nbsp;|&nbsp;
-			                 <span class="link" id="conflictsTab" data-bind="click: getOrderConflicts" data-toggle="tab"	data-tab-id="conflictsDivTab">Conflicts</span>
+			                 <span class="link" id="conflictsTab" data-bind="click: getOrderConflicts" data-toggle="tab" data-tab-id="conflictsDivTab">Conflicts</span>
 			                 &nbsp;|&nbsp;
 			                 <span class="link" id="updatesTab" data-bind="click: getOrdersUpdated" data-toggle="tab" data-tab-id="updatedDivTab">Updates</span>
+			                 &nbsp;|&nbsp;
+			                 <span class="link" id="cancelsTab" data-bind="click: getOrdersCancelled" data-toggle="tab" data-tab-id="cancelledDivTab">Cancels</span>
 	                 	</span>
 	                 	<div class="tab-divider" style="margin-top:5px;margin-bottom:0px;"></div>	
 					</div>
@@ -64,6 +66,9 @@
 					</div>
 					<div class="tab-section template" style="display: none" id="updatedDivTab">
 						<div th:include="ordersupdated :: content"></div>
+					</div>
+					<div class="tab-section template" style="display: none" id="cancelledDivTab">
+						<div th:include="ordercancelled :: content"></div>
 					</div>
 				</div>
 				<input type="hidden" id="tenantIdHdn" th:value="${tenantId}"></input>
