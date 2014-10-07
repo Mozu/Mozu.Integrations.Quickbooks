@@ -15,21 +15,17 @@
 				</a>
 			</div>
 			<div class="tab-container">
-				<div
-					style="position: absolute; z-index: 10; width: 99%; height: 92%; background-color: rgba(255, 255, 255, .5);"
-					id="progressIndicator">
+				<div style="position: absolute; z-index: 10; width: 95%; height: 90%; background-color: rgba(255, 255, 255, .5);" id="progressIndicator">
 					<div class="loadingicon"></div>
 				</div>
 
-				<div
-					style="margin-left: -15px; margin-top: -10px; position: absolute; z-index: 10; width: 100%; height: 100%; overflow: auto; background-color: rgba(255, 255, 255, .8); display: none"
+				<div style="margin-left: -15px; margin-top: -10px; position: absolute; z-index: 10; width: 100%; height: 100%; overflow: auto; background-color: rgba(255, 255, 255, .8); display: none"
 					id="serverError">
 					<div class="row" style="height: 20%; width: 100%; overflow: auto;">
 						<div class="col-md-12">
 							<div class="notification error">
 								<div class="icon" onclick="closeError()"></div>
-								<div id="serverErrorMessage" class="message">An error
-									occurred on the server.</div>
+								<div id="serverErrorMessage" class="message">An error occurred on the server.</div>
 							</div>
 						</div>
 					</div>
@@ -37,33 +33,33 @@
 				
 				<div class="tabs">
 					<a class="button tab active" data-toggle="tab" data-tab-id="aboutTab" data-hide-save="true">Info</a> 
-					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Settings</a>
-					<a href="#" data-bind="click: getOrders" class="button tab" data-toggle="tab" data-tab-id="ordersTab" data-hide-save="false">Orders Posted</a>   
+					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Account</a>
+					<a class="button tab" data-toggle="tab"  data-tab-id="orderConfigTab" data-hide-save="false">Order Config</a>
 				</div>
 				
 				<div class="tab-view">
-					<div class="tab-section information" id="aboutTab">
-						<div th:include="info :: content "></div>
-					</div>
-					<div class="tab-section template" style="display: none" id="generalTab">
-						<div th:include="generalsettings :: content"></div>
-					</div>
-					<div class="tab-section template" style="display: none" id="ordersTab">
-						<div th:include="sample :: content"></div>
+					<div class="tab-section">
+						<div id="aboutTab">
+							<div th:include="info :: content "></div>
+						</div>
+						<div style="display: none" id="generalTab">
+							<div th:include="generalsettings :: content"></div>
+						</div>
+						<div style="display: none" id="orderConfigTab">
+							<div th:include="orderconfig :: content"></div>
+						</div>
 					</div>
 				</div>
 
 				<div class="footer-actions">
-					<a class="button primary-action" data-bind="click: save"
-						id="saveBtn">Save</a>
-					<div class="branding-text">Developed by Volusion, Inc. All
-						rights reserved.</div>
+					<a class="button primary-action" data-bind="click: save, visible: settings.qbAccount() != ''" id="saveBtn">Save</a>&nbsp;&nbsp;
+						
+					<div class="branding-text">Developed by Volusion, Inc. All rights reserved.</div>
 				</div>
 				
-				<p style="display:none;" id="tenantIdHdn"
-						th:text="${tenantId}"></p>
-				<p style="display:none;" id="siteIdHdn"
-				th:text="${siteId}"></p>
+				<input type="hidden" id="tenantIdHdn" th:value="${tenantId}"></input>
+				<input type="hidden" id="siteIdHdn"	th:value="${siteId}"></input>
+				<input type="hidden" id="selectedTab"	th:value="${selectedTab}"></input>
 			
 			</div>
 		</div>

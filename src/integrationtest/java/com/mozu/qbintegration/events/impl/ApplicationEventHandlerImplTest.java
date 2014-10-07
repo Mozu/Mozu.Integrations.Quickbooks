@@ -1,6 +1,6 @@
 package com.mozu.qbintegration.events.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -14,9 +14,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.event.Event;
+import com.mozu.qbintegration.events.impl.ApplicationEventHandlerImpl;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/root-context.xml" })
+@ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/root-context.xml", "file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })
 public class ApplicationEventHandlerImplTest {
 
 	@Autowired
@@ -31,7 +32,7 @@ public class ApplicationEventHandlerImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4508;
+		tenantId = 5872;
 		apiContext = new MozuApiContext(tenantId);
 	}
 

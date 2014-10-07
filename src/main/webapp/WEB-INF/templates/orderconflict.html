@@ -1,0 +1,140 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+<script src="js/home.js" type="text/javascript"></script>
+<title>Order Conflicts</title>
+</head>
+<body>
+
+	<div th:fragment="content">
+			<div id="ordConflict">
+				<div class="row">
+					<div class="tab-full-column">	
+						<table width="100%">
+							<tr>
+								<td>
+									<table id="orderConflictsTable" class="display">
+										<thead>
+											<tr>
+												<th>
+													<input type="checkbox" />
+												</th>
+												<th><p th:text="#{label.order}"></p></th>
+												<th><p th:text="#{label.customerName}"></p></th>
+												<th><p th:text="#{label.createdDate}"></p></th>
+												<th><p th:text="#{label.updatedDate}"></p></th>
+												<th><p th:text="#{label.amount}"></p></th>
+												<th><p th:text="#{label.reason}"></p></th>
+												<th><p th:text="#{label.action}"></p></th>
+		
+											</tr>
+										</thead>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</div>	
+				</div>
+				
+				<div class="row">
+					<div class="tab-first-column">
+						<a class="button primary-action" data-bind="click: postRetryOrderToQB">Retry Orders</a>
+					</div>	
+				</div>
+			
+			</div>
+			
+			<!-- Error processing div -->
+			<div id="ordConflictError" style="display: none;">
+				<div class="row" >
+					<div class="tab-full-column">
+						<a href="javascript:void(0);" onclick="javascript:showOrderConflict();"> Back </a> 
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="tab-full-column">
+						<table id="singleErrorDisplay" width="100%" class="display">
+							<thead>
+								<tr>
+									<th>Product Code</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody data-bind="foreach: orderConflictDetails">
+						        <tr style="cursor:pointer;" data-bind="click: $root.clickedRow">
+						            <td data-bind="text: dataToFix"></td>
+						            <td data-bind="text: natureOfConflict"></td>
+						        </tr>
+						    </tbody>
+						</table>
+					</div>
+				</div>
+				
+				<div class="row" data-bind="visible: showItemOptions">
+					<div class="tab-full-column" style="margin-top:10px;"></div>
+					<div class="tab-first-column">
+						<div class="tab-checkbox-container">
+							<input name="item" type="radio" data-bind="click: enableNewItem" value="new"></input>
+							<label class="tab-checkbox-label" for="newItem">Create New Item</label>	
+						</div>
+					</div>
+					<div class="tab-second-column">
+						<div class="tab-checkbox-container">
+							<input name="item" type="radio" data-bind="click: enableExistingItem" value="map"></input>
+							<label class="tab-checkbox-label" for="existingItem">Map to Existing Item</label>	
+						</div>
+					</div>
+				</div>
+				<div data-bind="visible: showItemCreate">
+					<div class="row">
+					    <div class="tab-first-column">
+						    <label class="tab-field-label" for="enableCB">Item type</label>
+							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Item Name/Number</label>
+							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" />
+							<label class="tab-field-label" for="field">Purchase Info</label>
+							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" />
+							<label class="tab-field-label" for="field">Sales Info</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" />
+							<label class="tab-field-label" for="field">Sales Price</label>
+							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"/>
+							
+						</div>
+						<div class="tab-second-column">
+							<label class="tab-field-label" for="field">Manufacturer Part Number</label>
+							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
+							<label class="tab-field-label" for="field">Tax Code</label>
+							<input type="text" data-bind="value: itemToFix.itemTaxCode" class="tab-field" />
+							<label class="tab-field-label" for="field">Expense Account</label>
+							<input type="text" data-bind="value: itemToFix.itemExpenseAccount" class="tab-field"/>
+							<label class="tab-field-label" for="field">Income Account</label>
+							<input type="text" data-bind="value: itemToFix.itemIncomeAccount" class="tab-field" />
+						</div>
+					</div>
+					<div>
+						<a class="button primary-action" data-bind="click: saveItemToQuickbooks" style="float:none;">Save Item</a>
+					</div>
+				</div>
+				
+				<div data-bind="visible: showItemMap">
+					<div class="row">
+					    <div class="tab-full-column">
+						    <label class="tab-field-label left-align" for="enableCB">Choose from below list to map:</label>
+							<select data-bind="options: allProductsInQB, optionsText: 'productName', optionsValue: 'qbProductListID', value: selectedProductToMap" class="dropdown" style="float: none; margin-left: 10px;"></select>
+							
+						</div>
+					</div>
+					<div class="row">
+						<div class="tab-first-column">
+							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB">Refresh Products</a>
+							<a class="button primary-action" data-bind="click: mapItemToQuickbooks" style="float:none;">Map Item</a>
+						</div>	
+					</div>
+				</div>
+			</div>
+		</div>
+</body>
+
+</html>
