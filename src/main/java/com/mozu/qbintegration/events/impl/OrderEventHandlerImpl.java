@@ -1,8 +1,12 @@
 package com.mozu.qbintegration.events.impl;
 
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 
 import org.apache.http.HttpStatus;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,9 @@ import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
+import com.mozu.qbintegration.handlers.EntityHandler;
+import com.mozu.qbintegration.handlers.OrderStateHandler;
+import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -31,6 +38,9 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	@Autowired
 	private QueueManagerService queueManagerService;
 
+	@Autowired
+	private OrderStateHandler orderStateHandler;
+	
 	@PostConstruct
 	public void initialize() {
 		try {
@@ -38,12 +48,24 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		} catch (Exception e) {
 			e.getMessage();
 		}
-		logger.info("Application event handler initialized");
+		logger.info("Order event handler initialized");
 	}
 
 	@Override
 	public EventHandlerStatus cancelled(ApiContext apiContext, Event event) {
-		return null;
+		
+		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
+		final Integer tenantId = apiContext.getTenantId();
+		//final Integer siteId = apiContext.getSiteId();
+		try {
+			orderStateHandler.deleteOrder(event.getEntityId(), tenantId);
+		} catch (Exception e) {
+			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " exception:"	+ e.getMessage(), e);
+			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		}
+					
+		return status;
+		
 	}
 
 	@Override
@@ -61,35 +83,16 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
 		final Integer tenantId = apiContext.getTenantId();
 		final Integer siteId = apiContext.getSiteId();
-		final String orderId = event.getEntityId();
 		try {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					OrderResource orderResource = new OrderResource(apiContext);
-					Order order = null;
-					try {
-						order = orderResource.getOrder(orderId);
-						CustomerAccountResource accountResource = new CustomerAccountResource(apiContext);
-						final CustomerAccount orderingCust = accountResource.getAccount(order.getCustomerAccountId());
-						quickbooksService.saveOrderInQuickbooks(order, orderingCust, tenantId, siteId);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-				}
-			}).start();
-			
-			
+			//quickbooksService.saveOrderInQuickbooks(event.getEntityId(),  tenantId);
+			orderStateHandler.processOrder(event.getEntityId(), apiContext);
+			status = new EventHandlerStatus(HttpStatus.SC_OK);
 		} catch (Exception e) {
-			logger.error(
-					"Exception while processing customer update, tenantID: "
-							+ tenantId + " Site Id : " + siteId, " exception:"
-							+ e);
-			status = new EventHandlerStatus(e.getMessage(),
-					HttpStatus.SC_INTERNAL_SERVER_ERROR);
-		}
+			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
+			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
+		}
+					
 		return status;
 	}
 
@@ -99,8 +102,19 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	}
 
 	@Override
-	public EventHandlerStatus updated(ApiContext apiContext, Event event) {
-		return null;
+	public EventHandlerStatus updated(final ApiContext apiContext, Event event) {
+		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
+		final Integer tenantId = apiContext.getTenantId();
+		final String orderId = event.getEntityId();
+		try {
+			orderStateHandler.processOrder(orderId, apiContext);
+			status = new EventHandlerStatus(HttpStatus.SC_OK);
+		} catch (Exception e) {
+			logger.error("Exception while processing customer update, tenantID: "+ tenantId + ", exception:"	+ e.getMessage(), e);
+			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		}
+
+		return status;
 	}
 
 	@Override

@@ -3,126 +3,77 @@
  */
 package com.mozu.qbintegration.tasks;
 
+import java.util.Date;
+
+import org.joda.time.DateTime;
+
 /**
  * @author Akshay
  * 
  */
 public class WorkTask {
 
-	private String qbTaskType;
+	private String Id;
 	
-	private Long enteredTime;
+	private DateTime createDate;
 
-	private String taskId;
-
-	private String qbTaskRequest;
+	private String status;
 	
-	private String qbTaskResponse;
+	private String currentStep;
 
-	private String qbTaskStatus;
+	private String type;
 	
-	private Integer tenantId;
+	private String action;
 	
-	private Integer siteId;
-
-	/**
-	 * @return the qbTaskType
-	 */
-	public String getQbTaskType() {
-		return qbTaskType;
+	public String getId() {
+		return Id;
 	}
 
-	/**
-	 * @param qbTaskType the qbTaskType to set
-	 */
-	public void setQbTaskType(String qbTaskType) {
-		this.qbTaskType = qbTaskType;
+	public void setId(String id) {
+		Id = id;
 	}
 
-	/**
-	 * @return the enteredTime
-	 */
-	public Long getEnteredTime() {
-		return enteredTime;
+	public String getType() {
+		return type;
 	}
 
-	/**
-	 * @param enteredTime the enteredTime to set
-	 */
-	public void setEnteredTime(Long enteredTime) {
-		this.enteredTime = enteredTime;
+	public void setType(String type) {
+		this.type = type;
 	}
 
-	/**
-	 * @return the taskId
-	 */
-	public String getTaskId() {
-		return taskId;
+	public DateTime getCreateDate() {
+		return createDate;
 	}
 
-	/**
-	 * @param taskId the taskId to set
-	 */
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+	public void setCreateDate(DateTime createDate) {
+		this.createDate = createDate;
 	}
 
-	/**
-	 * @return the qbTaskRequest
-	 */
-	public String getQbTaskRequest() {
-		return qbTaskRequest;
+	public String getStatus() {
+		return status;
 	}
 
-	/**
-	 * @param qbTaskRequest the qbTaskRequest to set
-	 */
-	public void setQbTaskRequest(String qbTaskRequest) {
-		this.qbTaskRequest = qbTaskRequest;
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
-	/**
-	 * @return the qbTaskResponse
-	 */
-	public String getQbTaskResponse() {
-		return qbTaskResponse;
+	public String getCurrentStep() {
+		return currentStep;
 	}
 
-	/**
-	 * @param qbTaskResponse the qbTaskResponse to set
-	 */
-	public void setQbTaskResponse(String qbTaskResponse) {
-		this.qbTaskResponse = qbTaskResponse;
+	public void setCurrentStep(String currentStep) {
+		this.currentStep = currentStep;
 	}
 
-	/**
-	 * @return the qbTaskStatus
-	 */
-	public String getQbTaskStatus() {
-		return qbTaskStatus;
+	public String getAction() {
+		return action;
 	}
+	
+	public void setAction(String action) {
+		this.action = action;
+		
+	}
+	
 
-	/**
-	 * @param qbTaskStatus the qbTaskStatus to set
-	 */
-	public void setQbTaskStatus(String qbTaskStatus) {
-		this.qbTaskStatus = qbTaskStatus;
-	}
-
-	public Integer getTenantId() {
-		return tenantId;
-	}
-
-	public void setTenantId(Integer tenantId) {
-		this.tenantId = tenantId;
-	}
-
-	public Integer getSiteId() {
-		return siteId;
-	}
-
-	public void setSiteId(Integer siteId) {
-		this.siteId = siteId;
-	}
 
 }

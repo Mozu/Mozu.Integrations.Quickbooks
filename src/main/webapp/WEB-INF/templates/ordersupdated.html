@@ -1,0 +1,81 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+<script src="js/home.js" type="text/javascript"></script>
+<title>Orders Updated in Mozu</title>
+</head>
+<body>
+
+	<div th:fragment="content">
+		<div id="ordUpdated">
+			<div class="row">
+				<div class="tab-full-column">
+					<table width="100%">
+						<tr>
+							<td>
+								<table id="orderUpdatedTable" class="display">
+									<thead>
+										<tr>
+											<th><input type="checkbox"/></th>
+											<th><p th:text="#{label.order}"></p></th>
+											<th><p th:text="#{label.customerName}"></p></th>
+											<th><p th:text="#{label.createdDate}"></p></th>
+											<th><p th:text="#{label.updatedDate}"></p></th>
+											<th><p th:text="#{label.amount}"></p></th>
+											<th><p th:text="#{label.action}"></p></th>
+										</tr>
+									</thead>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="tab-first-column">
+					<a class="button primary-action" data-bind="click: postUpdatedOrderToQB">Post Selected to Quickbooks</a>
+				</div>	
+			</div>
+			
+		</div>
+		
+		<!-- Compare div -->
+		<div id="ordUpdateDetails" style="display: none;">
+			<div class="row" >
+				<div class="tab-full-column">
+					<a href="javascript:void(0);" onclick="javascript:showOrderCompare();"> Back </a> 
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="tab-full-column">
+					<table id="compareDisplay" width="100%" class="display">
+						<thead>
+							<tr>
+								<th>Parameter</th>
+								<th>Posted Order</th>
+								<th>Updated Order</th>
+							</tr>
+						</thead>
+						<tbody data-bind="foreach: orderCompareDetails">
+					        <tr>
+					        	<td data-bind="text: parameter"></td>
+					            <td data-bind="text: postedOrderDetail"></td>
+					            <td data-bind="text: updatedOrderDetail"></td>
+					        </tr>
+					    </tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="tab-full-column" style="margin-top:10px;"></div>
+			</div>
+			
+		</div>
+	</div>
+</body>
+
+</html>
