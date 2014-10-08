@@ -245,7 +245,7 @@ public class OrderStateHandler {
 		return !StringUtils.isEmpty(qbId);
 	}
 
-	private boolean allItemsFound(Integer tenantId, Order order) throws Exception {
+	public boolean allItemsFound(Integer tenantId, Order order) throws Exception {
 		List<MozuOrderItem> productCodes = productHandler.getProductCodes(tenantId, order, true);
 		for(MozuOrderItem mzOrderItem : productCodes) {
 			if (StringUtils.isEmpty(mzOrderItem.getQbItemCode())) return false;

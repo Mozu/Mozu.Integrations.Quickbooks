@@ -11,6 +11,7 @@ import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
+import com.thoughtworks.xstream.XStream;
 
 public class XMLHelper {
 
@@ -27,6 +28,8 @@ public class XMLHelper {
 			marshallerObj.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			marshallerObj.marshal(qbxml, writer);
 			qbXMLStr = QBXML_PREFIX + writer.toString();
+			/*XStream stream = new XStream();
+			qbXMLStr = QBXML_PREFIX + stream.toXML(qbxml);*/
 		} catch (Exception e) {
 			throw e;
 		}
