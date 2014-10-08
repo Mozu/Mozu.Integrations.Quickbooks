@@ -6,18 +6,19 @@ package com.mozu.qbintegration.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.contracts.mzdb.EntityContainer;
 import com.mozu.api.contracts.mzdb.EntityContainerCollection;
@@ -25,17 +26,15 @@ import com.mozu.api.contracts.sitesettings.application.Application;
 import com.mozu.api.resources.platform.entitylists.EntityContainerResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
-import com.mozu.qbintegration.handlers.CustomerHandler;
+import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
-import com.mozu.qbintegration.handlers.ProductHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 import com.mozu.qbintegration.model.SubnavLink;
-import com.mozu.base.utils.ApplicationUtils;
 
 /**
  * @author Akshay
@@ -44,30 +43,14 @@ import com.mozu.base.utils.ApplicationUtils;
 @Service
 public class QuickbooksServiceImpl implements QuickbooksService {
 
-	
-
 	private static final Logger logger = LoggerFactory.getLogger(QuickbooksServiceImpl.class);
 
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
-	
-	// Heavy object, initialize in constructor
-	/*private JAXBContext contextObj = null;
 
-	// One time as well
-	Marshaller marshallerObj = null;*/
 
-	@Autowired
-	private QueueManagerService queueManagerService;
 
-	@Autowired 
-	CustomerHandler customerHandler;
-	
 	@Autowired 
 	OrderHandler orderHandler;
-	
-	@Autowired
-	ProductHandler productHandler;
-	
 	
 	@Autowired
 	EntityHandler entityHandler;
@@ -270,9 +253,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			orderCompareDetail.setUpdatedOrderDetail(updatedOrder.getAmount());
 			compareDetails.add(0, orderCompareDetail);
 		}
-		
-		logger.debug("" + postedOrder.getOrderItems());
-		logger.debug("" + updatedOrder.getOrderItems());
 		
 		return compareDetails;
 	}
