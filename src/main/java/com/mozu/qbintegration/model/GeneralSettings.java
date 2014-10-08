@@ -17,6 +17,10 @@ public class GeneralSettings {
 	
 	private Boolean cancelled;
 
+	private String shippingProductCode;
+	
+	private String discountProductCode;
+	
 	/**
 	 * @return the wsURL
 	 */
@@ -115,5 +119,23 @@ public class GeneralSettings {
 	public void setId(String id) {
 		this.id = id;
 	}
+
+	public String getShippingProductCode() {
+		return shippingProductCode;
+	}
+
+	public void setShippingProductCode(String shippingProductCode) {
+		this.shippingProductCode = shippingProductCode;
+	}
+
+	public String getDiscountProductCode() {
+		return discountProductCode;
+	}
+
+	public void setDiscountProductCode(String discountProductCode) {
+		this.discountProductCode = discountProductCode;
+	}
+	
+	
 }
 

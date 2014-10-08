@@ -42,30 +42,14 @@ import com.mozu.base.utils.ApplicationUtils;
 @Service
 public class QuickbooksServiceImpl implements QuickbooksService {
 
-	
-
 	private static final Logger logger = LoggerFactory.getLogger(QuickbooksServiceImpl.class);
 
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
-	
-	// Heavy object, initialize in constructor
-	/*private JAXBContext contextObj = null;
 
-	// One time as well
-	Marshaller marshallerObj = null;*/
 
-	@Autowired
-	private QueueManagerService queueManagerService;
 
-	@Autowired 
-	CustomerHandler customerHandler;
-	
 	@Autowired 
 	OrderHandler orderHandler;
-	
-	@Autowired
-	ProductHandler productHandler;
-	
 	
 	@Autowired
 	EntityHandler entityHandler;
