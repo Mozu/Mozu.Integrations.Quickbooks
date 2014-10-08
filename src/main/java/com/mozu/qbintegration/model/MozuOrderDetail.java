@@ -6,6 +6,7 @@ package com.mozu.qbintegration.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 
 /**
  * @author Akshay
@@ -69,12 +70,12 @@ public class MozuOrderDetail {
 	/**
 	 * 
 	 */
-	private String savedOrderLines;
+	private String editSequence;
 	
 	/**
 	 * 
 	 */
-	private String editSequence;
+	private List<OrderItem> orderItems;
 	
 	/**
 	 * @return the enteredTime
@@ -242,7 +243,6 @@ public class MozuOrderDetail {
 	 * @param savedOrderLines the savedOrderLines to set
 	 */
 	public void setSavedOrderLines(String savedOrderLines) {
-		this.savedOrderLines = savedOrderLines;
 	}
 
 	/**
@@ -257,6 +257,20 @@ public class MozuOrderDetail {
 	 */
 	public void setEditSequence(String editSequence) {
 		this.editSequence = editSequence;
+	}
+
+	/**
+	 * @return the orderItems
+	 */
+	public List<OrderItem> getOrderItems() {
+		return orderItems;
+	}
+
+	/**
+	 * @param orderItems the orderItems to set
+	 */
+	public void setOrderItems(List<OrderItem> orderItems) {
+		this.orderItems = orderItems;
 	}
 }
 

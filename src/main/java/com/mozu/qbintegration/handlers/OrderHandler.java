@@ -17,8 +17,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.commerce.OrderResource;
@@ -165,6 +163,9 @@ public class OrderHandler {
 		
 		//Set the edit sequence
 		orderDetails.setEditSequence(editSequence);
+		
+		//8-Oct-2014 Add orderitems so that updates can be compared
+		orderDetails.setOrderItems(order.getItems());
 		
 		return orderDetails;
 	}

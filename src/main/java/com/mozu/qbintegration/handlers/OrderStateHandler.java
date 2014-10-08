@@ -230,9 +230,9 @@ public class OrderStateHandler {
 			return "CUST_QUERY";
 		} else if (!allItemsFound(tenantId, order)) {
 			return "ITEM_QUERY";
-		} else if ("Update".equalsIgnoreCase(action)) {
+		} else if ("Update".equalsIgnoreCase(action) && allItemsFound(tenantId, order)) {
 			return "ORDER_UPDATE";
-		} else if ("Add".equalsIgnoreCase(action)){
+		} else if ("Add".equalsIgnoreCase(action) && allItemsFound(tenantId, order)){
 			return "ORDER_ADD";
 		} else {
 			return "ORDER_DELETE";

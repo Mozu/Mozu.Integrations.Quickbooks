@@ -1,9 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -15,14 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.core.Address;
-import com.mozu.api.contracts.customer.CustomerAccount;
-import com.mozu.api.contracts.customer.CustomerAttribute;
-import com.mozu.api.contracts.customer.CustomerContact;
-import com.mozu.api.utils.JsonUtils;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })

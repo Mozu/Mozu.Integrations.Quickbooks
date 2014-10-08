@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.contracts.mzdb.EntityContainer;
 import com.mozu.api.contracts.mzdb.EntityContainerCollection;
@@ -204,13 +206,73 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			MozuOrderDetail postedOrder, MozuOrderDetail updatedOrder) {
 		List<OrderCompareDetail> compareDetails = new ArrayList<OrderCompareDetail>();
 		
+		OrderCompareDetail orderCompareDetail = null;
+		
+		//We are preserving order of items as those are sent over. So we can compare side by side
+		// without having to compare. Also, we will use the larger list as datum so other can
+		// be blindly blank.
+		boolean isUpdateLarger = updatedOrder.getOrderItems().size() > postedOrder.getOrderItems().size();
+		List<OrderItem> outerList = isUpdateLarger ? updatedOrder.getOrderItems() : postedOrder.getOrderItems();
+		List<OrderItem> innerList = isUpdateLarger ? postedOrder.getOrderItems() : updatedOrder.getOrderItems();
+		
+		OrderCompareDetail orderCompareDetail2 = null;
+		for(OrderItem outerItem: outerList) {
+			orderCompareDetail = new OrderCompareDetail();
+			orderCompareDetail.setParameter("Product Code");
+			
+			orderCompareDetail2 = new OrderCompareDetail();
+			orderCompareDetail2.setParameter("Quantity");
+			
+			String prodName = outerItem.getProduct().getProductCode() + " (" + 
+					outerItem.getProduct().getName() + ")";
+			Integer qty = outerItem.getQuantity();
+			
+			if(isUpdateLarger) {
+				orderCompareDetail.setUpdatedOrderDetail(prodName);
+				orderCompareDetail2.setUpdatedOrderDetail(String.valueOf(qty));
+				orderCompareDetail.setPostedOrderDetail(""); //placeholder since UI needs to show blank
+				orderCompareDetail2.setPostedOrderDetail("");
+			} else {
+				orderCompareDetail.setPostedOrderDetail(prodName);
+				orderCompareDetail2.setPostedOrderDetail(String.valueOf(qty));
+				orderCompareDetail.setUpdatedOrderDetail(""); //placeholder since UI needs to show blank
+				orderCompareDetail2.setUpdatedOrderDetail("");
+			}
+			
+			compareDetails.add(orderCompareDetail);
+			compareDetails.add(orderCompareDetail2);
+		}
+		
+		Integer counter = 0;
+		for(OrderItem innerItem: innerList) { //process smaller list.
+			orderCompareDetail = compareDetails.get(counter);
+			
+			orderCompareDetail2 = compareDetails.get(++counter);
+			
+			String prodName = innerItem.getProduct().getProductCode() + " (" + 
+					innerItem.getProduct().getName() + ")";
+			Integer qty = innerItem.getQuantity();
+			
+			if(isUpdateLarger) {
+				orderCompareDetail.setPostedOrderDetail(prodName); //here innerlist will be postedorder
+				orderCompareDetail2.setPostedOrderDetail(String.valueOf(qty));
+			} else {
+				orderCompareDetail.setUpdatedOrderDetail(prodName);
+				orderCompareDetail2.setUpdatedOrderDetail(String.valueOf(qty));
+			}
+			counter++;
+		}
+		
 		if(postedOrder.getAmount() != null && !postedOrder.getAmount().equals(updatedOrder.getAmount())) {
-			OrderCompareDetail orderCompareDetail = new OrderCompareDetail();
+			orderCompareDetail = new OrderCompareDetail();
 			orderCompareDetail.setParameter("Amount");
 			orderCompareDetail.setPostedOrderDetail(postedOrder.getAmount());
 			orderCompareDetail.setUpdatedOrderDetail(updatedOrder.getAmount());
-			compareDetails.add(orderCompareDetail);
+			compareDetails.add(0, orderCompareDetail);
 		}
+		
+		logger.debug("" + postedOrder.getOrderItems());
+		logger.debug("" + updatedOrder.getOrderItems());
 		
 		return compareDetails;
 	}

@@ -392,6 +392,7 @@ public class ProductHandler {
 
 			//Add discounts as seperate line item
 			if(item.getDiscountTotal() > 0.0) {
+				mzItem = new MozuOrderItem();
 				mzItem.setProductCode("DISC-PRODUCT");
 				mzItem.setQbItemCode(qbDiscProductCode);
 				mzItem.setAmount(item.getDiscountTotal());

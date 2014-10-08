@@ -3,14 +3,15 @@
  */
 package com.mozu.qbintegration.tasks;
 
-import java.util.Date;
-
 import org.joda.time.DateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * @author Akshay
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkTask {
 
 	private String Id;
