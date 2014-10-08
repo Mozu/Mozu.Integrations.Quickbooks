@@ -11,15 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.mozu.api.ApiContext;
-import com.mozu.api.ApiException;
-import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.event.Event;
-import com.mozu.api.contracts.mzdb.EntityList;
-import com.mozu.api.contracts.mzdb.IndexedProperty;
 import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.ApplicationEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
-import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.model.GeneralSettings;

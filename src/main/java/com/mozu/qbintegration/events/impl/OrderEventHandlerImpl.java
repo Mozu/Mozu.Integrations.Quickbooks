@@ -1,29 +1,19 @@
 package com.mozu.qbintegration.events.impl;
 
-import java.util.List;
-
 import javax.annotation.PostConstruct;
 
 import org.apache.http.HttpStatus;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.mozu.api.ApiContext;
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.event.Event;
 import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
-import com.mozu.api.resources.commerce.OrderResource;
-import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
-import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -56,11 +46,15 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
 		final Integer tenantId = apiContext.getTenantId();
+		
 		//final Integer siteId = apiContext.getSiteId();
 		try {
-			orderStateHandler.deleteOrder(event.getEntityId(), tenantId);
+			//Get it in only if User wants to process cancelled orders
+			if(quickbooksService.getSettingsFromEntityList(tenantId).getCancelled()) { 
+				orderStateHandler.deleteOrder(event.getEntityId(), tenantId);
+			}
 		} catch (Exception e) {
-			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " exception:"	+ e.getMessage(), e);
+			logger.error("Exception while processing order cancelled, tenantID: "+ tenantId + " exception:"	+ e.getMessage(), e);
 			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
 		}
 					
@@ -85,12 +79,13 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		final Integer siteId = apiContext.getSiteId();
 		try {
 			//quickbooksService.saveOrderInQuickbooks(event.getEntityId(),  tenantId);
-			orderStateHandler.processOrder(event.getEntityId(), apiContext);
-			status = new EventHandlerStatus(HttpStatus.SC_OK);
+			//Get it in only if User wants to process accepted orders
+			if(quickbooksService.getSettingsFromEntityList(tenantId).getAccepted()) {
+				orderStateHandler.processOrder(event.getEntityId(), apiContext);
+			}
 		} catch (Exception e) {
 			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
 			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
-
 		}
 					
 		return status;

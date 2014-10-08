@@ -5,17 +5,10 @@ package com.mozu.qbintegration.service;
 
 import java.util.List;
 
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
-import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
-import com.mozu.qbintegration.model.ProductToQuickbooks;
-import com.mozu.qbintegration.tasks.WorkTask;
 
 /**
  * @author Akshay
