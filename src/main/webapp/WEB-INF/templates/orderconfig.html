@@ -3,14 +3,14 @@
 <body>
 
 	<div th:fragment="content">
-	
+
 		<div class="row">
 			<div class="tab-full-column">
 				<label th:text="#{label.downloadsettings}" class="label-bold"></label>
 			</div>
 		</div>
 		<div class="tab-divider"></div>
-		
+
 
 		<div class="row">
 			<div class="tab-full-column">
@@ -28,6 +28,26 @@
 					<input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"></input>
 					<label th:text="#{label.cancelled}"></label>
 				</div>
+			</div>
+		</div>
+		
+		<div class="tab-divider"></div>
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.productMapping}" class="label-bold"></label>
+			</div>
+		</div>
+		<div class="tab-divider"></div>
+
+
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="tab-full-column">
+					<label class="tab-field-label" th:text="#{label.shipping}"></label>
+					<input type="text" id="wsUrl" class="tab-field" data-bind="value : settings.shippingProductCode"  ></input>
+					<label class="tab-field-label" th:text="#{label.discount}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.discountProductCode"></input>
+				</div>	
 			</div>
 		</div>
 	</div>

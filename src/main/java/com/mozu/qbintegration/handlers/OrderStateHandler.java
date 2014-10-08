@@ -111,11 +111,13 @@ public class OrderStateHandler {
 			queueManagerService.addTask(tenantId, order.getId(), "Order", nextStep, action);
 		} else {
 			String status = "PROCESSING";
-			if (lastSteps.contains(nextStep.toLowerCase()) )
+			if (lastSteps.contains(currentStep.toLowerCase()) )
 				status = "COMPLETED";
 			
-			if (nextStep.equalsIgnoreCase("conflict"))
+			if (nextStep.equalsIgnoreCase("conflict")) {
 				addToConflictQueue(tenantId, order, qbResponse, null);
+				status = "COMPLETED";
+			}
 			queueManagerService.updateTask(tenantId,order.getId(), nextStep, status);
 		}
 	}
@@ -171,7 +173,7 @@ public class OrderStateHandler {
 				
 				deleteConfictEntities(tenantId, order.getId());
 				List<Object> searchResults = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
-				List<MozuOrderItem> productCodes = productHandler.getProductCodes(order);
+				List<MozuOrderItem> productCodes = productHandler.getProductCodes(tenantId,order, false);
 				for(Object obj : searchResults) {
 					ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
 					
@@ -245,7 +247,7 @@ public class OrderStateHandler {
 		return !StringUtils.isEmpty(qbId);
 	}
 
-	private boolean allItemsFound(Integer tenantId, Order order) throws Exception {
+	public boolean allItemsFound(Integer tenantId, Order order) throws Exception {
 		List<MozuOrderItem> productCodes = productHandler.getProductCodes(tenantId, order, true);
 		for(MozuOrderItem mzOrderItem : productCodes) {
 			if (StringUtils.isEmpty(mzOrderItem.getQbItemCode())) return false;
