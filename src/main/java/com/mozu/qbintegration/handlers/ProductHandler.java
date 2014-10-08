@@ -402,9 +402,9 @@ public class ProductHandler {
 		}
 	}
 
-	public List<MozuOrderItem> getProductCodes(Order order) throws Exception {
+	/*public List<MozuOrderItem> getProductCodes(Order order) throws Exception {
 		return getProductCodes(0, order, false);
-	}
+	}*/
 
 	public List<MozuOrderItem> getProductCodes(Integer tenantId, Order order,
 			boolean queryQBProduct) throws Exception {
@@ -418,12 +418,10 @@ public class ProductHandler {
 
 		if (queryQBProduct) {
 			if (StringUtils.isNotEmpty(settings.getDiscountProductCode()))
-				qbDiscProductCode = getQBId(tenantId,
-						settings.getDiscountProductCode());
+				qbDiscProductCode = getQBId(tenantId, settings.getDiscountProductCode());
 
 			if (StringUtils.isNotEmpty(settings.getShippingProductCode()))
-				shippingProductCode = getQBId(tenantId,
-						settings.getShippingProductCode());
+				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
 		}
 
 		for (OrderItem item : order.getItems()) {
@@ -471,8 +469,7 @@ public class ProductHandler {
 			}
 
 			// Add discounts as seperate line item
-			if (item.getDiscountTotal() > 0.0
-					&& StringUtils.isNotEmpty(qbDiscProductCode)) {
+			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 				mzItem = new MozuOrderItem();
 				mzItem.setProductCode(settings.getDiscountProductCode());
 				mzItem.setQbItemCode(qbDiscProductCode);
@@ -482,8 +479,7 @@ public class ProductHandler {
 			}
 		}
 
-		if (order.getShippingTotal() > 0.0
-				&& StringUtils.isNotEmpty(shippingProductCode)) {
+		if (order.getShippingTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
 			mzItem.setQbItemCode(shippingProductCode);
@@ -494,7 +490,7 @@ public class ProductHandler {
 
 		if (order.getAdjustment() != null
 				&& order.getAdjustment().getAmount() > 0.0
-				&& StringUtils.isNotEmpty(qbDiscProductCode)) {
+				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
 			mzItem.setQbItemCode(qbDiscProductCode);
@@ -506,7 +502,7 @@ public class ProductHandler {
 
 		if (order.getShippingAdjustment() != null
 				&& order.getShippingAdjustment().getAmount() > 0.0
-				&& StringUtils.isNotEmpty(qbDiscProductCode)) {
+				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
 			mzItem.setQbItemCode(qbDiscProductCode);
