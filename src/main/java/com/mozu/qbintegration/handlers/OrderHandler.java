@@ -72,50 +72,7 @@ public class OrderHandler {
 		return order;
 	}
 
-	
-	/*public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status,SalesOrderAddRsType salesOrderResponse) throws Exception {
-		String qbTransactionId = null;
-		List<Object> salesOrderLineRet = null;
 		
-		if(salesOrderResponse == null) {
-			qbTransactionId = "";
-		} else {
-			qbTransactionId = salesOrderResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineRet = 
-					salesOrderResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
-		}
-		
-		//Set the edit sequence to be used while updating
-		String editSequence = "";
-		salesOrderResponse.getSalesOrderRet().getBillAddress();
-		
-		if (salesOrderResponse != null)
-			editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
-		
-		return getOrderDetails(tenantId, orderId, status,qbTransactionId, editSequence, salesOrderResponse.getSalesOrderRet());
-	}
-	
-	public MozuOrderDetail getOrderUpdateDetails(Integer tenantId,String orderId, String status, SalesOrderModRsType salesOrderModResponse) throws Exception {
-		
-		String qbTransactionId = null;
-		List<Object> salesOrderLineRet = null;
-		
-		if(salesOrderModResponse == null) {
-			qbTransactionId = "";
-		} else {
-			qbTransactionId = salesOrderModResponse.getSalesOrderRet().getTxnID();
-			salesOrderLineRet = 
-					salesOrderModResponse.getSalesOrderRet().getSalesOrderLineRetOrSalesOrderLineGroupRet();
-		}
-		//Set the edit sequence to be used while updating
-		
-		String editSequence = "";
-		if (salesOrderModResponse != null)
-			editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
-		
-		return getOrderDetails(tenantId, orderId, status, qbTransactionId, editSequence, salesOrderModResponse.getSalesOrderRet());
-	}*/
-	
 	public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status,  SalesOrderRet salesOrderRet) throws Exception {
 		Order order = getOrder(orderId, tenantId);
 		CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
@@ -123,9 +80,6 @@ public class OrderHandler {
 		
 	}
 	
-	/*public MozuOrderDetail getOrderDetails(Order order, CustomerAccount custAcct, String status) {
-		return getOrderDetails(order, custAcct, status, null,null, null);
-	}*/
 	
 	public MozuOrderDetail getOrderDetails(Integer tenantId, Order order, CustomerAccount custAcct, String status, SalesOrderRet salesOrderRet) throws Exception {
 		List<Object> salesOrderLineRet = null;
@@ -335,7 +289,7 @@ public class OrderHandler {
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
 		salesOrderAdd.setCustomerRef(customerRef);
-		//salesOrderAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
+		salesOrderAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
 		salesOrderAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesOrderAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		
@@ -385,7 +339,9 @@ public class OrderHandler {
 		SalesOrderMod salesOrdermod = new SalesOrderMod();
 		salesOrderModRqType.setRequestID(order.getId());
 		
-		salesOrderModRqType.setSalesOrderMod(salesOrdermod);
+		salesOrdermod.setRefNumber(String.valueOf(order.getOrderNumber()));
+		
+		
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
 		salesOrdermod.setCustomerRef(customerRef);
@@ -396,12 +352,14 @@ public class OrderHandler {
 		salesOrdermod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesOrdermod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		
+		salesOrderModRqType.setSalesOrderMod(salesOrdermod);
+		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		//Double productDiscounts = 0.0;
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		for (MozuOrderItem item : orderItems) {
 			if (item.isMic()) {
-				addSOModLineItemAmount(salesOrdermod, numberFormat.format(item.getAmount()), item.getQbItemCode());
+				addSOModLineItemAmount(salesOrdermod, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
 			} else {
 				ItemRef itemRef = new ItemRef();
 				itemRef.setListID(item.getQbItemCode());
@@ -420,6 +378,7 @@ public class OrderHandler {
 				
 				salesOrderLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
 				salesOrderLineMod.setQuantity(item.getQty().toString());
+				salesOrderLineMod.setDesc(item.getDescription());
 				salesOrderLineMod.setItemRef(itemRef);
 				
 				salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
@@ -440,14 +399,14 @@ public class OrderHandler {
 		salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
 	}
 	
-	private void addSOModLineItemAmount(SalesOrderMod salesOrdermod, String amount, String fieldName) {
+	private void addSOModLineItemAmount(SalesOrderMod salesOrdermod, String amount, String fieldName, String descrption) {
 		SalesOrderLineMod salesOrderLineMod = new SalesOrderLineMod();
 		salesOrderLineMod.setAmount(amount);
 		ItemRef itemRef = new ItemRef();
 		itemRef.setFullName(fieldName);
 		salesOrderLineMod.setItemRef(itemRef);
 		salesOrderLineMod.setTxnLineID("-1");
-		//salesOrderLineMod.setQuantity(String.valueOf(qty));
+		salesOrderLineMod.setDesc(descrption);
 		salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
 	}
 	
@@ -551,8 +510,7 @@ public class OrderHandler {
 		addr.setPostalOrZipCode(address.getPostalCode());
 		return addr;
 	}
-	
-	
+		
 	private BillAddress getBillAddress(Address address) {
 		BillAddress billAddress = new BillAddress();
 		billAddress.setAddr1(address.getAddress1());

@@ -66,13 +66,14 @@ public class OrderStateHandler {
 			//Check if order has been processed, if not put in process Queue
 			boolean isProcessed = isOrderProcessed(tenantId, order.getId());
 			boolean isOrderInConflict = isOrderInConflict(tenantId, order.getId());
-			
-			if (isProcessed && !isOrderInConflict) { //Add to update queue
-				
-				MozuOrderDetail mozuOrderDetails = orderHandler.getOrderDetails(tenantId, order, orderingCust, "Updated", null );
-				orderHandler.updateOrderInEntityList(mozuOrderDetails, entityHandler.getOrderUpdatedEntityName(), tenantId);
-			} else if (!isOrderInProcessing(tenantId, orderId)) { //Add to queue for processing
-				transitionState(orderId, tenantId, null, "Add" );
+			boolean isOrderInProcessing = isOrderInProcessing(tenantId, orderId);
+			if (!isOrderInProcessing) {
+				if (isProcessed && !isOrderInConflict) { //Add to update queue
+					MozuOrderDetail mozuOrderDetails = orderHandler.getOrderDetails(tenantId, order, orderingCust, "Updated", null );
+					orderHandler.updateOrderInEntityList(mozuOrderDetails, entityHandler.getOrderUpdatedEntityName(), tenantId);
+				} else  { //Add to queue for processing
+					transitionState(orderId, tenantId, null, "Add" );
+				}
 			}
 		}
 	}
@@ -212,8 +213,7 @@ public class OrderStateHandler {
 		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), id, orderDetails);
 	}
 	
-	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, 
-			boolean queryResult, String action) throws Exception {
+	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, boolean queryResult, String action) throws Exception {
 		
 		if (currentStep.equalsIgnoreCase("cust_query") && !queryResult)
 			return "CUST_ADD";
