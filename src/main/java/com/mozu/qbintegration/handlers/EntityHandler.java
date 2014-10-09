@@ -191,7 +191,7 @@ public class EntityHandler {
 		entityList.setName(ORDERS_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
 		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
-		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId","string"));
+		entityList.setIndexA(getIndexedProperty("mozuOrderNumber","string"));
 		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED,POSTED,ERRORED, UPDATED
 		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
@@ -238,10 +238,11 @@ public class EntityHandler {
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(TASKQUEUELOG_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("id","string"));
+		entityList.setIdProperty(getIndexedProperty("enteredTime","string"));
 		entityList.setIndexA(getIndexedProperty("createDate", "date"));
 		entityList.setIndexB(getIndexedProperty("status", "string"));
 		entityList.setIndexC(getIndexedProperty("type", "string"));
+		entityList.setIndexC(getIndexedProperty("id", "string"));
 		
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
@@ -275,11 +276,11 @@ public class EntityHandler {
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_UPDATED_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
-		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
+		entityList.setIdProperty(getIndexedProperty("mozuOrderId", "string"));
 		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId","string"));
 		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED, POSTED, ERRORED, UPDATED
 		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIndexD(getIndexedProperty("mozuOrderNumber", "integer"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -337,6 +338,19 @@ public class EntityHandler {
 		property.setDataType(type);
 
 		return property;
+	}
+	
+	public void addEntity(Integer tenantId, String entityName, Object value) throws Exception {
+		ObjectNode taskNode = mapper.valueToTree(value);
+
+		// Add the mapping entry
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		try {
+				entityResource.insertEntity(taskNode, entityName);
+		} catch (Exception e) {
+			logger.error("Error saving or updating  entity : "+ e.getMessage());
+			throw e;
+		}
 	}
 	
 	public void addUpdateEntity(Integer tenantId, String entityName, String id, Object value) throws Exception {

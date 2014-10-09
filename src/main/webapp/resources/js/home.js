@@ -197,7 +197,7 @@ var homeViewModel = function() {
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 			success : function(data) {
-				console.log(data);
+				//console.log(data);
 			},
 			error : function() {
 			}
@@ -215,7 +215,7 @@ var homeViewModel = function() {
     		},
     		dataType : "json",		
     		success : function(data) {
-    			console.log(data);
+    			//console.log(data);
     			getAllProductsFromEntityList();
     		},error : function() {
     			$("#content").hide();
@@ -274,7 +274,7 @@ var homeViewModel = function() {
     	});
     	
     	$allCheckedUpdateBoxes.promise().done(function() {
-    		console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
+    		//console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
         	$.ajax({
         		url : "Orders/postUpdatedOrderToQB",
         		type : "POST",
@@ -360,33 +360,18 @@ var homeViewModel = function() {
 			{
 				"mData" : "mozuOrderNumber"
 			}, {
-				"mData" : "quickbooksOrderListId"
-			}, {
 				"mData" : "customerEmail"
 			}, {
 				"mData" : "orderDate",
-					 "mRender": function (data, type, row) {
-					   
-						 return moment(data).format("YYYY-MM-DD HH:mm:ss")
-					/* var myISODate =  new Date(data) ;
-					
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();*/
-					   }
+				 "mRender": function (data, type, row) {
+					 return unixToHumanTime(data);
+				   }
 			}, 
 			{
 				"mData" : "orderUpdatedDate",
 				"mRender": function (data, type, row) {
-					return moment(data).format("YYYY-MM-DD hh:mm a");
-				 /*var myISODate =  new Date(data) ;
-			
-				      return myISODate.getDate()+'-'+
-				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-				      +':'+myISODate.getSeconds();*/
-				   }
+					return unixToHumanTime(data);
+				}
 			},
 			{
 				"mData" : "amount"
@@ -429,24 +414,14 @@ var homeViewModel = function() {
 					"mData" : "orderDate",
 						"mRender": function (data, type, row) {
 					   
-							var myISODate =  new Date(data) ;
-					
-						      return myISODate.getDate()+'-'+
-						      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-						      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-						      +':'+myISODate.getSeconds();
+							return unixToHumanTime(data);
 						}
 				}, 
 				{
 					"mData" : "orderUpdatedDate",
 					"mRender": function (data, type, row) {
 					    	
-					 var myISODate =  new Date(data) ;
-				
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
+						return unixToHumanTime(data);
 					}
 				},
 				{
@@ -506,24 +481,14 @@ var homeViewModel = function() {
 							"mData" : "orderDate",
 								"mRender": function (data, type, row) {
 							   
-									var myISODate =  new Date(data) ;
-							
-								      return myISODate.getDate()+'-'+
-								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-								      +':'+myISODate.getSeconds();
+									return unixToHumanTime(data);
 								}
 						}, 
 						{
 							"mData" : "orderUpdatedDate",
 							"mRender": function (data, type, row) {
 							    	
-							 var myISODate =  new Date(data) ;
-						
-							      return myISODate.getDate()+'-'+
-							      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-							      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-							      +':'+myISODate.getSeconds();
+								return unixToHumanTime(data);
 							}
 						},
 						{
@@ -655,6 +620,10 @@ var homeViewModel = function() {
 
 
 	self.getSettings();
+}
+
+function unixToHumanTime(data) {
+	return moment.unix(data/1000).format("YYYY-MM-DD HH:mm:ss")
 }
 
 function closeError() {

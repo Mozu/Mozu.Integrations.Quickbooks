@@ -150,7 +150,8 @@ public class OrdersController {
 		criteria.setOrderStatus(action); //POSTED, UPDATED, CONFLICT, CANCELLED
 		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, 
 						"UPDATED".equalsIgnoreCase(action)? 
-								entityHandler.getOrderUpdatedEntityName() : entityHandler.getOrderEntityName());
+								entityHandler.getOrderUpdatedEntityName() : entityHandler.getOrderEntityName(), "UPDATED".equalsIgnoreCase(action)? 
+										"mozuOrderNumber" : "enteredTime");
 
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());

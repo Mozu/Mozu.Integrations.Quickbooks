@@ -1,6 +1,7 @@
 package com.mozu.qbintegration.endpoints;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -22,6 +23,7 @@ import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.handlers.ProductHandler;
+import com.mozu.qbintegration.model.WorkTaskLog;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -151,8 +153,8 @@ public class QuickbooksServiceEndPoint {
 	
 			SendRequestXMLResponse response = new SendRequestXMLResponse();
 			if (workTask != null) {
-	
 				String requestXml = getRequestXml(tenantId, workTask);
+				logRequestResponse(tenantId, workTask, requestXml);
 				logger.info(requestXML.getTicket()+"- Task Request - "+requestXml);
 				response.setSendRequestXMLResult(requestXml);
 			} else {
@@ -187,8 +189,8 @@ public class QuickbooksServiceEndPoint {
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
 					try{
-						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), 
-								workTask.getAction());
+						logRequestResponse(tenantId, workTask, responseXML.getResponse());
+						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(),workTask.getAction());
 					} catch(Exception ex) {
 						orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
 						queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
@@ -196,6 +198,7 @@ public class QuickbooksServiceEndPoint {
 					}
 					break;
 				case "product":
+					logRequestResponse(tenantId, workTask, responseXML.getResponse());
 					if (workTask.getAction().equalsIgnoreCase("add"))
 						productHandler.processItemAdd(tenantId, workTask, responseXML.getResponse());
 					else if (workTask.getAction().equalsIgnoreCase("refresh"))
@@ -281,4 +284,16 @@ public class QuickbooksServiceEndPoint {
 		}
 	}
 
+	private void logRequestResponse(int tenantId, WorkTask workTask, String xml) throws Exception {
+		WorkTaskLog log = new WorkTaskLog();
+		log.setAction(workTask.getAction());
+		log.setCreateDate(workTask.getCreateDate());
+		log.setCurrentStep(workTask.getCurrentStep());
+		log.setType(workTask.getType());
+		log.setId(workTask.getId());
+		log.setXml(xml);
+		log.setEnteredTime(String.valueOf((new Date()).getTime()));
+		
+		entityHandler.addEntity(tenantId, entityHandler.getTaskqueueLogEntityName(), log);
+	}
 }

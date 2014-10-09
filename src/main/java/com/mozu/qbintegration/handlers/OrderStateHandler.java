@@ -126,10 +126,8 @@ public class OrderStateHandler {
 		
 		for(String mozuOrderNum: orderNumberList) {
 			
-			String filter = (new StringBuilder()).append("mozuOrderId eq ").
-					append(mozuOrderNum).append(" and orderStatus eq CONFLICT").toString();
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, 
-					entityHandler.getOrderEntityName(), filter, "enteredTime desc", 200);
+			String filter = (new StringBuilder()).append("mozuOrderId eq ").append(mozuOrderNum).append(" and orderStatus eq CONFLICT").toString();
+			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId,	entityHandler.getOrderEntityName(), filter, "enteredTime desc", 200);
 			for(JsonNode node : nodes) { //there should be only one ever...just to cover the .001% :)
 				MozuOrderDetail conflictOrder = mapper.readValue(node.toString(), MozuOrderDetail.class);
 				conflictOrder.setOrderStatus("RETRIED");
@@ -153,7 +151,7 @@ public class OrderStateHandler {
 			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+mozuOrderNum);
 			for(JsonNode node : nodes) {
 				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
-				entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetail.getEnteredTime());
+				entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetail.getMozuOrderId());
 			}
 			logger.debug("Slotted an order update task for mozu order number: " + mozuOrderNum);
 		}

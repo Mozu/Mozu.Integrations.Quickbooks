@@ -225,8 +225,8 @@ public class OrderHandler {
 		else if (orderQueryRsType.getStatusSeverity().equalsIgnoreCase("warn"))
 			return false;
 		else {
-			MozuOrderDetail orderDetails = getOrderDetails(tenantId,orderId, "POSTED", orderQueryRsType.getSalesOrderRet().get(0));
-			saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);
+			//MozuOrderDetail orderDetails = getOrderDetails(tenantId,orderId, "POSTED", orderQueryRsType.getSalesOrderRet().get(0));
+			//saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);
 			return true;
 		}
 	}
@@ -246,15 +246,13 @@ public class OrderHandler {
 			if(!isUpdate) {
 				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
 			} else {
-				
-				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), 
-						"mozuOrderId eq "+orderDetails.getMozuOrderId() + " and orderStatus eq UPDATED");
+				//JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetails.getMozuOrderId());
 
-				if (nodes.size() > 0) { //Delete existing update
+				/*if (nodes != null) { //Delete existing update
 					MozuOrderDetail existing = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
 					entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), existing.getEnteredTime());
-				} 
-				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
+				} */
+				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getMozuOrderId(), orderDetails);
 			}
 		} catch (Exception e) {
 			logger.error("Error saving order details for tenant id: " + tenantId);
@@ -264,6 +262,10 @@ public class OrderHandler {
 	}
 
 	public List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, MozuOrderDetail mozuOrderDetails, String mapName) throws Exception {
+		return getMozuOrderDetails(tenantId,mozuOrderDetails,mapName ,"enteredTime");
+	}
+	
+	public List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, MozuOrderDetail mozuOrderDetails, String mapName, String orderBy) throws Exception {
 
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
@@ -281,7 +283,7 @@ public class OrderHandler {
 		EntityCollection orderCollection = null;
 		
 		try {
-			orderCollection = entityResource.getEntities(mapName, null, null, sb.toString(), "enteredTime desc", null);
+			orderCollection = entityResource.getEntities(mapName, null, null, sb.toString(), orderBy+" desc", null);
 			if (null != orderCollection) {
 				for (JsonNode singleOrder : orderCollection.getItems()) {
 					mozuOrders.add(mapper.readValue(singleOrder.toString(), MozuOrderDetail.class));
