@@ -1,8 +1,11 @@
 package com.mozu.qbintegration.handlers;
 
+import org.joda.*;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -161,8 +164,8 @@ public class OrderHandler {
 		
 		//DateTimeFormatter timeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		
-		orderDetails.setOrderDate(String.valueOf(order.getAcceptedDate().getMillis()));
-		orderDetails.setOrderUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().getMillis()));
+		orderDetails.setOrderDate(String.valueOf(order.getAcceptedDate().toDate().getTime()));
+		orderDetails.setOrderUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().toDate().getTime()));
 		orderDetails.setConflictReason("");
 		orderDetails.setAmount(String.valueOf(order.getSubtotal()));
 		

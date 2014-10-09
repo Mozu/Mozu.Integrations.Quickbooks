@@ -30,9 +30,10 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Autowired
 	EntityHandler entityHandler;
 	
-	private final String PROCESSING = "PROCESSING";
+	public final String PROCESSING = "Processing";
+	public final String PENDING = "Pending";
+	public final String COMPLETED = "Completed";
 	
-
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate desc", 1);
@@ -57,7 +58,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		workTask.setId(id);
 		workTask.setCreateDate(DateTime.now());
 		workTask.setType(type);
-		workTask.setStatus("ENTERED");
+		workTask.setStatus(PENDING);
 		workTask.setAction(action);
 		workTask.setCurrentStep(currentStep);
 		
@@ -77,7 +78,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 
 	@Override
 	public void updateTask(Integer tenantId, String id, String currentStep, String status) throws Exception {
-		if(status.equalsIgnoreCase("completed")) {
+		if(status.equalsIgnoreCase(COMPLETED)) {
 			entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
 		} else {
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);

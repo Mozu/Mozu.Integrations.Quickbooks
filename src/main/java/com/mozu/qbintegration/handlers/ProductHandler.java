@@ -356,18 +356,21 @@ public class ProductHandler {
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order,
-				true);
+		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order,true);
+		List<String> existing = new ArrayList<String>();
 		for(MozuOrderItem orderItem : productCodes) {
 			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
 				continue;
-			ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
-			itemQueryRqType.getFullName().add(orderItem.getProductCode());	
-			itemQueryRqType.setRequestID(order.getId());
-	
-			qbxmlMsgsRqType
-					.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
-					.add(itemQueryRqType);
+			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate queries
+				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
+				itemQueryRqType.getFullName().add(orderItem.getProductCode());	
+				itemQueryRqType.setRequestID(order.getId());
+				
+				qbxmlMsgsRqType
+						.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
+						.add(itemQueryRqType);
+				existing.add(orderItem.getProductCode());
+			}
 		}
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
@@ -500,13 +503,12 @@ public class ProductHandler {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
 			mzItem.setQbItemCode(shippingProductCode);
-			mzItem.setAmount(order.getShippingTotal());
+			mzItem.setAmount(order.getShippingSubTotal());
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);
 		}
 		
 		if (order.getAdjustment() != null
-				&& order.getAdjustment().getAmount() > 0.0
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
@@ -530,7 +532,6 @@ public class ProductHandler {
 		}*/
 
 		if (order.getShippingAdjustment() != null
-				&& order.getShippingAdjustment().getAmount() > 0.0
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
