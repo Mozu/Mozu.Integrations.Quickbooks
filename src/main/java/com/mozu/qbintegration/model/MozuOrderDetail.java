@@ -5,7 +5,10 @@ package com.mozu.qbintegration.model;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 
 /**
@@ -67,6 +70,7 @@ public class MozuOrderDetail {
 	 */
 	private List<QuickBooksSavedOrderLine> savedOrderLinesList;
 	
+
 	/**
 	 * 
 	 */
@@ -76,6 +80,12 @@ public class MozuOrderDetail {
 	 * 
 	 */
 	private List<OrderItem> orderItems;
+	
+	
+	private Address shipToAddress;
+	
+	private Address billToAddress;
+	
 	
 	/**
 	 * @return the enteredTime
@@ -127,10 +137,10 @@ public class MozuOrderDetail {
 	}
 
 	/**
-	 * @param orderUpdatedDate the orderUpdatedDate to set
+	 * @param l the orderUpdatedDate to set
 	 */
-	public void setOrderUpdatedDate(String orderUpdatedDate) {
-		this.orderUpdatedDate = orderUpdatedDate;
+	public void setOrderUpdatedDate(String orderUpdateDate) {
+		this.orderUpdatedDate = orderUpdateDate;
 	}
 
 	/**
@@ -141,7 +151,7 @@ public class MozuOrderDetail {
 	}
 
 	/**
-	 * @param orderDate the orderDate to set
+	 * @param l the orderDate to set
 	 */
 	public void setOrderDate(String orderDate) {
 		this.orderDate = orderDate;
@@ -239,11 +249,7 @@ public class MozuOrderDetail {
 		return savedOrderLines;
 	}*/
 
-	/**
-	 * @param savedOrderLines the savedOrderLines to set
-	 */
-	public void setSavedOrderLines(String savedOrderLines) {
-	}
+
 
 	/**
 	 * @return the editSequence
@@ -259,6 +265,24 @@ public class MozuOrderDetail {
 		this.editSequence = editSequence;
 	}
 
+
+	public Address getShipToAddress() {
+		return shipToAddress;
+	}
+
+	public void setShipToAddress(Address shipToAddress) {
+		this.shipToAddress = shipToAddress;
+	}
+
+	public Address getBillToAddress() {
+		return billToAddress;
+	}
+
+	public void setBillToAddress(Address billToAddress) {
+		this.billToAddress = billToAddress;
+	}
+	
+	
 	/**
 	 * @return the orderItems
 	 */
