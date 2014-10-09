@@ -129,7 +129,11 @@ public class OrderHandler {
 	
 	public MozuOrderDetail getOrderDetails(Integer tenantId, Order order, CustomerAccount custAcct, String status, SalesOrderRet salesOrderRet) throws Exception {
 		List<Object> salesOrderLineRet = null;
-		String qbTransactionId = null;
+		/*
+		 * Bug fix 9-oct-2014: this field is an indexed property in EL. 
+		 * Cannot be null. So made it "". Was failing in case of order delete
+		 */
+		String qbTransactionId = "";
 		String editSequence = null;
 		
 		if(salesOrderRet != null) {
@@ -145,7 +149,7 @@ public class OrderHandler {
 				editSequence = previousOrder.getEditSequence();
 			}
 			
-		}
+		} 
 		
 		MozuOrderDetail orderDetails = new MozuOrderDetail();
 		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
@@ -266,7 +270,8 @@ public class OrderHandler {
 				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
 			} else {
 				
-				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+orderDetails.getMozuOrderId());
+				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), 
+						"mozuOrderId eq "+orderDetails.getMozuOrderId() + " and orderStatus eq UPDATED");
 
 				if (nodes.size() > 0) { //Delete existing update
 					MozuOrderDetail existing = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
@@ -503,7 +508,7 @@ public class OrderHandler {
 		} else {
 			
 			MozuOrderDetail orderCancelDetails = getOrderCancelDetails(tenantId, orderId, "CANCELLED", deleteTxRespType);
-			saveOrderInEntityList(orderCancelDetails, entityHandler.getOrderEntityName(), tenantId);
+			saveOrderInEntityList(orderCancelDetails, entityHandler.getOrderEntityName(), tenantId); 
 	
 			logger.debug((new StringBuilder())
 					.append("Processed cancelling order with id: ")

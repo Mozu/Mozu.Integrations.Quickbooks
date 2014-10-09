@@ -55,7 +55,11 @@ public class OrderStateHandler {
 	@Autowired
 	EntityHandler entityHandler;
 
-	private List<String> lastSteps = new ArrayList<String>(){{add("order_add"); add("order_update"); add("order_cancel"); add("conflict");}};
+	/*
+	 * Bug fix 9-Oct-2014: Added order_delete as a state in the queue
+	 */
+	private List<String> lastSteps = new ArrayList<String>(){
+		{add("order_add"); add("order_update"); add("order_cancel"); add("conflict");add("order_delete");}};
 	
 	public void processOrder(String orderId, ApiContext apiContext) throws Exception {
 		Integer tenantId = apiContext.getTenantId();
@@ -199,7 +203,7 @@ public class OrderStateHandler {
 			} else if (object instanceof CustomerAddRsType) {
 				CustomerAddRsType custAddRsType = (CustomerAddRsType)object;
 				orderDetails.setConflictReason(custAddRsType.getStatusMessage());
-			}
+			} 
 		} else
 			orderDetails.setConflictReason(error);
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "mozuOrderId eq "+order.getId()+" and orderStatus eq CONFLICT");
