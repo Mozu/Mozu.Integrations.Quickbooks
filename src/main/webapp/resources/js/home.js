@@ -64,7 +64,7 @@ function saveDataToTable(data) {
 	});
 	
 	$(data).promise().done(function() {
-		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bSort: false, "aaSorting": []});
 		$('#compareDisplay').dataTable().fnDraw();
 		
 	});

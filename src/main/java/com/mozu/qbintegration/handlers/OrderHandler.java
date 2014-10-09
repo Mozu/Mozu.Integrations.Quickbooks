@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +15,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.mzdb.EntityCollection;
@@ -190,6 +186,9 @@ public class OrderHandler {
 		
 		//Set the edit sequence
 		orderDetails.setEditSequence(editSequence);
+		
+		//8-Oct-2014 Add orderitems so that updates can be compared
+		orderDetails.setOrderItems(order.getItems());
 		
 		return orderDetails;
 	}

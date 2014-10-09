@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mozu.api.contracts.core.Address;
+import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 
 /**
  * @author Akshay
@@ -69,11 +70,16 @@ public class MozuOrderDetail {
 	 */
 	private List<QuickBooksSavedOrderLine> savedOrderLinesList;
 	
-	
+
 	/**
 	 * 
 	 */
 	private String editSequence;
+	
+	/**
+	 * 
+	 */
+	private List<OrderItem> orderItems;
 	
 	
 	private Address shipToAddress;
@@ -244,6 +250,7 @@ public class MozuOrderDetail {
 	}*/
 
 
+
 	/**
 	 * @return the editSequence
 	 */
@@ -257,6 +264,7 @@ public class MozuOrderDetail {
 	public void setEditSequence(String editSequence) {
 		this.editSequence = editSequence;
 	}
+
 
 	public Address getShipToAddress() {
 		return shipToAddress;
@@ -275,5 +283,18 @@ public class MozuOrderDetail {
 	}
 	
 	
+	/**
+	 * @return the orderItems
+	 */
+	public List<OrderItem> getOrderItems() {
+		return orderItems;
+	}
+
+	/**
+	 * @param orderItems the orderItems to set
+	 */
+	public void setOrderItems(List<OrderItem> orderItems) {
+		this.orderItems = orderItems;
+	}
 }
 
