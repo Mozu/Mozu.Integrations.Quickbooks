@@ -361,7 +361,7 @@ public class ProductHandler {
 		for(MozuOrderItem orderItem : productCodes) {
 			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
 				continue;
-			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate queries
+			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate query
 				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
 				itemQueryRqType.getFullName().add(orderItem.getProductCode());	
 				itemQueryRqType.setRequestID(order.getId());
@@ -446,11 +446,9 @@ public class ProductHandler {
 				mzItem.setQbItemCode(this.getQBId(tenantId, productCode));
 			
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				mzItem.setAmount(item.getUnitPrice().getSaleAmount()
-						* item.getQuantity());
+				mzItem.setAmount(item.getUnitPrice().getSaleAmount());
 			} else {
-				mzItem.setAmount(item.getUnitPrice().getListAmount()
-						* item.getQuantity());
+				mzItem.setAmount(item.getUnitPrice().getListAmount());
 			}
 			
 			mzItem.setQty(item.getQuantity());
