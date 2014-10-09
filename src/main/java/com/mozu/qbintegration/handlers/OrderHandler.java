@@ -126,7 +126,7 @@ public class OrderHandler {
 		orderDetails.setOrderDate(String.valueOf(order.getAcceptedDate().toDate().getTime()));
 		orderDetails.setOrderUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().toDate().getTime()));
 		orderDetails.setConflictReason("");
-		orderDetails.setAmount(String.valueOf(order.getSubtotal()));
+		orderDetails.setAmount(String.valueOf(order.getTotal()));
 		
 		//Set item ids
 		List<QuickBooksSavedOrderLine> savedLines = new ArrayList<QuickBooksSavedOrderLine>();
