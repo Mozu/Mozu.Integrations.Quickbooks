@@ -68,16 +68,8 @@ public class OrderStateHandler {
 			boolean isOrderInConflict = isOrderInConflict(tenantId, order.getId());
 			
 			if (isProcessed && !isOrderInConflict) { //Add to update queue
-				//Get Posted order
-				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "mozuOrderId eq "+orderId+" and orderStatus eq POSTED");
-				String quickbooksOrderListId = null;
-				String quickbooksEditSequence = null;
-				if (nodes.size() > 0) {
-					MozuOrderDetail previousOrder = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
-					quickbooksOrderListId = previousOrder.getQuickbooksOrderListId();
-					quickbooksEditSequence = previousOrder.getEditSequence();
-				}
-				MozuOrderDetail mozuOrderDetails = orderHandler.getOrderDetails(order, orderingCust, "Updated", quickbooksOrderListId,quickbooksEditSequence, null );
+				
+				MozuOrderDetail mozuOrderDetails = orderHandler.getOrderDetails(tenantId, order, orderingCust, "Updated", null );
 				orderHandler.updateOrderInEntityList(mozuOrderDetails, entityHandler.getOrderUpdatedEntityName(), tenantId);
 			} else if (!isOrderInProcessing(tenantId, orderId)) { //Add to queue for processing
 				transitionState(orderId, tenantId, null, "Add" );

@@ -382,24 +382,25 @@ var homeViewModel = function() {
 				"mData" : "orderDate",
 					 "mRender": function (data, type, row) {
 					   
-					 var myISODate =  new Date(data) ;
+						 return moment(data).format("YYYY-MM-DD HH:mm:ss")
+					/* var myISODate =  new Date(data) ;
 					
 					      return myISODate.getDate()+'-'+
 					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
 					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
+					      +':'+myISODate.getSeconds();*/
 					   }
 			}, 
 			{
 				"mData" : "orderUpdatedDate",
 				"mRender": function (data, type, row) {
-				    	
-				 var myISODate =  new Date(data) ;
+					return moment(data).format("YYYY-MM-DD hh:mm a");
+				 /*var myISODate =  new Date(data) ;
 			
 				      return myISODate.getDate()+'-'+
 				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
 				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-				      +':'+myISODate.getSeconds();
+				      +':'+myISODate.getSeconds();*/
 				   }
 			},
 			{

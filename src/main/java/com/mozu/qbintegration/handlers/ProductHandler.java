@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDiscount;
+import com.mozu.api.contracts.commerceruntime.discounts.ShippingDiscount;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
@@ -436,6 +438,7 @@ public class ProductHandler {
 
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(productCode);
+			mzItem.setDescription(item.getProduct().getName());
 			if (queryQBProduct)
 				mzItem.setQbItemCode(this.getQBId(tenantId, productCode));
 
@@ -460,8 +463,8 @@ public class ProductHandler {
 
 					mzItem.setProductCode(bProduct.getProductCode());
 					if (queryQBProduct)
-						mzItem.setQbItemCode(getQBId(tenantId,
-								bProduct.getProductCode()));
+						mzItem.setQbItemCode(getQBId(tenantId,bProduct.getProductCode()));
+					mzItem.setDescription(bProduct.getName());
 					mzItem.setAmount(0.0);
 					mzItem.setQty(item.getQuantity() * bProduct.getQuantity());
 					productCodes.add(mzItem);
@@ -469,13 +472,25 @@ public class ProductHandler {
 			}
 
 			// Add discounts as seperate line item
-			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+			/*if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+				
 				mzItem = new MozuOrderItem();
 				mzItem.setProductCode(settings.getDiscountProductCode());
 				mzItem.setQbItemCode(qbDiscProductCode);
 				mzItem.setAmount(item.getDiscountTotal());
 				mzItem.setMisc(true);
 				productCodes.add(mzItem);
+			}*/
+			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
+					mzItem = new MozuOrderItem();
+					mzItem.setProductCode(settings.getDiscountProductCode());
+					mzItem.setQbItemCode(qbDiscProductCode);
+					mzItem.setDescription(discount.getDiscount().getName());
+					mzItem.setAmount(discount.getImpact());
+					mzItem.setMisc(true);
+					productCodes.add(mzItem);
+				}
 			}
 		}
 
@@ -499,6 +514,18 @@ public class ProductHandler {
 			productCodes.add(mzItem);
 
 		}
+		
+		/*if (StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+			for(ShippingDiscount discount : order.getShippingDiscounts()) {
+				MozuOrderItem mzItem = new MozuOrderItem();
+				mzItem.setProductCode(settings.getDiscountProductCode());
+				mzItem.setQbItemCode(qbDiscProductCode);
+				mzItem.setDescription(discount.getDiscount().getDiscount().getName());
+				mzItem.setAmount(discount.getDiscount().);
+				mzItem.setMisc(true);
+				productCodes.add(mzItem);
+			}
+		}*/
 
 		if (order.getShippingAdjustment() != null
 				&& order.getShippingAdjustment().getAmount() > 0.0
