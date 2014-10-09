@@ -272,7 +272,8 @@ public class OrderHandler {
 				entityHandler.addUpdateEntity(tenantId, mapName, orderDetails.getEnteredTime(), orderDetails);
 			} else {
 				
-				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+orderDetails.getMozuOrderId());
+				List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), 
+						"mozuOrderId eq "+orderDetails.getMozuOrderId() + " and orderStatus eq UPDATED");
 
 				if (nodes.size() > 0) { //Delete existing update
 					MozuOrderDetail existing = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
