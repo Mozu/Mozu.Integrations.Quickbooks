@@ -264,6 +264,8 @@ public class QuickbooksServiceEndPoint {
 					return productHandler.getQBProductsGetXML(tenantId, order);
 				case "order_delete":
 					return orderHandler.getQBOrderDeleteXML(tenantId, workTask.getId());
+				case "order_query":
+					return orderHandler.getQBOrderQueryXml(tenantId, order);
 				default:
 					throw new Exception("Not supported");
 			}

@@ -30,6 +30,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.CustomerRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
+import com.mozu.qbintegration.model.qbmodel.allgen.RefNumberFilter;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineAdd;
@@ -37,6 +38,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRqType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
@@ -208,6 +211,26 @@ public class OrderHandler {
 		}
 	}
 	
+	public boolean processOrderQuery(int tenantId, String orderId, String qbResponse) throws Exception {
+		
+		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
+
+		SalesOrderQueryRsType  orderQueryRsType = (SalesOrderQueryRsType ) orderModResp.getQBXMLMsgsRs()
+																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+																				.get(0);
+
+		
+		if (orderQueryRsType.getStatusSeverity().equalsIgnoreCase("error"))
+			throw new Exception(orderQueryRsType.getStatusMessage());
+		else if (orderQueryRsType.getStatusSeverity().equalsIgnoreCase("warn"))
+			return false;
+		else {
+			MozuOrderDetail orderDetails = getOrderDetails(tenantId,orderId, "POSTED", orderQueryRsType.getSalesOrderRet().get(0));
+			saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);
+			return true;
+		}
+	}
+	
 	public void saveOrderInEntityList(MozuOrderDetail orderDetails, String mapName,Integer tenantId) throws Exception {
 		saveOrUpdateOrderInEL(orderDetails, mapName, tenantId, Boolean.FALSE);
 	}
@@ -270,6 +293,31 @@ public class OrderHandler {
 		}
 		return mozuOrders;
 		
+	}
+	
+	public String getQBOrderQueryXml(int tenantId, Order order) throws Exception {
+		QBXML qbxml = new QBXML();
+		QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
+		
+		qbxmlMsgsRq.setOnError("stopOnError");
+		
+		SalesOrderQueryRqType  salesOrderQueryRqType = new SalesOrderQueryRqType();
+		salesOrderQueryRqType.setRequestID(order.getId());
+		
+		salesOrderQueryRqType.setIncludeLineItems("true");
+		salesOrderQueryRqType.setIncludeLinkedTxns("true");
+
+		salesOrderQueryRqType.getRefNumber().add(String.valueOf(order.getOrderNumber()));
+		//RefNumberFilter refNumberFilter = new RefNumberFilter();
+		//refNumberFilter.setMatchCriterion("contains");
+		//refNumberFilter.setRefNumber(String.valueOf(order.getOrderNumber()));
+		//salesOrderQueryRqType.setRefNumberFilter(refNumberFilter);
+		
+		
+		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(salesOrderQueryRqType);
+		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
+
+		return XMLHelper.getMarshalledValue(qbxml);
 	}
 	
 	public String getQBOrderSaveXML(int tenantId, String orderId) throws Exception {
@@ -485,6 +533,8 @@ public class OrderHandler {
 		
 	}
 
+	
+	
 	private MozuOrderDetail getOrderCancelDetails(Integer tenantId,
 			String orderId, String status, TxnDelRsType deleteTxRespType) throws Exception {
 		return getOrderDetails(tenantId, orderId, status, null);
