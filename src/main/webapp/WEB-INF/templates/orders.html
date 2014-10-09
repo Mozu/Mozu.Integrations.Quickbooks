@@ -41,21 +41,13 @@
 			                 <span class="link" id="updatesTab" data-bind="click: getOrdersUpdated" data-toggle="tab" data-tab-id="updatedDivTab">Updates</span>
 			                 &nbsp;|&nbsp;
 			                 <span class="link" id="cancelsTab" data-bind="click: getOrdersCancelled" data-toggle="tab" data-tab-id="cancelledDivTab">Cancels</span>
+			                  &nbsp;|&nbsp;
+			                 <span class="link" id="queueTab" data-bind="click: getOrdersQueue" data-toggle="tab" data-tab-id="orderQueueDivTab">Pending</span>
+			                 
 	                 	</span>
 	                 	<div class="tab-divider" style="margin-top:5px;margin-bottom:0px;"></div>	
 					</div>
 				</div>
-				
-				
-			 	 
-				<!-- div class="tabs">
-					<a href="#" id="postedTab" data-bind="click: getOrders" class="button tab active" data-toggle="tab" 
-						data-tab-id="postedDivTab" data-hide-save="true">Orders Posted</a>   
-					<a href="#" id="conflictsTab" data-bind="click: getOrderConflicts" class="button tab" data-toggle="tab" 
-						data-tab-id="conflictsDivTab" data-hide-save="true">Order Conflicts</a>   
-					<a href="#" id="updatesTab" data-bind="click: getOrdersUpdated" class="button tab" data-toggle="tab" 
-						data-tab-id="updatedDivTab" data-hide-save="true">Order Updates</a>   
-				</div-->
 				
 				<div class="tab-view-ext">
 					<div class="tab-section template" id="postedDivTab" style="display: none">
@@ -69,6 +61,9 @@
 					</div>
 					<div class="tab-section template" style="display: none" id="cancelledDivTab">
 						<div th:include="ordercancelled :: content"></div>
+					</div>
+					<div class="tab-section template" style="display: none" id="orderQueueDivTab">
+						<div th:include="orderqueue :: content"></div>
 					</div>
 				</div>
 				<input type="hidden" id="tenantIdHdn" th:value="${tenantId}"></input>

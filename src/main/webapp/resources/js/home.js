@@ -17,7 +17,7 @@ function funEdit(orderNumber) {
 				homeViewModel.orderConflictDetails.push(data[index]);
 			});
 			
-			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
+			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
 			$table.fnDraw();
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
@@ -252,9 +252,9 @@ var homeViewModel = function() {
         		},
         		dataType : "json",		
         		success : function(data) {
-        			console.log(data);
+        			$("#"+$("#selectedTab").val()+"Tab").click();
         		},error : function() {
-        			$("#content").hide();
+        			//$("#content").hide();
         		}
         	});
     	});
@@ -285,9 +285,9 @@ var homeViewModel = function() {
         		},
         		dataType : "json",		
         		success : function(data) {
-        			
+        			$("#"+$("#selectedTab").val()+"Tab").click();
         		},error : function() {
-        			$("#content").hide();
+        			//$("#content").hide();
         		}
         	});
     		
@@ -295,21 +295,6 @@ var homeViewModel = function() {
     	
     };
     
-    
-    /*self.generatePwd = function() {
-    	$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/config/generatePwd?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  self.settings.qbAccount(),
-			success : function(data) {
-				self.settings.qbPassword(data.pwd);
-			},
-			error : function() {
-			}
-		});
-    }*/
     
 	self.save = function() {
 		$.ajax({
@@ -382,24 +367,25 @@ var homeViewModel = function() {
 				"mData" : "orderDate",
 					 "mRender": function (data, type, row) {
 					   
-					 var myISODate =  new Date(data) ;
+						 return moment(data).format("YYYY-MM-DD HH:mm:ss")
+					/* var myISODate =  new Date(data) ;
 					
 					      return myISODate.getDate()+'-'+
 					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
 					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
+					      +':'+myISODate.getSeconds();*/
 					   }
 			}, 
 			{
 				"mData" : "orderUpdatedDate",
 				"mRender": function (data, type, row) {
-				    	
-				 var myISODate =  new Date(data) ;
+					return moment(data).format("YYYY-MM-DD hh:mm a");
+				 /*var myISODate =  new Date(data) ;
 			
 				      return myISODate.getDate()+'-'+
 				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
 				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-				      +':'+myISODate.getSeconds();
+				      +':'+myISODate.getSeconds();*/
 				   }
 			},
 			{
@@ -606,6 +592,40 @@ var homeViewModel = function() {
 		$table.fnDraw();
 	};
 	
+	self.getOrdersQueue = function() {
+
+		var $table = $('#orderQueueTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"bFilter" : false,
+			"bSort" : false,
+			"bInfo" : false,
+			"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val(),
+			"aoColumns" : [
+				            {    
+			            	   "mData": "createDate",
+				            },
+				            {
+								"mData" : "status"
+							}, 
+							{
+								"mData" : "type"
+							}, 
+							{
+								"mData" : "action"
+							},
+							{
+								"mData" : "currentStep"
+							},
+							{
+								"mData" : "id"
+							}
+			            ]
+			});
+		$table.fnDraw();
+	};
+	
 	self.getSettings = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
@@ -637,6 +657,9 @@ var homeViewModel = function() {
 	self.getSettings();
 }
 
+function closeError() {
+	$("#serverError").hide();
+}
 
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
 	console.log(exception);

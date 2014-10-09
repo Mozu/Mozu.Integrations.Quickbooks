@@ -1,15 +1,16 @@
 package com.mozu.qbintegration.handlers;
 
+import org.joda.*;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
+import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.commerce.OrderResource;
@@ -25,6 +27,7 @@ import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
+import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
@@ -36,6 +39,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.utils.XMLHelper;
@@ -70,7 +75,7 @@ public class OrderHandler {
 	}
 
 	
-	public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status,SalesOrderAddRsType salesOrderResponse) throws Exception {
+	/*public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status,SalesOrderAddRsType salesOrderResponse) throws Exception {
 		String qbTransactionId = null;
 		List<Object> salesOrderLineRet = null;
 		
@@ -84,11 +89,12 @@ public class OrderHandler {
 		
 		//Set the edit sequence to be used while updating
 		String editSequence = "";
+		salesOrderResponse.getSalesOrderRet().getBillAddress();
 		
 		if (salesOrderResponse != null)
 			editSequence = salesOrderResponse.getSalesOrderRet().getEditSequence();
 		
-		return getOrderDetails(tenantId, orderId, status,qbTransactionId, editSequence, salesOrderLineRet);
+		return getOrderDetails(tenantId, orderId, status,qbTransactionId, editSequence, salesOrderResponse.getSalesOrderRet());
 	}
 	
 	public MozuOrderDetail getOrderUpdateDetails(Integer tenantId,String orderId, String status, SalesOrderModRsType salesOrderModResponse) throws Exception {
@@ -109,16 +115,13 @@ public class OrderHandler {
 		if (salesOrderModResponse != null)
 			editSequence = salesOrderModResponse.getSalesOrderRet().getEditSequence();
 		
-		return getOrderDetails(tenantId, orderId, status, qbTransactionId, editSequence, salesOrderLineRet);
-	}
+		return getOrderDetails(tenantId, orderId, status, qbTransactionId, editSequence, salesOrderModResponse.getSalesOrderRet());
+	}*/
 	
-	public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) throws Exception {
-		
+	public MozuOrderDetail getOrderDetails(Integer tenantId,String orderId, String status,  SalesOrderRet salesOrderRet) throws Exception {
 		Order order = getOrder(orderId, tenantId);
-
 		CustomerAccount custAcct = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
-		
-		return getOrderDetails(order, custAcct, status, qbTransactionId,editSequence, salesOrderLineRet);
+		return getOrderDetails(tenantId, order, custAcct, status, salesOrderRet);
 		
 	}
 	
@@ -126,7 +129,26 @@ public class OrderHandler {
 		return getOrderDetails(order, custAcct, status, null,null, null);
 	}*/
 	
-	public MozuOrderDetail getOrderDetails(Order order, CustomerAccount custAcct, String status, String qbTransactionId, String editSequence, List<Object> salesOrderLineRet) {
+	public MozuOrderDetail getOrderDetails(Integer tenantId, Order order, CustomerAccount custAcct, String status, SalesOrderRet salesOrderRet) throws Exception {
+		List<Object> salesOrderLineRet = null;
+		String qbTransactionId = null;
+		String editSequence = null;
+		
+		if(salesOrderRet != null) {
+			qbTransactionId = salesOrderRet.getTxnID();
+			salesOrderLineRet = salesOrderRet.getSalesOrderLineRetOrSalesOrderLineGroupRet();
+			editSequence = salesOrderRet.getEditSequence();
+		} else if (status.equalsIgnoreCase("updated")) {
+			//Get Posted order
+			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "mozuOrderId eq "+order.getId()+" and orderStatus eq POSTED");
+			if (nodes.size() > 0) {
+				MozuOrderDetail previousOrder = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
+				qbTransactionId = previousOrder.getQuickbooksOrderListId();
+				editSequence = previousOrder.getEditSequence();
+			}
+			
+		}
+		
 		MozuOrderDetail orderDetails = new MozuOrderDetail();
 		orderDetails.setEnteredTime(String.valueOf(System.currentTimeMillis()));
 		orderDetails.setMozuOrderNumber(order.getOrderNumber().toString());
@@ -135,11 +157,15 @@ public class OrderHandler {
 		orderDetails.setOrderStatus(status);
 		orderDetails.setCustomerEmail(custAcct.getEmailAddress());
 		
-		DateTimeFormatter timeFormat = DateTimeFormat
-				.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+		if (salesOrderRet != null) {
+			orderDetails.setBillToAddress(getAddress(salesOrderRet.getBillAddress()));
+			orderDetails.setShipToAddress(getAddress(salesOrderRet.getShipAddress()));
+		}
 		
-		orderDetails.setOrderDate(timeFormat.print(order.getAcceptedDate().getMillis()));
-		orderDetails.setOrderUpdatedDate(timeFormat.print(order.getAcceptedDate().getMillis()));
+		//DateTimeFormatter timeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+		
+		orderDetails.setOrderDate(String.valueOf(order.getAcceptedDate().toDate().getTime()));
+		orderDetails.setOrderUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().toDate().getTime()));
 		orderDetails.setConflictReason("");
 		orderDetails.setAmount(String.valueOf(order.getSubtotal()));
 		
@@ -184,7 +210,7 @@ public class OrderHandler {
 		} 
 		else 
 		{
-			MozuOrderDetail orderDetails = getOrderDetails(tenantId, orderId, "POSTED",salesOrderResponse);
+			MozuOrderDetail orderDetails = getOrderDetails(tenantId, orderId, "POSTED",salesOrderResponse.getSalesOrderRet());
 			saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);
 	
 			logger.debug((new StringBuilder())
@@ -211,7 +237,7 @@ public class OrderHandler {
 		if (orderModRsType.getStatusSeverity().equalsIgnoreCase("error"))
 			return false;
 		else {
-			MozuOrderDetail orderDetails = getOrderUpdateDetails(tenantId,orderId, "POSTED", orderModRsType);
+			MozuOrderDetail orderDetails = getOrderDetails(tenantId,orderId, "POSTED", orderModRsType.getSalesOrderRet());
 			saveOrderInEntityList(orderDetails,entityHandler.getOrderEntityName(), tenantId);
 			
 	
@@ -311,23 +337,25 @@ public class OrderHandler {
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
 		salesOrderAdd.setCustomerRef(customerRef);
-
+		//salesOrderAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
+		salesOrderAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		salesOrderAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		//Double productDiscounts = 0.0;
 		for (MozuOrderItem item : orderItems) {
 			if (item.isMic()) {
-				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getAmount()), item.getQbItemCode());
+				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
 			} else {
 				ItemRef itemRef = new ItemRef();
-				
 				itemRef.setListID(item.getQbItemCode());
 				SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
 				salesOrderLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
 				salesOrderLineAdd.setItemRef(itemRef);
+				salesOrderLineAdd.setDesc(item.getDescription());
 				salesOrderLineAdd.setQuantity(item.getQty().toString());
 				salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
-
 			}
 			
 		}
@@ -367,6 +395,9 @@ public class OrderHandler {
 		salesOrdermod.setTxnID(postedOrder.getQuickbooksOrderListId());
 		salesOrdermod.setEditSequence(postedOrder.getEditSequence());
 		
+		salesOrdermod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		salesOrdermod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		//Double productDiscounts = 0.0;
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
@@ -400,11 +431,12 @@ public class OrderHandler {
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	private void addSOAddLineItemAmount(SalesOrderAdd salesOrderAdd, String amount, String fieldName) {
+	private void addSOAddLineItemAmount(SalesOrderAdd salesOrderAdd, String amount, String fieldName, String descrption) {
 		SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
 		salesOrderLineAdd.setAmount(amount);
 		ItemRef itemRef = new ItemRef();
 		itemRef.setFullName(fieldName);
+		salesOrderLineAdd.setDesc(descrption);
 		salesOrderLineAdd.setItemRef(itemRef);
 		//salesOrderLineAdd.setQuantity(String.valueOf(qty));
 		salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
@@ -493,7 +525,61 @@ public class OrderHandler {
 
 	private MozuOrderDetail getOrderCancelDetails(Integer tenantId,
 			String orderId, String status, TxnDelRsType deleteTxRespType) throws Exception {
-		return getOrderDetails(tenantId, orderId, status, "", "", null);
+		return getOrderDetails(tenantId, orderId, status, null);
 	}
 
+	private Address getAddress(BillAddress address) {
+		Address addr = new Address();
+		addr.setAddress1(address.getAddr1());
+		addr.setAddress2(address.getAddr2());
+		addr.setAddress3(address.getAddr3());
+		addr.setAddress4(address.getAddr4());
+		addr.setCityOrTown(address.getCity());
+		addr.setStateOrProvince(address.getState());
+		addr.setCountryCode(address.getCountry());
+		addr.setPostalOrZipCode(address.getPostalCode());
+		return addr;
+	}
+	
+	private Address getAddress(ShipAddress address) {
+		Address addr = new Address();
+		addr.setAddress1(address.getAddr1());
+		addr.setAddress2(address.getAddr2());
+		addr.setAddress3(address.getAddr3());
+		addr.setAddress4(address.getAddr4());
+		addr.setCityOrTown(address.getCity());
+		addr.setStateOrProvince(address.getState());
+		addr.setCountryCode(address.getCountry());
+		addr.setPostalOrZipCode(address.getPostalCode());
+		return addr;
+	}
+	
+	
+	private BillAddress getBillAddress(Address address) {
+		BillAddress billAddress = new BillAddress();
+		billAddress.setAddr1(address.getAddress1());
+		billAddress.setAddr2(address.getAddress2());
+		billAddress.setAddr3(address.getAddress3());
+		billAddress.setAddr4(address.getAddress4());
+		billAddress.setCity(address.getCityOrTown());
+		billAddress.setState(address.getStateOrProvince());
+		billAddress.setCountry(address.getCountryCode());
+		billAddress.setPostalCode(address.getPostalOrZipCode());
+		
+		return billAddress;
+	}
+	
+	private ShipAddress getShipAddress(Address address) {
+		ShipAddress shipAddress = new ShipAddress();
+		shipAddress.setAddr1(address.getAddress1());
+		shipAddress.setAddr2(address.getAddress2());
+		shipAddress.setAddr3(address.getAddress3());
+		shipAddress.setAddr4(address.getAddress4());
+		shipAddress.setCity(address.getCityOrTown());
+		shipAddress.setState(address.getStateOrProvince());
+		shipAddress.setCountry(address.getCountryCode());
+		shipAddress.setPostalCode(address.getPostalOrZipCode());
+		
+		return shipAddress;
+	}
 }

@@ -3,6 +3,7 @@ package com.mozu.qbintegration.model;
 public class MozuOrderItem {
 	private String productCode;
 	private String qbItemCode;
+	private String description;
 	private Integer qty;
 	private double amount;
 	private boolean isMics;
@@ -43,4 +44,18 @@ public class MozuOrderItem {
 	public double getTotalAmount() {
 		return this.amount * this.qty;
 	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public boolean isMics() {
+		return isMics;
+	}
+	public void setMics(boolean isMics) {
+		this.isMics = isMics;
+	}
+	
+	
 }

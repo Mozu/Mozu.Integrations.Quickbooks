@@ -264,38 +264,53 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 		EntityContainerCollection collection = entityContainerResource.getEntityContainers(entityHandler.getSubnavLinksEntityName(),200,null,null,null,null);
 
+		String title = "Quickbooks Order Management";
+		SubnavLink link = new SubnavLink();
+		link.setParentId("orders");
+		link.setAppId(application.getAppId());
+		link.setWindowTitle(title);
+		link.setPath(new String[] {"Quickbooks","Orders","Posted"});
+		link.setHref(serverUrl+"/Orders?tab=posted");
+		addUpdateSubNavLink(link, collection, entityResource);
 		
-		SubnavLink postedOrdersLink = new SubnavLink();
-		postedOrdersLink.setParentId("orders");
-		postedOrdersLink.setAppId(application.getAppId());
-		postedOrdersLink.setPath(new String[] {"Quickbooks","Orders","Posted"});
-		postedOrdersLink.setWindowTitle("Quickbooks order Management");
-		postedOrdersLink.setHref(serverUrl+"/Orders?tab=posted");
-		addUpdateSubNavLink(postedOrdersLink, collection, entityResource);
-		
-		SubnavLink conflictOrdersLink = new SubnavLink();
+		/*SubnavLink conflictOrdersLink = new SubnavLink();
 		conflictOrdersLink.setParentId("orders");
 		conflictOrdersLink.setAppId(application.getAppId());
-		conflictOrdersLink.setPath(new String[] {"Quickbooks","Orders","Conflicts"});
-		conflictOrdersLink.setWindowTitle("Quickbooks order Management");
-		conflictOrdersLink.setHref(serverUrl+"/Orders?tab=conflicts");
-		addUpdateSubNavLink(conflictOrdersLink, collection, entityResource);
+		conflictOrdersLink.setWindowTitle(title);*/
 		
-		SubnavLink updatedOrdersLink = new SubnavLink();
+		link.setPath(new String[] {"Quickbooks","Orders","Conflicts"});
+		link.setHref(serverUrl+"/Orders?tab=conflicts");
+		addUpdateSubNavLink(link, collection, entityResource);
+		
+		/*SubnavLink updatedOrdersLink = new SubnavLink();
 		updatedOrdersLink.setParentId("orders");
 		updatedOrdersLink.setAppId(application.getAppId());
-		updatedOrdersLink.setPath(new String[] {"Quickbooks","Orders","Updates"});
-		updatedOrdersLink.setWindowTitle("Quickbooks order Management");
-		updatedOrdersLink.setHref(serverUrl+"/Orders?tab=updates");
-		addUpdateSubNavLink(updatedOrdersLink, collection, entityResource);
+		updatedOrdersLink.setWindowTitle(title);*/
 		
-		SubnavLink cancelledOrdersLink = new SubnavLink();
+		
+		link.setPath(new String[] {"Quickbooks","Orders","Updates"});
+
+		link.setHref(serverUrl+"/Orders?tab=updates");
+		addUpdateSubNavLink(link, collection, entityResource);
+		
+		/*SubnavLink cancelledOrdersLink = new SubnavLink();
 		cancelledOrdersLink.setParentId("orders");
 		cancelledOrdersLink.setAppId(application.getAppId());
-		cancelledOrdersLink.setPath(new String[] {"Quickbooks","Orders","Cancelled"});
-		cancelledOrdersLink.setWindowTitle("Quickbooks order Management");
-		cancelledOrdersLink.setHref(serverUrl+"/Orders?tab=cancels");
-		addUpdateSubNavLink(cancelledOrdersLink, collection, entityResource);
+		cancelledOrdersLink.setWindowTitle(title);*/
+		
+		link.setPath(new String[] {"Quickbooks","Orders","Cancelled"});
+		
+		link.setHref(serverUrl+"/Orders?tab=cancels");
+		addUpdateSubNavLink(link, collection, entityResource);
+		
+		/*SubnavLink cancelledOrdersLink = new SubnavLink();
+		cancelledOrdersLink.setParentId("orders");
+		cancelledOrdersLink.setAppId(application.getAppId());
+		cancelledOrdersLink.setWindowTitle(title);*/
+		
+		link.setPath(new String[] {"Quickbooks","Orders","Pending"});
+		link.setHref(serverUrl+"/Orders?tab=queue");
+		addUpdateSubNavLink(link, collection, entityResource);
 	}
 	
 	private void addUpdateSubNavLink(SubnavLink subNavLink,EntityContainerCollection collection,EntityResource entityResource ) throws Exception {
