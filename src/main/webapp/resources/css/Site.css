@@ -453,10 +453,21 @@ p {
 }
 .tab-second-column {
   min-width: 300px;
-  margin-left: 4%;
+ /* margin-left: 4%;*/
   float: left;
   width: 48%;
 }
+
+.compare {
+	border: solid black 1px;
+  	text-align: center;
+}
+
+.singlecolumn {
+	border: solid black 1px;
+  	text-align: center;
+}
+
 .tab-checkbox-container {
 	margin-top: 5px;
 	margin-bottom: 10px;
@@ -616,3 +627,33 @@ label {
   	color: #d2463c;
   	border-bottom: 3px solid #d2463c;
   }
+  
+ .comparecontainer-left {
+    display:table;
+    border-collapse: collapse;
+    float: left;
+ }
+ 
+  .comparecontainer-right {
+    display:table;
+    border-collapse: collapse;
+ }
+ 
+.compareheading {
+     font-weight: bold;
+     display:table-row;
+     background-color:#000000;
+     text-align: center;
+     line-height: 25px;
+     font-size: 14px;
+     color:#ffffff;
+    
+}
+.compare-table-row {  
+     display:table-row;
+     text-align: left;
+}
+.compare-col {
+    display:table-cell;
+    border: 1px solid #CCC;
+}

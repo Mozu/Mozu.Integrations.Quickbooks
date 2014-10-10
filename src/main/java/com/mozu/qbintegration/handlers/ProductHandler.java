@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.commerceruntime.discounts.AppliedDiscount;
 import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDiscount;
 import com.mozu.api.contracts.commerceruntime.discounts.ShippingDiscount;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
@@ -434,6 +435,7 @@ public class ProductHandler {
 				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
 		}
 		
+		double itemLevelDiscount = 0.0; // this sums up all item discounts
 		for(OrderItem item : order.getItems()) {
 			
 			String productCode = null;
@@ -489,6 +491,7 @@ public class ProductHandler {
 				mzItem.setMisc(true);
 				productCodes.add(mzItem);
 			}*/
+			
 			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
 					mzItem = new MozuOrderItem();
@@ -496,6 +499,7 @@ public class ProductHandler {
 					mzItem.setQbItemCode(qbDiscProductCode);
 					mzItem.setDescription(discount.getDiscount().getName());
 					mzItem.setAmount(discount.getImpact());
+					itemLevelDiscount += discount.getImpact();
 					mzItem.setMisc(true);
 					productCodes.add(mzItem);
 				}
@@ -509,6 +513,20 @@ public class ProductHandler {
 			mzItem.setAmount(order.getShippingSubTotal());
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);
+		}
+		
+		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { //Akshay 10-Oct-2014 -- add order level disc
+			
+			for (AppliedDiscount disc: order.getOrderDiscounts()) {
+				MozuOrderItem mzItem = new MozuOrderItem();
+				mzItem.setProductCode(settings.getDiscountProductCode());
+				mzItem.setQbItemCode(qbDiscProductCode);
+				
+				mzItem.setDescription(disc.getDiscount().getName());
+				mzItem.setAmount(disc.getImpact());
+				mzItem.setMisc(true);
+				productCodes.add(mzItem);
+			}
 		}
 		
 		if (order.getAdjustment() != null
