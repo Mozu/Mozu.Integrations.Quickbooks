@@ -27,6 +27,7 @@ public class GeneralSettings {
 	
 	private String discountProductCode;
 	
+	private String qbwFile;
 	/**
 	 * @return the wsURL
 	 */
@@ -164,6 +165,14 @@ public class GeneralSettings {
 
 	public void setUpdated(Boolean updated) {
 		this.updated = updated;
+	}
+
+	public String getQbwFile() {
+		return qbwFile;
+	}
+
+	public void setQbwFile(String qbwFile) {
+		this.qbwFile = qbwFile;
 	}
 	
 	
