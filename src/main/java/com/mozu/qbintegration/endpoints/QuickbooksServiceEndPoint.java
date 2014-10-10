@@ -122,6 +122,7 @@ public class QuickbooksServiceEndPoint {
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "authenticate")
 	@ResponsePayload
 	public AuthenticateResponse authenticate(@RequestPayload Authenticate authRequest)	throws Exception {
+		logger.info("Authenticate Request from QWC");
 		AuthenticateResponse response = new AuthenticateResponse();
 
 		String password = authRequest.getStrPassword();
@@ -166,6 +167,7 @@ public class QuickbooksServiceEndPoint {
 
 		// Get the tenantID
 		try {
+			logger.info("request XML : "+requestXML.getTicket());
 			Integer tenantId = Integer.parseInt(requestXML.getTicket().split("~")[0]);
 			
 			WorkTask workTask = queueManagerService.getNext(tenantId);
@@ -190,8 +192,8 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 
-		logger.info(responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
-		logger.info(responseXML.getTicket()+" - Task Response - "+responseXML.getResponse());
+		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
+		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Response - "+responseXML.getResponse());
 		Integer tenantId = Integer.parseInt(responseXML.getTicket().split("~")[0]);
 		WorkTask workTask = queueManagerService.getActiveTask(tenantId);
 
@@ -244,7 +246,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ConnectionErrorResponse connectionError(ConnectionError connError)
 			throws java.rmi.RemoteException {
-		logger.debug(connError.getMessage());
+		logger.info("connection Error : "+connError.getMessage());
 		ConnectionErrorResponse errorResponse = new ConnectionErrorResponse();
 		errorResponse.setConnectionErrorResult("");
 		return errorResponse;
@@ -254,7 +256,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public GetLastErrorResponse getLastError(GetLastError lastError)
 			throws java.rmi.RemoteException {
-		logger.debug(lastError.getTicket());
+		logger.info("getLastError : "+lastError.getTicket());
 		
 		GetLastErrorResponse response = new GetLastErrorResponse();
 		response.setGetLastErrorResult("");
@@ -265,7 +267,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public CloseConnectionResponse closeConnection(
 			CloseConnection closeConnection) throws java.rmi.RemoteException {
-		logger.debug(closeConnection.getTicket());
+		logger.info("close Connection:"+closeConnection.getTicket());
 		CloseConnectionResponse response = new CloseConnectionResponse();
 		response.setCloseConnectionResult("Thank you for using QB Connector");
 		return response;

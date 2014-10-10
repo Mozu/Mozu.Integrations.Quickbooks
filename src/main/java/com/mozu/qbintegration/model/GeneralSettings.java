@@ -27,6 +27,12 @@ public class GeneralSettings {
 	
 	private String discountProductCode;
 	
+	private String giftCardProductCode;
+	
+	private String orderSalesTaxCode;
+	
+	private String orderNonSalesTaxCode;
+	
 	private String qbwFile;
 	/**
 	 * @return the wsURL
@@ -173,6 +179,30 @@ public class GeneralSettings {
 
 	public void setQbwFile(String qbwFile) {
 		this.qbwFile = qbwFile;
+	}
+
+	public String getGiftCardProductCode() {
+		return giftCardProductCode;
+	}
+
+	public void setGiftCardProductCode(String giftCardProductCode) {
+		this.giftCardProductCode = giftCardProductCode;
+	}
+
+	public String getOrderSalesTaxCode() {
+		return orderSalesTaxCode;
+	}
+
+	public void setOrderSalesTaxCode(String orderSalesTaxCode) {
+		this.orderSalesTaxCode = orderSalesTaxCode;
+	}
+
+	public String getOrderNonSalesTaxCode() {
+		return orderNonSalesTaxCode;
+	}
+
+	public void setOrderNonSalesTaxCode(String orderNonSalesTaxCode) {
+		this.orderNonSalesTaxCode = orderNonSalesTaxCode;
 	}
 	
 	

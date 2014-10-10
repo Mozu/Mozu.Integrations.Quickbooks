@@ -70,6 +70,28 @@
 					<input type="text" id="wsUrl" class="tab-field" data-bind="value : settings.shippingProductCode"  ></input>
 					<label class="tab-field-label" th:text="#{label.discount}"></label>
 					<input type="text"  class="tab-field" data-bind="value : settings.discountProductCode"></input>
+					<label class="tab-field-label" th:text="#{label.giftCardProductCode}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.giftCardProductCode"></input>
+				</div>	
+			</div>
+		</div>
+		
+		<div class="tab-divider"></div>
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.taxCodeMapping}" class="label-bold"></label>
+			</div>
+		</div>
+		<div class="tab-divider"></div>
+
+
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="tab-full-column">
+					<label class="tab-field-label" th:text="#{label.orderTaxable}"></label>
+					<input type="text" id="wsUrl" class="tab-field" data-bind="value : settings.orderSalesTaxCode"  ></input>
+					<label class="tab-field-label" th:text="#{label.nonTaxable}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.orderNonSalesTaxCode"></input>
 				</div>	
 			</div>
 		</div>

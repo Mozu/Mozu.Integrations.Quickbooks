@@ -7,7 +7,7 @@ public class MozuOrderItem {
 	private Integer qty;
 	private double amount;
 	private boolean isMics;
-	
+	private String taxCode;
 	
 	public String getProductCode() {
 		return productCode;
@@ -55,6 +55,12 @@ public class MozuOrderItem {
 	}
 	public void setMics(boolean isMics) {
 		this.isMics = isMics;
+	}
+	public String getTaxCode() {
+		return taxCode;
+	}
+	public void setTaxCode(String taxCode) {
+		this.taxCode = taxCode;
 	}
 	
 	
