@@ -255,6 +255,7 @@ public class QuickbooksServiceEndPoint {
 	public GetLastErrorResponse getLastError(GetLastError lastError)
 			throws java.rmi.RemoteException {
 		logger.debug(lastError.getTicket());
+		
 		GetLastErrorResponse response = new GetLastErrorResponse();
 		response.setGetLastErrorResult("");
 		return response;
@@ -312,7 +313,8 @@ public class QuickbooksServiceEndPoint {
 		log.setId(workTask.getId());
 		log.setXml(xml);
 		log.setEnteredTime(String.valueOf((new Date()).getTime()));
-		
+		//bug fix 10-oct-2014 - status cannot be null
+		log.setStatus(workTask.getStatus() == null ? "" : workTask.getStatus());
 		entityHandler.addEntity(tenantId, entityHandler.getTaskqueueLogEntityName(), log);
 	}
 }
