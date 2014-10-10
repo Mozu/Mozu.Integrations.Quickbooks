@@ -435,7 +435,7 @@ public class ProductHandler {
 				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
 		}
 		
-		double itemLevelDiscount = 0.0; // this sums up all item discounts
+		double qbDiscount = 0.0; // this sums up all item discounts
 		for(OrderItem item : order.getItems()) {
 			
 			String productCode = null;
@@ -494,14 +494,14 @@ public class ProductHandler {
 			
 			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
-					mzItem = new MozuOrderItem();
+					/*mzItem = new MozuOrderItem();
 					mzItem.setProductCode(settings.getDiscountProductCode());
 					mzItem.setQbItemCode(qbDiscProductCode);
 					mzItem.setDescription(discount.getDiscount().getName());
-					mzItem.setAmount(discount.getImpact());
-					itemLevelDiscount += discount.getImpact();
-					mzItem.setMisc(true);
-					productCodes.add(mzItem);
+					mzItem.setAmount(discount.getImpact());*/
+					qbDiscount += discount.getImpact();
+					//mzItem.setMisc(true);
+					//productCodes.add(mzItem);
 				}
 			}
 		}
@@ -518,46 +518,63 @@ public class ProductHandler {
 		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { //Akshay 10-Oct-2014 -- add order level disc
 			
 			for (AppliedDiscount disc: order.getOrderDiscounts()) {
-				MozuOrderItem mzItem = new MozuOrderItem();
+				/*MozuOrderItem mzItem = new MozuOrderItem();
 				mzItem.setProductCode(settings.getDiscountProductCode());
 				mzItem.setQbItemCode(qbDiscProductCode);
 				
 				mzItem.setDescription(disc.getDiscount().getName());
 				mzItem.setAmount(disc.getImpact());
 				mzItem.setMisc(true);
-				productCodes.add(mzItem);
+				productCodes.add(mzItem);*/
+				
+				qbDiscount += disc.getImpact();
 			}
 		}
 		
 		if (order.getAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			MozuOrderItem mzItem = new MozuOrderItem();
+			/*MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(order.getAdjustment().getAmount());
 			mzItem.setMisc(true);
-			productCodes.add(mzItem);
+			productCodes.add(mzItem);*/
+			
+			
+			qbDiscount += -(order.getAdjustment().getAmount());
 			
 		}
 		
 		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && order.getShippingDiscounts() != null) {
 			for(ShippingDiscount discount : order.getShippingDiscounts()) {
-				MozuOrderItem mzItem = new MozuOrderItem();
+				/*MozuOrderItem mzItem = new MozuOrderItem();
 				mzItem.setProductCode(settings.getDiscountProductCode());
 				mzItem.setQbItemCode(qbDiscProductCode);
 				mzItem.setDescription(discount.getDiscount().getDiscount().getName());
 				mzItem.setAmount(discount.getDiscount().getImpact());
 				mzItem.setMisc(true);
-				productCodes.add(mzItem);
+				productCodes.add(mzItem);*/
+				qbDiscount += discount.getDiscount().getImpact();
 			}
 		}
 
 		if (order.getShippingAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			MozuOrderItem mzItem = new MozuOrderItem();
+			/*MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getDiscountProductCode());
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(order.getShippingAdjustment().getAmount());
+			mzItem.setMisc(true);
+			productCodes.add(mzItem);*/
+			
+			qbDiscount += -(order.getShippingAdjustment().getAmount());
+		}
+		
+		if (qbDiscount != 0.0) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode(settings.getDiscountProductCode());
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);
 		}

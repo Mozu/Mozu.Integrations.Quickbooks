@@ -45,7 +45,7 @@ public class EntityHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 5872;
+		tenantId = 4647;
 	}
 
 	@After

@@ -412,7 +412,7 @@ public class OrderHandler {
 		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderEntityName(), order.getOrderNumber().toString());
 		if (node == null)
 			throw new Exception("Existing Quickbooks sales order not found");
-		SalesOrderRet salesOrderRet = mapper.readValue(node.toString(), SalesOrderRet.class);
+		QuickBooksOrder salesOrderRet = mapper.readValue(node.toString(), QuickBooksOrder.class);
 		
 		
 		TxnDelRqType deleteTx = new TxnDelRqType();
@@ -447,7 +447,8 @@ public class OrderHandler {
 			return false;
 		} else {
 			MozuOrderDetail orderDetail = getMozuOrderDetail(tenantId, orderId);
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderCancelledEntityName(), orderDetail.getId(), orderDetail);
+			orderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+			entityHandler.addEntity(tenantId, entityHandler.getOrderCancelledEntityName(), orderDetail);
 			
 			logger.debug((new StringBuilder())
 					.append("Processed cancelling order with id: ")

@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.ws.WebServiceContext;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
@@ -23,6 +25,7 @@ import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.handlers.ProductHandler;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.WorkTaskLog;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
@@ -78,6 +81,8 @@ public class QuickbooksServiceEndPoint {
 	@Autowired
 	ProductHandler productHandler;
 	
+	@Autowired
+	QuickbooksService quickbooksService;
 	
 	@Autowired
 	OrderStateHandler orderStateHandler;
@@ -116,25 +121,39 @@ public class QuickbooksServiceEndPoint {
 
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "authenticate")
 	@ResponsePayload
-	public AuthenticateResponse authenticate(@RequestPayload Authenticate authRequest)	throws java.rmi.RemoteException {
+	public AuthenticateResponse authenticate(@RequestPayload Authenticate authRequest)	throws Exception {
 		AuthenticateResponse response = new AuthenticateResponse();
 
-		String decryptedPwd = encryptDecryptHandler.decrypt(authRequest
-				.getStrPassword());
+		String password = authRequest.getStrPassword();
+		String decryptedPwd = encryptDecryptHandler.decrypt(password);
 		Integer tenantId = Integer.parseInt(decryptedPwd.split("~")[0]);
 		String userName = decryptedPwd.split("~")[1];
 
 		ArrayOfString arrStr = new ArrayOfString();
 		List<String> val = arrStr.getString();
-		val.add(tenantId + "~" + String.valueOf(System.currentTimeMillis())); // GUID
 
+		GeneralSettings generalSetting = quickbooksService.getSettingsFromEntityList(tenantId);
+		
 		// TODO: Add more security based on tenantId ?
 
-		if (userName.equals(authRequest.getStrUserName())) {
+		if (userName.equals(authRequest.getStrUserName()) && userName.equals(generalSetting.getQbAccount()) && password.equals(generalSetting.getQbPassword()) ) {
+			val.add(tenantId + "~" + String.valueOf(System.currentTimeMillis())); // GUID
+			
+			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId,entityHandler.getTaskqueueEntityName(), null,null,1);
+			if (nodes.size() == 0) {
+				val.add("none");
+			}
+			else if (StringUtils.isNotEmpty(generalSetting.getQbwFile()))
+				val.add(generalSetting.getQbwFile()); // Pending work to do?
+			else {
+				val.add(""); // Pending work to do?
+				val.add("");
+				val.add(null);
+				val.add("10");
+			}
+		} else {
 			val.add(""); // Pending work to do?
-			val.add("");
-			val.add(null);
-			val.add("10");
+			val.add("nvu");
 		}
 
 		response.setAuthenticateResult(arrStr);
@@ -236,6 +255,7 @@ public class QuickbooksServiceEndPoint {
 	public GetLastErrorResponse getLastError(GetLastError lastError)
 			throws java.rmi.RemoteException {
 		logger.debug(lastError.getTicket());
+		
 		GetLastErrorResponse response = new GetLastErrorResponse();
 		response.setGetLastErrorResult("");
 		return response;
