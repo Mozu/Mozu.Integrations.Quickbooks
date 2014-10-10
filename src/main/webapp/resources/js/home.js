@@ -48,8 +48,10 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.orderCompareDetails.removeAll();
-			saveDataToTable(data);
+			ko.mapping.fromJS(data, homeViewModel.compare);
+			//homeViewModel.orderCompareDetails.removeAll();
+			//console.log(data);
+			//saveDataToTable(data);
 		},
 		error : function() {
 			$("#content").hide();
@@ -119,10 +121,17 @@ var qbItem = function(itemNumber) {
     self.selectedChoice = ko.observable();
 }
 
+var compare = {
+	postedOrder : "",
+	updatedOrder : ""
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
+	
+	self.compare = ko.mapping.fromJS(compare);
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -358,17 +367,17 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			{
-				"mData" : "mozuOrderNumber"
+				"mData" : "orderNumber"
 			}, {
 				"mData" : "customerEmail"
 			}, {
-				"mData" : "orderDate",
+				"mData" : "createDate",
 				 "mRender": function (data, type, row) {
 					 return unixToHumanTime(data);
 				   }
 			}, 
 			{
-				"mData" : "orderUpdatedDate",
+				"mData" : "updatedDate",
 				"mRender": function (data, type, row) {
 					return unixToHumanTime(data);
 				}
@@ -397,7 +406,7 @@ var homeViewModel = function() {
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 	            {    
-            	   "mData": "mozuOrderId",
+            	   "mData": "id",
             	   "bSearchable": false,
             	   "bSortable": false,
             	   "mRender": function (data, type, full) {			
@@ -405,20 +414,20 @@ var homeViewModel = function() {
             	   }
 			    },
 			    {
-			    	"mData" : "mozuOrderNumber"
+			    	"mData" : "orderNumber"
 			    }, 
 				{
 					"mData" : "customerEmail"
 				}, 
 				{
-					"mData" : "orderDate",
+					"mData" : "createDate",
 						"mRender": function (data, type, row) {
 					   
 							return unixToHumanTime(data);
 						}
 				}, 
 				{
-					"mData" : "orderUpdatedDate",
+					"mData" : "updatedDate",
 					"mRender": function (data, type, row) {
 					    	
 						return unixToHumanTime(data);
@@ -436,12 +445,12 @@ var homeViewModel = function() {
 				},
 				{    
 				   //"mData": "conflictReason",
-				    "mData": "mozuOrderNumber",
+				    "mData": "id",
 				    "bSearchable": false,
 				    "bSortable": false,
 				    "mRender": function (data, type, row) {
 				    	var dataId = data ;
-				    	return "<a href='javascript:funEdit(\"" + row.mozuOrderId + "\")'>Edit</a>";
+				    	return "<a href='javascript:funEdit(\"" + row.id + "\")'>Edit</a>";
 				   }
 				 }
 			]
@@ -462,7 +471,7 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			            {    
-		            	   "mData": "mozuOrderId",
+		            	   "mData": "id",
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
@@ -472,20 +481,20 @@ var homeViewModel = function() {
 		            	   }
 			            },
 			            {
-			            	"mData" : "mozuOrderNumber"
+			            	"mData" : "orderNumber"
 			            }, 
 						{
 							"mData" : "customerEmail"
 						}, 
 						{
-							"mData" : "orderDate",
+							"mData" : "createDate",
 								"mRender": function (data, type, row) {
 							   
 									return unixToHumanTime(data);
 								}
 						}, 
 						{
-							"mData" : "orderUpdatedDate",
+							"mData" : "updatedDate",
 							"mRender": function (data, type, row) {
 							    	
 								return unixToHumanTime(data);
@@ -496,12 +505,12 @@ var homeViewModel = function() {
 						},
 						{    
 						   //"mData": "conflictReason",
-						    "mData": "mozuOrderNumber",
+						    "mData": "id",
 						    "bSearchable": false,
 						    "bSortable": false,
 						    "mRender": function (data, type, row) {
 						    	var dataId = data ;
-						    	return "<a href='javascript:compareDetails(\"" + row.mozuOrderId + "\")'>Review</a>";
+						    	return "<a href='javascript:compareDetails(\"" + row.id + "\")'>Review</a>";
 						   }
 						}
 			]

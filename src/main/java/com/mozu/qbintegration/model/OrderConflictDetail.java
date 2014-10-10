@@ -12,17 +12,13 @@ public class OrderConflictDetail {
 	/**
 	 * 
 	 */
-	private String enteredTime;
+	private String id;
 	
 	/**
 	 * 
 	 */
-	private String mozuOrderId;
+	private String orderId;
 	
-	/**
-	 * 
-	 */
-	private String mozuOrderNumber;
 	
 	/*
 	 * 
@@ -42,44 +38,32 @@ public class OrderConflictDetail {
 	/**
 	 * @return the mozuOrderId
 	 */
-	public String getMozuOrderId() {
-		return mozuOrderId;
+	public String getOrderId() {
+		return orderId;
 	}
 
 	/**
 	 * @param mozuOrderId the mozuOrderId to set
 	 */
-	public void setMozuOrderId(String mozuOrderId) {
-		this.mozuOrderId = mozuOrderId;
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
 	}
 
 	/**
 	 * @return the enteredTime
 	 */
-	public String getEnteredTime() {
-		return enteredTime;
+	public String getId() {
+		return id;
 	}
 
 	/**
 	 * @param enteredTime the enteredTime to set
 	 */
-	public void setEnteredTime(String enteredTime) {
-		this.enteredTime = enteredTime;
+	public void setId(String id) {
+		this.id = id;
 	}
 	
-	/**
-	 * @return the mozuOrderNumber
-	 */
-	public String getMozuOrderNumber() {
-		return mozuOrderNumber;
-	}
-
-	/**
-	 * @param mozuOrderNumber the mozuOrderNumber to set
-	 */
-	public void setMozuOrderNumber(String mozuOrderNumber) {
-		this.mozuOrderNumber = mozuOrderNumber;
-	}
+	
 
 	/**
 	 * @return the conflictReason

@@ -17,6 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.mzdb.EntityCollection;
+import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -60,6 +61,7 @@ public class EntityHandlerTest {
 		}
 	}
 	
+	
 	@Test
 	public void cleanupEntity() {
 
@@ -88,6 +90,23 @@ public class EntityHandlerTest {
 				logger.info("Deleting id:"+id+" from "+entityName);
 				entityResource.deleteEntity(entityName, id);
 			}
+		}
+	}
+	
+	@Test
+	public void deleteEntities() {
+		try {
+			EntityListResource entityListResource = new EntityListResource(new MozuApiContext(tenantId));
+			
+			entityListResource.deleteEntityList(entityHandler.getCustomerEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderConflictEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderUpdatedEntityName());
+			entityListResource.deleteEntityList(entityHandler.getProdctAddEntity());
+			entityListResource.deleteEntityList(entityHandler.getTaskqueueEntityName());
+			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
+		} catch (Exception e) {
+			fail(e.getMessage());
 		}
 	}
 }
