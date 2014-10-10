@@ -11,12 +11,18 @@ public class GeneralSettings {
 	
 	private String qbPassword;
 	
-	private Boolean accepted;
+	private Boolean accepted = false;
 	
-	private Boolean completed;
+	private Boolean completed = false;
 	
-	private Boolean cancelled;
+	private Boolean cancelled = false;
 
+	private Boolean paid = false;
+	
+	private Boolean fulFilled = false;
+	
+	private Boolean updated = false;
+	
 	private String shippingProductCode;
 	
 	private String discountProductCode;
@@ -135,6 +141,31 @@ public class GeneralSettings {
 	public void setDiscountProductCode(String discountProductCode) {
 		this.discountProductCode = discountProductCode;
 	}
+
+	public Boolean getPaid() {
+		return paid;
+	}
+
+	public void setPaid(Boolean paid) {
+		this.paid = paid;
+	}
+
+	public Boolean getFulFilled() {
+		return fulFilled;
+	}
+
+	public void setFulFilled(Boolean fulFilled) {
+		this.fulFilled = fulFilled;
+	}
+
+	public Boolean getUpdated() {
+		return updated;
+	}
+
+	public void setUpdated(Boolean updated) {
+		this.updated = updated;
+	}
+	
 	
 	
 }

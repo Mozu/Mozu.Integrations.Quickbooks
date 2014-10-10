@@ -529,33 +529,23 @@ var homeViewModel = function() {
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 				            {    
-			            	   "mData": "mozuOrderNumber",
+			            	   "mData": "orderNumber",
 				            },
 				            {
 								"mData" : "customerEmail"
 							}, 
 							{
-								"mData" : "orderDate",
+								"mData" : "createDate",
 									"mRender": function (data, type, row) {
 								   
-										var myISODate =  new Date(data) ;
-								
-									      return myISODate.getDate()+'-'+
-									      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-									      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-									      +':'+myISODate.getSeconds();
+										return unixToHumanTime(data);
 									}
 							}, 
 							{
-								"mData" : "orderUpdatedDate",
+								"mData" : "updatedDate",
 								"mRender": function (data, type, row) {
 								    	
-								 var myISODate =  new Date(data) ;
-							
-								      return myISODate.getDate()+'-'+
-								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-								      +':'+myISODate.getSeconds();
+									return unixToHumanTime(data);
 								}
 							},
 							{
