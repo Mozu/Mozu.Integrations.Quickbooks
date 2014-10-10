@@ -20,6 +20,7 @@ import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.OrderCompareDetail;
@@ -27,7 +28,10 @@ import com.mozu.qbintegration.model.QuickBooksOrder;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerRef;
+import com.mozu.qbintegration.model.qbmodel.allgen.CustomerSalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemRef;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemSalesTaxRef;
+import com.mozu.qbintegration.model.qbmodel.allgen.PaymentMethodRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
@@ -40,9 +44,23 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAdd;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAddRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptLineAdd;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptLineMod;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptLineMod.TxnLineID;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptLineRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptMod;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptMod.TxnID;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptModRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptQueryRqType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptQueryRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
+import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
@@ -61,6 +79,8 @@ public class OrderHandler {
 	@Autowired
 	EntityHandler entityHandler;
 	
+	@Autowired 
+	QuickbooksService quickbooksService;
 	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));
@@ -79,7 +99,7 @@ public class OrderHandler {
 	
 	public boolean processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
 		QBXML orderAddResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
-		SalesOrderAddRsType salesOrderResponse = (SalesOrderAddRsType) orderAddResp
+		SalesReceiptAddRsType salesOrderResponse = (SalesReceiptAddRsType) orderAddResp
 				.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 				.get(0);
@@ -91,7 +111,7 @@ public class OrderHandler {
 		} 
 		else 
 		{
-			QuickBooksOrder order = getQuickBooksOrder(salesOrderResponse.getSalesOrderRet());
+			QuickBooksOrder order = getQuickBooksOrder(salesOrderResponse.getSalesReceiptRet());
 			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
 			MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
 			mozuOrderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
@@ -112,7 +132,7 @@ public class OrderHandler {
 	public boolean processOrderUpdate(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
 		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
 
-		SalesOrderModRsType orderModRsType = (SalesOrderModRsType) orderModResp.getQBXMLMsgsRs()
+		SalesReceiptModRsType orderModRsType = (SalesReceiptModRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
 
@@ -121,7 +141,7 @@ public class OrderHandler {
 			return false;
 		else {
 			
-			QuickBooksOrder order = getQuickBooksOrder(orderModRsType.getSalesOrderRet());
+			QuickBooksOrder order = getQuickBooksOrder(orderModRsType.getSalesReceiptRet());
 			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
 			
 			MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
@@ -142,7 +162,7 @@ public class OrderHandler {
 		
 		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
 
-		SalesOrderQueryRsType  orderQueryRsType = (SalesOrderQueryRsType ) orderModResp.getQBXMLMsgsRs()
+		SalesReceiptQueryRsType  orderQueryRsType = (SalesReceiptQueryRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
 
@@ -153,13 +173,13 @@ public class OrderHandler {
 			return false;
 		else {
 			
-			QuickBooksOrder order = getQuickBooksOrder(orderQueryRsType.getSalesOrderRet().get(0));
+			QuickBooksOrder order = getQuickBooksOrder(orderQueryRsType.getSalesReceiptRet().get(0));
 			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
 			return true;
 		}
 	}
 	
-	private QuickBooksOrder getQuickBooksOrder(SalesOrderRet salesOrderRet) {
+	private QuickBooksOrder getQuickBooksOrder(SalesReceiptRet salesOrderRet) {
 		QuickBooksOrder order = new QuickBooksOrder();
 		order.setBillAddress(salesOrderRet.getBillAddress());
 		order.setShipAddress(salesOrderRet.getShipAddress());
@@ -181,9 +201,9 @@ public class OrderHandler {
 			order.setSalesTaxTotal(Double.parseDouble(salesOrderRet.getSalesTaxTotal()));
 		
 		order.setOrderLines(new ArrayList<QuickBooksSavedOrderLine>());
-		if( salesOrderRet.getSalesOrderLineRetOrSalesOrderLineGroupRet() != null) {
-			for(Object returnedItem: salesOrderRet.getSalesOrderLineRetOrSalesOrderLineGroupRet()) {
-				SalesOrderLineRet salesOrderLineRet = (SalesOrderLineRet) returnedItem;
+		if( salesOrderRet.getSalesReceiptLineRetOrSalesReceiptLineGroupRet() != null) {
+			for(Object returnedItem: salesOrderRet.getSalesReceiptLineRetOrSalesReceiptLineGroupRet()) {
+				SalesReceiptLineRet salesOrderLineRet = (SalesReceiptLineRet) returnedItem;
 				
 				QuickBooksSavedOrderLine line = new QuickBooksSavedOrderLine();
 				line.setAmount(Double.parseDouble(salesOrderLineRet.getAmount()));
@@ -247,11 +267,10 @@ public class OrderHandler {
 		
 		qbxmlMsgsRq.setOnError("stopOnError");
 		
-		SalesOrderQueryRqType  salesOrderQueryRqType = new SalesOrderQueryRqType();
+		SalesReceiptQueryRqType  salesOrderQueryRqType = new SalesReceiptQueryRqType();
 		salesOrderQueryRqType.setRequestID(order.getId());
 		
 		salesOrderQueryRqType.setIncludeLineItems("true");
-		salesOrderQueryRqType.setIncludeLinkedTxns("true");
 
 		salesOrderQueryRqType.getRefNumber().add(String.valueOf(order.getOrderNumber()));
 		
@@ -263,6 +282,7 @@ public class OrderHandler {
 	
 	public String getQBOrderSaveXML(int tenantId, String orderId) throws Exception {
 		
+		GeneralSettings setting = quickbooksService.getSettingsFromEntityList(tenantId);
 		//Order singleOrder, String customerQBListID,List<String> itemListIDs
 		Order order = getOrder(orderId, tenantId);
 		CustomerAccount account = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
@@ -272,36 +292,49 @@ public class OrderHandler {
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
-		com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRqType salesOrderAddRqType = new com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRqType();
+		com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAddRqType salesReceiptAddRqType = new com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAddRqType();
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
-				.add(salesOrderAddRqType);
+				.add(salesReceiptAddRqType);
 		qbxmlMsgsRq.setOnError("stopOnError");
-		SalesOrderAdd salesOrderAdd = new SalesOrderAdd();
-		salesOrderAddRqType.setRequestID(order.getId());
+		SalesReceiptAdd salesReceiptAdd = new SalesReceiptAdd();
+		salesReceiptAddRqType.setRequestID(order.getId());
 		
-		salesOrderAddRqType.setSalesOrderAdd(salesOrderAdd);
+		salesReceiptAddRqType.setSalesReceiptAdd(salesReceiptAdd);
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
-		salesOrderAdd.setCustomerRef(customerRef);
-		salesOrderAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
-		salesOrderAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
-		salesOrderAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+
+		if (order.getIsTaxExempt()) {
+			CustomerSalesTaxCodeRef customerSalesTaxCodeRef = new CustomerSalesTaxCodeRef();
+			customerSalesTaxCodeRef.setFullName("Non");
+			salesReceiptAdd.setCustomerSalesTaxCodeRef(customerSalesTaxCodeRef);
+		}
+		
+		salesReceiptAdd.setCustomerRef(customerRef);
+		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
+		salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		salesReceiptAdd.setPaymentMethodRef(getPayment(order) );
+		
+		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		//Double productDiscounts = 0.0;
 		for (MozuOrderItem item : orderItems) {
 			if (item.isMic()) {
-				addSOAddLineItemAmount(salesOrderAdd, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
+				addSOAddLineItemAmount(salesReceiptAdd, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
 			} else {
 				ItemRef itemRef = new ItemRef();
 				itemRef.setListID(item.getQbItemCode());
-				SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
-				salesOrderLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
-				salesOrderLineAdd.setItemRef(itemRef);
-				salesOrderLineAdd.setDesc(item.getDescription());
-				salesOrderLineAdd.setQuantity(item.getQty().toString());
-				salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
+				SalesReceiptLineAdd salesReceiptLineAdd = new SalesReceiptLineAdd();
+				salesReceiptLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
+				salesReceiptLineAdd.setItemRef(itemRef);
+				salesReceiptLineAdd.setDesc(item.getDescription());
+				salesReceiptLineAdd.setQuantity(item.getQty().toString());
+				
+				salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+				
+				salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 			}
 			
 		}
@@ -315,7 +348,8 @@ public class OrderHandler {
 		if (node == null)
 			throw new Exception("Existing Quickbooks sales order not found");
 		
-		QuickBooksOrder salesOrderRet = mapper.readValue(node.toString(), QuickBooksOrder.class);
+		GeneralSettings setting = quickbooksService.getSettingsFromEntityList(tenantId);
+		QuickBooksOrder salesReceiptRet = mapper.readValue(node.toString(), QuickBooksOrder.class);
 		CustomerAccount account = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 		
 		String customerQBListID = customerHandler.getQbCustomerId(tenantId, account.getEmailAddress());
@@ -324,82 +358,116 @@ public class OrderHandler {
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRq = new QBXMLMsgsRq();
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
-		com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRqType salesOrderModRqType = 
-				new com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRqType();
+		com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptModRqType salesReceiptModRqType = 
+				new com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptModRqType();
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
-				.add(salesOrderModRqType);
+				.add(salesReceiptModRqType);
 		qbxmlMsgsRq.setOnError("stopOnError");
-		SalesOrderMod salesOrdermod = new SalesOrderMod();
-		salesOrderModRqType.setRequestID(order.getId());
+		SalesReceiptMod salesReceiptmod = new SalesReceiptMod();
+		salesReceiptModRqType.setRequestID(order.getId());
 		
-		salesOrdermod.setRefNumber(String.valueOf(order.getOrderNumber()));
+		salesReceiptmod.setRefNumber(String.valueOf(order.getOrderNumber()));
 		
 		
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
-		salesOrdermod.setCustomerRef(customerRef);
+		salesReceiptmod.setCustomerRef(customerRef);
 		
-		salesOrdermod.setTxnID( salesOrderRet.getTxnID());
-		salesOrdermod.setEditSequence(salesOrderRet.getEditSequence());
-		
-		salesOrdermod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
-		salesOrdermod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
-		
-		salesOrderModRqType.setSalesOrderMod(salesOrdermod);
+		TxnID txnId = new TxnID();
+		txnId.setValue(salesReceiptRet.getTxnID());
+		salesReceiptmod.setTxnID(txnId);
+		salesReceiptmod.setEditSequence(salesReceiptRet.getEditSequence());
+		salesReceiptmod.setPaymentMethodRef(getPayment(order));
+		salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
+		salesReceiptmod.setPaymentMethodRef(getPayment(order) );
+		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		//Double productDiscounts = 0.0;
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		for (MozuOrderItem item : orderItems) {
 			if (item.isMic()) {
-				addSOModLineItemAmount(salesOrdermod, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
+				addSOModLineItemAmount(salesReceiptmod, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
 			} else {
 				ItemRef itemRef = new ItemRef();
 				itemRef.setListID(item.getQbItemCode());
-				SalesOrderLineMod salesOrderLineMod = new SalesOrderLineMod();
+				SalesReceiptLineMod salesReceiptLineMod = new SalesReceiptLineMod();
 				
-				if( salesOrderRet.getOrderLines() != null) {
-					for(QuickBooksSavedOrderLine qbItem: salesOrderRet.getOrderLines()) {
+				if( salesReceiptRet.getOrderLines() != null) {
+					for(QuickBooksSavedOrderLine qbItem: salesReceiptRet.getOrderLines()) {
 						if(item.getProductCode().equalsIgnoreCase(qbItem.getFullName())) {
-							salesOrderLineMod.setTxnLineID(qbItem.getTxnLineId());
+							TxnLineID txnLineId = new TxnLineID();
+							txnLineId.setValue(qbItem.getTxnLineId());
+							salesReceiptLineMod.setTxnLineID(txnLineId );
 						}
-					}
-					if (StringUtils.isEmpty(salesOrderLineMod.getTxnLineID())) {
-						salesOrderLineMod.setTxnLineID("-1");
 					}
 				}
 				
-				salesOrderLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
-				salesOrderLineMod.setQuantity(item.getQty().toString());
-				salesOrderLineMod.setDesc(item.getDescription());
-				salesOrderLineMod.setItemRef(itemRef);
-				
-				salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
+				salesReceiptLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
+				salesReceiptLineMod.setQuantity(item.getQty().toString());
+				salesReceiptLineMod.setDesc(item.getDescription());
+				salesReceiptLineMod.setItemRef(itemRef);
+				salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+				salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
 
 			}
 		}
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	private void addSOAddLineItemAmount(SalesOrderAdd salesOrderAdd, String amount, String fieldName, String descrption) {
-		SalesOrderLineAdd salesOrderLineAdd = new SalesOrderLineAdd();
-		salesOrderLineAdd.setAmount(amount);
+	private void addSOAddLineItemAmount(SalesReceiptAdd salesOrderAdd, String amount, String fieldName, String descrption) {
+		SalesReceiptLineAdd salesReceiptLineAdd = new SalesReceiptLineAdd();
+		salesReceiptLineAdd.setAmount(amount);
 		ItemRef itemRef = new ItemRef();
 		itemRef.setFullName(fieldName);
-		salesOrderLineAdd.setDesc(descrption);
-		salesOrderLineAdd.setItemRef(itemRef);
-		salesOrderAdd.getSalesOrderLineAddOrSalesOrderLineGroupAdd().add(salesOrderLineAdd);
+		salesReceiptLineAdd.setDesc(descrption);
+		salesReceiptLineAdd.setItemRef(itemRef);
+		salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef("Non"));
+		salesOrderAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 	}
 	
-	private void addSOModLineItemAmount(SalesOrderMod salesOrdermod, String amount, String fieldName, String descrption) {
-		SalesOrderLineMod salesOrderLineMod = new SalesOrderLineMod();
-		salesOrderLineMod.setAmount(amount);
+	private void addSOModLineItemAmount(SalesReceiptMod salesOrdermod, String amount, String fieldName, String descrption) {
+		SalesReceiptLineMod salesReceiptLineMod = new SalesReceiptLineMod();
+		salesReceiptLineMod.setAmount(amount);
 		ItemRef itemRef = new ItemRef();
 		itemRef.setFullName(fieldName);
-		salesOrderLineMod.setItemRef(itemRef);
-		salesOrderLineMod.setTxnLineID("-1");
-		salesOrderLineMod.setDesc(descrption);
-		salesOrdermod.getSalesOrderLineModOrSalesOrderLineGroupMod().add(salesOrderLineMod);
+		salesReceiptLineMod.setItemRef(itemRef);
+		
+		salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef("Non"));
+
+		salesReceiptLineMod.setDesc(descrption);
+		salesOrdermod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
+	}
+	
+	private SalesTaxCodeRef getSalesTaxCodeRef(String taxCode) {
+		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();
+		salesTaxCodeRef.setFullName(taxCode);
+		return salesTaxCodeRef;
+		
+	}
+	
+	private ItemSalesTaxRef getItemSalesTaxRef(double taxTotal, GeneralSettings setting) {
+		ItemSalesTaxRef itemSalesTaxRef = new ItemSalesTaxRef();
+		if (taxTotal > 0) {
+			itemSalesTaxRef.setFullName(setting.getOrderSalesTaxCode());
+		} else {
+			itemSalesTaxRef.setFullName(setting.getOrderNonSalesTaxCode());
+		}
+		
+		return itemSalesTaxRef;
+	}
+	
+	private PaymentMethodRef getPayment(Order order) {
+		PaymentMethodRef paymentRef = new PaymentMethodRef();
+		if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
+			paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
+		}
+		else {
+			paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
+		}
+		
+		return paymentRef;
 	}
 	
 	/*
@@ -417,7 +485,7 @@ public class OrderHandler {
 		
 		TxnDelRqType deleteTx = new TxnDelRqType();
 		deleteTx.setRequestID(orderId);
-		deleteTx.setTxnDelType("SalesOrder");
+		deleteTx.setTxnDelType("SalesReceipt");
 		deleteTx.setTxnID(salesOrderRet.getTxnID());
 		
 		qbxml = new QBXML();
@@ -427,7 +495,6 @@ public class OrderHandler {
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(deleteTx);
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
-
 
 	/*
 	 * Process the response of cancelling a sales order in QB. 
