@@ -28,22 +28,19 @@ public class EntityHandler {
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
 
 	private  final String CUST_ENTITY = "QB_CUSTOMER";
-
 	private  final String PRODUCT_ENTITY = "QB_PRODUCT";
-
-	private  final String SETTINGS_ENTITY = "QB_SETTINGS";
-	
-	private  final String ORDERS_ENTITY = "QB_ORDERS";
-	
-	private  final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
-	
-	private  final String TASKQUEUELOG_ENTITY = "QB_TASKQUEUELOG";
-	
-	private  final String ORDER_CONFLICT_ENTITY = "QB_ORDER_CONFLICT";
-
-	private  final String ORDERS_UPDATED_ENTITY = "QB_UPDATED_ORDERS";
-	
 	private  final String PRODUCT_ADD_ENTITY = "QB_PRODUCT_ADD";
+	private  final String SETTINGS_ENTITY = "QB_SETTINGS";
+	private  final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
+	private  final String TASKQUEUELOG_ENTITY = "QB_TASKQUEUELOG";
+	private  final String ORDER_CONFLICT_DETAIL_ENTITY = "QB_CONFLICT_DETAIL";
+	private  final String ORDERS_UPDATED_ENTITY = "QB_UPDATED";
+	private  final String ORDER_CONFLICT_ENTITY = "QB_CONFLICT";
+	private  final String ORDER_POSTED_ENTITY = "QB_POSTED";
+	private  final String ORDER_CANCELLED_ENTITY = "QB_CANCELLED";
+	private  final String ORDERS_ENTITY = "QB_ORDERS";	
+
+
 
 	private  String nameSpace = "";
 	
@@ -91,10 +88,22 @@ public class EntityHandler {
 		return ORDER_CONFLICT_ENTITY + "@" + getNamespace();
 	}
 	
+	public  String getOrderConflictDetailEntityName() {
+		return ORDER_CONFLICT_DETAIL_ENTITY + "@" + getNamespace();
+	}
+	
 	public  String getOrderUpdatedEntityName() {
 		return ORDERS_UPDATED_ENTITY + "@" + getNamespace();
 	}
 	
+	public String getOrderPostedEntityName() {
+		return ORDER_POSTED_ENTITY + "@" + getNamespace();
+	}
+	
+	public String getOrderCancelledEntityName() {
+		return ORDER_CANCELLED_ENTITY + "@" + getNamespace();
+	}
+
 	public String getProdctAddEntity() {
 		return PRODUCT_ADD_ENTITY + "@" + getNamespace();
 	}
@@ -120,6 +129,9 @@ public class EntityHandler {
 		installOrderConflictSchema(tenantId);
 		installOrdersUpdatedSchema(tenantId);
 		installProductAddSchema(tenantId);
+		installOrderPostedSchema(tenantId);
+		installOrderConflictDetailsSchema(tenantId);
+		installOrderCancelledSchema(tenantId);
 	}
 	
 	/**
@@ -189,11 +201,10 @@ public class EntityHandler {
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
-		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
-		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId","string"));
-		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED,POSTED,ERRORED, UPDATED
-		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIdProperty(getIndexedProperty("refNumber", "string"));
+		entityList.setIndexA(getIndexedProperty("timeCreated", "date")); 
+		entityList.setIndexB(getIndexedProperty("timeModified", "date"));
+		
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -238,10 +249,11 @@ public class EntityHandler {
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(TASKQUEUELOG_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("id","string"));
+		entityList.setIdProperty(getIndexedProperty("enteredTime","string"));
 		entityList.setIndexA(getIndexedProperty("createDate", "date"));
 		entityList.setIndexB(getIndexedProperty("status", "string"));
 		entityList.setIndexC(getIndexedProperty("type", "string"));
+		entityList.setIndexC(getIndexedProperty("id", "string"));
 		
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
@@ -252,15 +264,53 @@ public class EntityHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
+	private void installOrderPostedSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(this.ORDER_POSTED_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
+		entityList.setIndexA(getIndexedProperty("id", "string"));
+		entityList.setIndexB(getIndexedProperty("orderNumber", "integer"));
+		entityList.setIndexC(getIndexedProperty("createDate", "string"));
+
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = getOrderConflictDetailEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+	
+	private void installOrderCancelledSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(this.ORDER_CANCELLED_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
+		entityList.setIndexA(getIndexedProperty("id", "string"));
+		entityList.setIndexB(getIndexedProperty("orderNumber", "integer"));
+		entityList.setIndexC(getIndexedProperty("createDate", "string"));
+		entityList.setIndexC(getIndexedProperty("updatedDate", "string"));
+
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = getOrderCancelledEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
 	
 	private void installOrderConflictSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDER_CONFLICT_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
-		entityList.setIndexA(getIndexedProperty("mozuOrderId", "string"));
-
+		entityList.setIdProperty(getIndexedProperty("id", "string"));
+		entityList.setIndexA(getIndexedProperty("createDate", "string"));
+		entityList.setIndexB(getIndexedProperty("orderNumber", "integer"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -270,16 +320,31 @@ public class EntityHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 	
+	private void installOrderConflictDetailsSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(this.ORDER_CONFLICT_DETAIL_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("id", "string"));
+		entityList.setIndexA(getIndexedProperty("orderId", "string"));
+
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = getOrderConflictDetailEntityName();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+	
 	private void installOrdersUpdatedSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_UPDATED_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
-		entityList.setIndexD(getIndexedProperty("mozuOrderId", "string"));
-		entityList.setIndexA(getIndexedProperty("quickbooksOrderListId","string"));
-		entityList.setIndexB(getIndexedProperty("orderStatus", "string")); // RECEIVED, POSTED, ERRORED, UPDATED
-		entityList.setIndexC(getIndexedProperty("customerEmail", "string"));
+		entityList.setIdProperty(getIndexedProperty("id", "string"));
+		entityList.setIndexB(getIndexedProperty("orderNumber", "string")); // RECEIVED, POSTED, ERRORED, UPDATED
+		entityList.setIndexC(getIndexedProperty("updatedDate", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -337,6 +402,19 @@ public class EntityHandler {
 		property.setDataType(type);
 
 		return property;
+	}
+	
+	public void addEntity(Integer tenantId, String entityName, Object value) throws Exception {
+		ObjectNode taskNode = mapper.valueToTree(value);
+
+		// Add the mapping entry
+		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		try {
+				entityResource.insertEntity(taskNode, entityName);
+		} catch (Exception e) {
+			logger.error("Error saving or updating  entity : "+ e.getMessage());
+			throw e;
+		}
 	}
 	
 	public void addUpdateEntity(Integer tenantId, String entityName, String id, Object value) throws Exception {

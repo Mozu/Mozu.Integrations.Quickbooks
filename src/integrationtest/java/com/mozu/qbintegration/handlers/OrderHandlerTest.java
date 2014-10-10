@@ -1,7 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -13,18 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mozu.api.ApiContext;
-import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })
-public class OrderStateHandlerTest {
+public class OrderHandlerTest {
 
 	@Autowired
-	OrderStateHandler orderStateHandler;
-	
-	@Autowired 
 	OrderHandler orderHandler;
 	
 	Integer tenantId;
@@ -40,8 +32,8 @@ public class OrderStateHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4647;
-		orderId = "0534854d78bf8a158cf35c2f00001227";
+		tenantId = 5872;
+		orderId = "05357e6721f6631de04a4598000016f0";
 	}
 
 	@After
@@ -49,22 +41,11 @@ public class OrderStateHandlerTest {
 	}
 
 	@Test
-	public void processOrderTest() {
+	public void getQBOrderSaveXMLTest() {
 		try {
-			ApiContext apiContext = new MozuApiContext(tenantId);
-			orderStateHandler.processOrder(orderId, apiContext );
+			String xml = orderHandler.getQBOrderSaveXML(tenantId, orderId);
+			System.out.println(xml);
 		} catch(Exception exc) {
-			fail(exc.getMessage());
-		}
-	}
-
-	@Test
-	public void allItemsFoundTest() {
-		try {
-			Order order = orderHandler.getOrder(orderId, tenantId);
-			boolean foundAll = orderStateHandler.allItemsFound(tenantId, order);
-			assertEquals(true, foundAll);
-		}catch(Exception exc) {
 			fail(exc.getMessage());
 		}
 	}

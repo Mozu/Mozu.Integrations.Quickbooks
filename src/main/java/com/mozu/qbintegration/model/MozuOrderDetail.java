@@ -5,7 +5,11 @@ package com.mozu.qbintegration.model;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mozu.api.contracts.core.Address;
+import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 
 /**
  * @author Akshay
@@ -19,22 +23,14 @@ public class MozuOrderDetail {
 	/**
 	 * 
 	 */
-	private String mozuOrderNumber;
+	private Integer orderNumber;
 	
 	/**
 	 * 
 	 */
-	private String mozuOrderId;
+	private String id;
 	
-	/**
-	 * 
-	 */
-	private String quickbooksOrderListId;
 	
-	/**
-	 * can be RECEIVED, POSTED, ERRORED, UPDATED
-	 */
-	private String orderStatus;
 	
 	/**
 	 * 
@@ -44,37 +40,26 @@ public class MozuOrderDetail {
 	/**
 	 * 
 	 */
-	private String orderDate;
+	private String createDate;
 	
 	/**
 	 * 
 	 */
-	private String orderUpdatedDate;
+	private String updatedDate;
+
 	
 	/**
 	 * 
 	 */
 	private String conflictReason;
 	
+	private boolean existsInQb;
 	/**
 	 * 
 	 */
-	private String amount;
+	private double amount;
 	
-	/**
-	 * 
-	 */
-	private List<QuickBooksSavedOrderLine> savedOrderLinesList;
 	
-	/**
-	 * 
-	 */
-	private String savedOrderLines;
-	
-	/**
-	 * 
-	 */
-	private String editSequence;
 	
 	/**
 	 * @return the enteredTime
@@ -93,14 +78,14 @@ public class MozuOrderDetail {
 	/**
 	 * @return the amount
 	 */
-	public String getAmount() {
+	public double getAmount() {
 		return amount;
 	}
 
 	/**
 	 * @param amount the amount to set
 	 */
-	public void setAmount(String amount) {
+	public void setAmount(double amount) {
 		this.amount = amount;
 	}
 
@@ -121,87 +106,60 @@ public class MozuOrderDetail {
 	/**
 	 * @return the orderUpdatedDate
 	 */
-	public String getOrderUpdatedDate() {
-		return orderUpdatedDate;
+	public String getUpdatedDate() {
+		return updatedDate;
 	}
 
 	/**
-	 * @param orderUpdatedDate the orderUpdatedDate to set
+	 * @param l the orderUpdatedDate to set
 	 */
-	public void setOrderUpdatedDate(String orderUpdatedDate) {
-		this.orderUpdatedDate = orderUpdatedDate;
+	public void setUpdatedDate(String updateDate) {
+		this.updatedDate = updateDate;
 	}
 
 	/**
 	 * @return the orderDate
 	 */
-	public String getOrderDate() {
-		return orderDate;
+	public String getCreateDate() {
+		return createDate;
 	}
 
 	/**
-	 * @param orderDate the orderDate to set
+	 * @param l the orderDate to set
 	 */
-	public void setOrderDate(String orderDate) {
-		this.orderDate = orderDate;
+	public void setOrderDate(String createDate) {
+		this.createDate = createDate;
 	}
 
 	/**
 	 * @return the mozuOrderNumber
 	 */
-	public String getMozuOrderNumber() {
-		return mozuOrderNumber;
+	public Integer getOrderNumber() {
+		return orderNumber;
 	}
 
 	/**
 	 * @param mozuOrderNumber the mozuOrderNumber to set
 	 */
-	public void setMozuOrderNumber(String mozuOrderNumber) {
-		this.mozuOrderNumber = mozuOrderNumber;
+	public void setOrderNumber(Integer orderNumber) {
+		this.orderNumber = orderNumber;
 	}
 
 	/**
 	 * @return the mozuOrderId
 	 */
-	public String getMozuOrderId() {
-		return mozuOrderId;
+	public String getId() {
+		return id;
 	}
 
 	/**
 	 * @param mozuOrderId the mozuOrderId to set
 	 */
-	public void setMozuOrderId(String mozuOrderId) {
-		this.mozuOrderId = mozuOrderId;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	/**
-	 * @return the quickbooksOrderListId
-	 */
-	public String getQuickbooksOrderListId() {
-		return quickbooksOrderListId;
-	}
-
-	/**
-	 * @param quickbooksOrderListId the quickbooksOrderListId to set
-	 */
-	public void setQuickbooksOrderListId(String quickbooksOrderListId) {
-		this.quickbooksOrderListId = quickbooksOrderListId;
-	}
-
-	/**
-	 * @return the orderStatus
-	 */
-	public String getOrderStatus() {
-		return orderStatus;
-	}
-
-	/**
-	 * @param orderStatus the orderStatus to set
-	 */
-	public void setOrderStatus(String orderStatus) {
-		this.orderStatus = orderStatus;
-	}
-
+	
 	/**
 	 * @return the customerEmail
 	 */
@@ -215,48 +173,20 @@ public class MozuOrderDetail {
 	public void setCustomerEmail(String customerEmail) {
 		this.customerEmail = customerEmail;
 	}
+
+	public boolean isExistsInQb() {
+		return existsInQb;
+	}
+
+	public void setExistsInQb(boolean existsInQb) {
+		this.existsInQb = existsInQb;
+	}
+
+	public void setCreateDate(String createDate) {
+		this.createDate = createDate;
+	}
 	
-	/**
-	 * @return the savedOrderLinesList
-	 */
-	public List<QuickBooksSavedOrderLine> getSavedOrderLinesList() {
-		return savedOrderLinesList;
-	}
 
-	/**
-	 * @param savedOrderLinesList the savedOrderLinesList to set
-	 */
-	public void setSavedOrderLinesList(
-			List<QuickBooksSavedOrderLine> savedOrderLinesList) {
-		this.savedOrderLinesList = savedOrderLinesList;
-	}
-
-	/**
-	 * @return the savedOrderLines
-	 */
-	/*public String getSavedOrderLines() {
-		return savedOrderLines;
-	}*/
-
-	/**
-	 * @param savedOrderLines the savedOrderLines to set
-	 */
-	public void setSavedOrderLines(String savedOrderLines) {
-		this.savedOrderLines = savedOrderLines;
-	}
-
-	/**
-	 * @return the editSequence
-	 */
-	public String getEditSequence() {
-		return editSequence;
-	}
-
-	/**
-	 * @param editSequence the editSequence to set
-	 */
-	public void setEditSequence(String editSequence) {
-		this.editSequence = editSequence;
-	}
+	
 }
 

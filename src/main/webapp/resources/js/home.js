@@ -17,7 +17,7 @@ function funEdit(orderNumber) {
 				homeViewModel.orderConflictDetails.push(data[index]);
 			});
 			
-			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
+			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
 			$table.fnDraw();
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
@@ -48,8 +48,10 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.orderCompareDetails.removeAll();
-			saveDataToTable(data);
+			ko.mapping.fromJS(data, homeViewModel.compare);
+			//homeViewModel.orderCompareDetails.removeAll();
+			//console.log(data);
+			//saveDataToTable(data);
 		},
 		error : function() {
 			$("#content").hide();
@@ -64,7 +66,7 @@ function saveDataToTable(data) {
 	});
 	
 	$(data).promise().done(function() {
-		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false});
+		$('#compareDisplay').dataTable({ retrieve: true,bFilter: false, bInfo: false, bPaginate:false, bSort: false, "aaSorting": []});
 		$('#compareDisplay').dataTable().fnDraw();
 		
 	});
@@ -119,10 +121,17 @@ var qbItem = function(itemNumber) {
     self.selectedChoice = ko.observable();
 }
 
+var compare = {
+	postedOrder : "",
+	updatedOrder : ""
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
+	
+	self.compare = ko.mapping.fromJS(compare);
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -197,7 +206,7 @@ var homeViewModel = function() {
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 			success : function(data) {
-				console.log(data);
+				//console.log(data);
 			},
 			error : function() {
 			}
@@ -215,7 +224,7 @@ var homeViewModel = function() {
     		},
     		dataType : "json",		
     		success : function(data) {
-    			console.log(data);
+    			//console.log(data);
     			getAllProductsFromEntityList();
     		},error : function() {
     			$("#content").hide();
@@ -252,9 +261,9 @@ var homeViewModel = function() {
         		},
         		dataType : "json",		
         		success : function(data) {
-        			console.log(data);
+        			$("#"+$("#selectedTab").val()+"Tab").click();
         		},error : function() {
-        			$("#content").hide();
+        			//$("#content").hide();
         		}
         	});
     	});
@@ -274,7 +283,7 @@ var homeViewModel = function() {
     	});
     	
     	$allCheckedUpdateBoxes.promise().done(function() {
-    		console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
+    		//console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
         	$.ajax({
         		url : "Orders/postUpdatedOrderToQB",
         		type : "POST",
@@ -285,9 +294,9 @@ var homeViewModel = function() {
         		},
         		dataType : "json",		
         		success : function(data) {
-        			
+        			$("#"+$("#selectedTab").val()+"Tab").click();
         		},error : function() {
-        			$("#content").hide();
+        			//$("#content").hide();
         		}
         	});
     		
@@ -295,21 +304,6 @@ var homeViewModel = function() {
     	
     };
     
-    
-    /*self.generatePwd = function() {
-    	$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/config/generatePwd?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  self.settings.qbAccount(),
-			success : function(data) {
-				self.settings.qbPassword(data.pwd);
-			},
-			error : function() {
-			}
-		});
-    }*/
     
 	self.save = function() {
 		$.ajax({
@@ -373,34 +367,20 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			{
-				"mData" : "mozuOrderNumber"
-			}, {
-				"mData" : "quickbooksOrderListId"
+				"mData" : "orderNumber"
 			}, {
 				"mData" : "customerEmail"
 			}, {
-				"mData" : "orderDate",
-					 "mRender": function (data, type, row) {
-					   
-					 var myISODate =  new Date(data) ;
-					
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
-					   }
+				"mData" : "createDate",
+				 "mRender": function (data, type, row) {
+					 return unixToHumanTime(data);
+				   }
 			}, 
 			{
-				"mData" : "orderUpdatedDate",
+				"mData" : "updatedDate",
 				"mRender": function (data, type, row) {
-				    	
-				 var myISODate =  new Date(data) ;
-			
-				      return myISODate.getDate()+'-'+
-				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-				      +':'+myISODate.getSeconds();
-				   }
+					return unixToHumanTime(data);
+				}
 			},
 			{
 				"mData" : "amount"
@@ -426,7 +406,7 @@ var homeViewModel = function() {
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 	            {    
-            	   "mData": "mozuOrderId",
+            	   "mData": "id",
             	   "bSearchable": false,
             	   "bSortable": false,
             	   "mRender": function (data, type, full) {			
@@ -434,33 +414,23 @@ var homeViewModel = function() {
             	   }
 			    },
 			    {
-			    	"mData" : "mozuOrderNumber"
+			    	"mData" : "orderNumber"
 			    }, 
 				{
 					"mData" : "customerEmail"
 				}, 
 				{
-					"mData" : "orderDate",
+					"mData" : "createDate",
 						"mRender": function (data, type, row) {
 					   
-							var myISODate =  new Date(data) ;
-					
-						      return myISODate.getDate()+'-'+
-						      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-						      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-						      +':'+myISODate.getSeconds();
+							return unixToHumanTime(data);
 						}
 				}, 
 				{
-					"mData" : "orderUpdatedDate",
+					"mData" : "updatedDate",
 					"mRender": function (data, type, row) {
 					    	
-					 var myISODate =  new Date(data) ;
-				
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
+						return unixToHumanTime(data);
 					}
 				},
 				{
@@ -475,12 +445,12 @@ var homeViewModel = function() {
 				},
 				{    
 				   //"mData": "conflictReason",
-				    "mData": "mozuOrderNumber",
+				    "mData": "id",
 				    "bSearchable": false,
 				    "bSortable": false,
 				    "mRender": function (data, type, row) {
 				    	var dataId = data ;
-				    	return "<a href='javascript:funEdit(\"" + row.mozuOrderId + "\")'>Edit</a>";
+				    	return "<a href='javascript:funEdit(\"" + row.id + "\")'>Edit</a>";
 				   }
 				 }
 			]
@@ -501,7 +471,7 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			            {    
-		            	   "mData": "mozuOrderId",
+		            	   "mData": "id",
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
@@ -511,33 +481,23 @@ var homeViewModel = function() {
 		            	   }
 			            },
 			            {
-			            	"mData" : "mozuOrderNumber"
+			            	"mData" : "orderNumber"
 			            }, 
 						{
 							"mData" : "customerEmail"
 						}, 
 						{
-							"mData" : "orderDate",
+							"mData" : "createDate",
 								"mRender": function (data, type, row) {
 							   
-									var myISODate =  new Date(data) ;
-							
-								      return myISODate.getDate()+'-'+
-								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-								      +':'+myISODate.getSeconds();
+									return unixToHumanTime(data);
 								}
 						}, 
 						{
-							"mData" : "orderUpdatedDate",
+							"mData" : "updatedDate",
 							"mRender": function (data, type, row) {
 							    	
-							 var myISODate =  new Date(data) ;
-						
-							      return myISODate.getDate()+'-'+
-							      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-							      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-							      +':'+myISODate.getSeconds();
+								return unixToHumanTime(data);
 							}
 						},
 						{
@@ -545,12 +505,12 @@ var homeViewModel = function() {
 						},
 						{    
 						   //"mData": "conflictReason",
-						    "mData": "mozuOrderNumber",
+						    "mData": "id",
 						    "bSearchable": false,
 						    "bSortable": false,
 						    "mRender": function (data, type, row) {
 						    	var dataId = data ;
-						    	return "<a href='javascript:compareDetails(\"" + row.mozuOrderId + "\")'>Review</a>";
+						    	return "<a href='javascript:compareDetails(\"" + row.id + "\")'>Review</a>";
 						   }
 						}
 			]
@@ -606,6 +566,40 @@ var homeViewModel = function() {
 		$table.fnDraw();
 	};
 	
+	self.getOrdersQueue = function() {
+
+		var $table = $('#orderQueueTable').dataTable({
+			"bProcessing" : true,
+			"bServerSide" : true,
+			"bDestroy"	: true,
+			"bFilter" : false,
+			"bSort" : false,
+			"bInfo" : false,
+			"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val(),
+			"aoColumns" : [
+				            {    
+			            	   "mData": "createDate",
+				            },
+				            {
+								"mData" : "status"
+							}, 
+							{
+								"mData" : "type"
+							}, 
+							{
+								"mData" : "action"
+							},
+							{
+								"mData" : "currentStep"
+							},
+							{
+								"mData" : "id"
+							}
+			            ]
+			});
+		$table.fnDraw();
+	};
+	
 	self.getSettings = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
@@ -637,6 +631,13 @@ var homeViewModel = function() {
 	self.getSettings();
 }
 
+function unixToHumanTime(data) {
+	return moment.unix(data/1000).format("YYYY-MM-DD HH:mm:ss")
+}
+
+function closeError() {
+	$("#serverError").hide();
+}
 
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
 	console.log(exception);

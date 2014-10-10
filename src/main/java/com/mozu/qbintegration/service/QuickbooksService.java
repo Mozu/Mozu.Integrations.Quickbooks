@@ -5,17 +5,10 @@ package com.mozu.qbintegration.service;
 
 import java.util.List;
 
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
-import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
-import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
-import com.mozu.qbintegration.model.ProductToQuickbooks;
-import com.mozu.qbintegration.tasks.WorkTask;
 
 /**
  * @author Akshay
@@ -46,19 +39,10 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param orderId
 	 * @return
-	 */
-	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId);
-
-
-	/**
-	 * Get the order comparison data for originally posted order and updated order
-	 * 
-	 * @param tenantId
-	 * @param mozuOrderNumber
-	 * @return
 	 * @throws Exception 
 	 */
-	List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId, String mozuOrderNumber) throws Exception;
+	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId) throws Exception;
+
 	
 	/**
 	 * Get all products from the entitylist

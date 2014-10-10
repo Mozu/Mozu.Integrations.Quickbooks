@@ -42,13 +42,13 @@ public class OrderEventHandlerTest {
 	
 	
 	@Test
-	public void cancelledTest() {
+	public void openedTest() {
 		try {
 	
 			Event event = new Event();
-			event.setTopic("order.canclled");
-			event.setEntityId("0534a9c3157c2812e8a8c54500001227");
-			orderEventHandlerImpl.cancelled(apiContext, event);
+			event.setTopic("order.opened");
+			event.setEntityId("053749e8157c280b28b2929f00001227");
+			orderEventHandlerImpl.opened(apiContext, event);
 		} catch(Exception e) {
 			fail(e.getMessage());
 		}

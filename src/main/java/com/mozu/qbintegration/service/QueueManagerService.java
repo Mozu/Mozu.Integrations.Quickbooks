@@ -3,8 +3,6 @@
  */
 package com.mozu.qbintegration.service;
 
-import java.util.List;
-
 import com.mozu.qbintegration.tasks.WorkTask;
 
 /**

@@ -1,6 +1,5 @@
 package com.mozu.qbintegration.model;
 
-import java.util.List;
 
 public class SubnavLink {
 	
