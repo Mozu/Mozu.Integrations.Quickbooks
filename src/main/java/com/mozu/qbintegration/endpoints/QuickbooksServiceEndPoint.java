@@ -293,7 +293,8 @@ public class QuickbooksServiceEndPoint {
 		log.setId(workTask.getId());
 		log.setXml(xml);
 		log.setEnteredTime(String.valueOf((new Date()).getTime()));
-		
+		//bug fix 10-oct-2014 - status cannot be null
+		log.setStatus(workTask.getStatus() == null ? "" : workTask.getStatus());
 		entityHandler.addEntity(tenantId, entityHandler.getTaskqueueLogEntityName(), log);
 	}
 }
