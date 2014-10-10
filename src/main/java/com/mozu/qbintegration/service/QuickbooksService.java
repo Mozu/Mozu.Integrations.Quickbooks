@@ -39,19 +39,10 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param orderId
 	 * @return
-	 */
-	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId);
-
-
-	/**
-	 * Get the order comparison data for originally posted order and updated order
-	 * 
-	 * @param tenantId
-	 * @param mozuOrderNumber
-	 * @return
 	 * @throws Exception 
 	 */
-	List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId, String mozuOrderNumber) throws Exception;
+	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId) throws Exception;
+
 	
 	/**
 	 * Get all products from the entitylist

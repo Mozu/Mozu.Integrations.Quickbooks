@@ -48,8 +48,10 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.orderCompareDetails.removeAll();
-			saveDataToTable(data);
+			ko.mapping.fromJS(data, homeViewModel.compare);
+			//homeViewModel.orderCompareDetails.removeAll();
+			//console.log(data);
+			//saveDataToTable(data);
 		},
 		error : function() {
 			$("#content").hide();
@@ -119,10 +121,17 @@ var qbItem = function(itemNumber) {
     self.selectedChoice = ko.observable();
 }
 
+var compare = {
+	postedOrder : "",
+	updatedOrder : ""
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
+	
+	self.compare = ko.mapping.fromJS(compare);
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -197,7 +206,7 @@ var homeViewModel = function() {
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 			success : function(data) {
-				console.log(data);
+				//console.log(data);
 			},
 			error : function() {
 			}
@@ -215,7 +224,7 @@ var homeViewModel = function() {
     		},
     		dataType : "json",		
     		success : function(data) {
-    			console.log(data);
+    			//console.log(data);
     			getAllProductsFromEntityList();
     		},error : function() {
     			$("#content").hide();
@@ -274,7 +283,7 @@ var homeViewModel = function() {
     	});
     	
     	$allCheckedUpdateBoxes.promise().done(function() {
-    		console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
+    		//console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
         	$.ajax({
         		url : "Orders/postUpdatedOrderToQB",
         		type : "POST",
@@ -358,35 +367,20 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			{
-				"mData" : "mozuOrderNumber"
-			}, {
-				"mData" : "quickbooksOrderListId"
+				"mData" : "orderNumber"
 			}, {
 				"mData" : "customerEmail"
 			}, {
-				"mData" : "orderDate",
-					 "mRender": function (data, type, row) {
-					   
-						 return moment(data).format("YYYY-MM-DD HH:mm:ss")
-					/* var myISODate =  new Date(data) ;
-					
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();*/
-					   }
+				"mData" : "createDate",
+				 "mRender": function (data, type, row) {
+					 return unixToHumanTime(data);
+				   }
 			}, 
 			{
-				"mData" : "orderUpdatedDate",
+				"mData" : "updatedDate",
 				"mRender": function (data, type, row) {
-					return moment(data).format("YYYY-MM-DD hh:mm a");
-				 /*var myISODate =  new Date(data) ;
-			
-				      return myISODate.getDate()+'-'+
-				      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-				      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-				      +':'+myISODate.getSeconds();*/
-				   }
+					return unixToHumanTime(data);
+				}
 			},
 			{
 				"mData" : "amount"
@@ -412,7 +406,7 @@ var homeViewModel = function() {
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
 	            {    
-            	   "mData": "mozuOrderId",
+            	   "mData": "id",
             	   "bSearchable": false,
             	   "bSortable": false,
             	   "mRender": function (data, type, full) {			
@@ -420,33 +414,23 @@ var homeViewModel = function() {
             	   }
 			    },
 			    {
-			    	"mData" : "mozuOrderNumber"
+			    	"mData" : "orderNumber"
 			    }, 
 				{
 					"mData" : "customerEmail"
 				}, 
 				{
-					"mData" : "orderDate",
+					"mData" : "createDate",
 						"mRender": function (data, type, row) {
 					   
-							var myISODate =  new Date(data) ;
-					
-						      return myISODate.getDate()+'-'+
-						      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-						      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-						      +':'+myISODate.getSeconds();
+							return unixToHumanTime(data);
 						}
 				}, 
 				{
-					"mData" : "orderUpdatedDate",
+					"mData" : "updatedDate",
 					"mRender": function (data, type, row) {
 					    	
-					 var myISODate =  new Date(data) ;
-				
-					      return myISODate.getDate()+'-'+
-					      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-					      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-					      +':'+myISODate.getSeconds();
+						return unixToHumanTime(data);
 					}
 				},
 				{
@@ -461,12 +445,12 @@ var homeViewModel = function() {
 				},
 				{    
 				   //"mData": "conflictReason",
-				    "mData": "mozuOrderNumber",
+				    "mData": "id",
 				    "bSearchable": false,
 				    "bSortable": false,
 				    "mRender": function (data, type, row) {
 				    	var dataId = data ;
-				    	return "<a href='javascript:funEdit(\"" + row.mozuOrderId + "\")'>Edit</a>";
+				    	return "<a href='javascript:funEdit(\"" + row.id + "\")'>Edit</a>";
 				   }
 				 }
 			]
@@ -487,7 +471,7 @@ var homeViewModel = function() {
 			"aoColumns" : [
 
 			            {    
-		            	   "mData": "mozuOrderId",
+		            	   "mData": "id",
 		            	   "bSearchable": false,
 		            	   "bSortable": false,
 		            	   "mRender": function (data, type, full) {			
@@ -497,33 +481,23 @@ var homeViewModel = function() {
 		            	   }
 			            },
 			            {
-			            	"mData" : "mozuOrderNumber"
+			            	"mData" : "orderNumber"
 			            }, 
 						{
 							"mData" : "customerEmail"
 						}, 
 						{
-							"mData" : "orderDate",
+							"mData" : "createDate",
 								"mRender": function (data, type, row) {
 							   
-									var myISODate =  new Date(data) ;
-							
-								      return myISODate.getDate()+'-'+
-								      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-								      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-								      +':'+myISODate.getSeconds();
+									return unixToHumanTime(data);
 								}
 						}, 
 						{
-							"mData" : "orderUpdatedDate",
+							"mData" : "updatedDate",
 							"mRender": function (data, type, row) {
 							    	
-							 var myISODate =  new Date(data) ;
-						
-							      return myISODate.getDate()+'-'+
-							      parseInt(myISODate.getMonth())+'-'+myISODate.getFullYear() 
-							      +' '+myISODate.getHours()+':'+myISODate.getMinutes()
-							      +':'+myISODate.getSeconds();
+								return unixToHumanTime(data);
 							}
 						},
 						{
@@ -531,12 +505,12 @@ var homeViewModel = function() {
 						},
 						{    
 						   //"mData": "conflictReason",
-						    "mData": "mozuOrderNumber",
+						    "mData": "id",
 						    "bSearchable": false,
 						    "bSortable": false,
 						    "mRender": function (data, type, row) {
 						    	var dataId = data ;
-						    	return "<a href='javascript:compareDetails(\"" + row.mozuOrderId + "\")'>Review</a>";
+						    	return "<a href='javascript:compareDetails(\"" + row.id + "\")'>Review</a>";
 						   }
 						}
 			]
@@ -655,6 +629,10 @@ var homeViewModel = function() {
 
 
 	self.getSettings();
+}
+
+function unixToHumanTime(data) {
+	return moment.unix(data/1000).format("YYYY-MM-DD HH:mm:ss")
 }
 
 function closeError() {
