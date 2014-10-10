@@ -540,7 +540,8 @@ public class ProductHandler {
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);*/
 			
-			qbDiscount += order.getAdjustment().getAmount();
+			
+			qbDiscount += -(order.getAdjustment().getAmount());
 			
 		}
 		
@@ -566,7 +567,7 @@ public class ProductHandler {
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);*/
 			
-			qbDiscount += order.getShippingAdjustment().getAmount();
+			qbDiscount += -(order.getShippingAdjustment().getAmount());
 		}
 		
 		if (qbDiscount != 0.0) {
