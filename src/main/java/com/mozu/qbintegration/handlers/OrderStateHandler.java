@@ -55,6 +55,9 @@ public class OrderStateHandler {
 	@Autowired
 	EntityHandler entityHandler;
 
+	private boolean orderExistsInQB = false;
+	private String conflictReason = null;
+	
 	/*
 	 * Bug fix 9-Oct-2014: Added order_delete as a state in the queue
 	 */
@@ -70,13 +73,14 @@ public class OrderStateHandler {
 			//Check if order has been processed, if not put in process Queue
 			boolean isProcessed = isOrderProcessed(tenantId, order.getId());
 			boolean isOrderInConflict = isOrderInConflict(tenantId, order.getId());
-			
-			if (isProcessed && !isOrderInConflict) { //Add to update queue
-				
-				MozuOrderDetail mozuOrderDetails = orderHandler.getOrderDetails(tenantId, order, orderingCust, "Updated", null );
-				orderHandler.updateOrderInEntityList(mozuOrderDetails, entityHandler.getOrderUpdatedEntityName(), tenantId);
-			} else if (!isOrderInProcessing(tenantId, orderId)) { //Add to queue for processing
-				transitionState(orderId, tenantId, null, "Add" );
+			boolean isOrderInProcessing = isOrderInProcessing(tenantId, orderId);
+			if (!isOrderInProcessing) {
+				if (isProcessed && !isOrderInConflict) { //Add to update queue
+					MozuOrderDetail orderDetails = orderHandler.getMozuOrderDetail(order);
+					entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetails.getId(), orderDetails);
+				} else  { //Add to queue for processing
+					transitionState(tenantId, order, orderingCust, null, "Add" );
+				}
 			}
 		}
 	}
@@ -111,7 +115,7 @@ public class OrderStateHandler {
 				status = "COMPLETED";
 			
 			if (nextStep.equalsIgnoreCase("conflict")) {
-				addToConflictQueue(tenantId, order, qbResponse, null);
+				addToConflictQueue(tenantId, order, qbResponse, conflictReason);
 				status = "COMPLETED";
 			}
 			queueManagerService.updateTask(tenantId,order.getId(), nextStep, status);
@@ -120,23 +124,15 @@ public class OrderStateHandler {
 	
 	public void retryConflicOrders(Integer tenantId,List<String> orderNumberList) throws Exception {
 		
-		for(String mozuOrderNum: orderNumberList) {
+		for(String orderId: orderNumberList) {
 			
-			String filter = (new StringBuilder()).append("mozuOrderId eq ").
-					append(mozuOrderNum).append(" and orderStatus eq CONFLICT").toString();
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, 
-					entityHandler.getOrderEntityName(), filter, "enteredTime desc", 200);
-			for(JsonNode node : nodes) { //there should be only one ever...just to cover the .001% :)
-				MozuOrderDetail conflictOrder = mapper.readValue(node.toString(), MozuOrderDetail.class);
-				conflictOrder.setOrderStatus("RETRIED");
-				entityHandler.updateEntity(tenantId, entityHandler.getOrderEntityName(), conflictOrder.getEnteredTime(), conflictOrder);
-				logger.debug("Updated order number: " + mozuOrderNum + " to RETRIED for tenant ID: " + tenantId);
-				
-				deleteConfictEntities(tenantId,conflictOrder.getMozuOrderId());
-			}
-			
-			processOrder(mozuOrderNum, new MozuApiContext(tenantId));
-			logger.debug("Slotted conflicted order for retry with order number: " + mozuOrderNum + " for tenant: " + tenantId);
+			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderId);
+			if (node == null) continue;
+			MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
+			transitionState(orderId, tenantId, null, (orderDetail.isExistsInQb() ? "Update" : "Add") );
+			deleteConfictEntities(tenantId,orderId);
+			entityHandler.deleteEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderId);
+			logger.debug("Slotted conflicted order for retry with order number: " + orderId + " for tenant: " + tenantId);
 		}
 
 		logger.debug("Slotted all conflicted orders for retry for tenant: " + tenantId);
@@ -144,21 +140,18 @@ public class OrderStateHandler {
 		
 	public void addUpdatesToQueue(List<String> orderNumberList,Integer tenantId) throws Exception {
 		
-		for(String mozuOrderNum: orderNumberList) {
-			transitionState(mozuOrderNum, tenantId, null, "Update");
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderUpdatedEntityName(), "mozuOrderId eq "+mozuOrderNum);
-			for(JsonNode node : nodes) {
-				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
-				entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetail.getEnteredTime());
-			}
-			logger.debug("Slotted an order update task for mozu order number: " + mozuOrderNum);
+		for(String orderId: orderNumberList) {
+			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
+			if (node == null) continue;
+			transitionState(orderId, tenantId, null, "Update");		
+			entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
+			logger.debug("Slotted an order update task for mozu order number: " + orderId);
 		}
 		
 	}
 
 	public void addToConflictQueue(Integer tenantId, Order order, String qbResponse, String error) throws Exception {
-		MozuOrderDetail orderDetails = orderHandler.getOrderDetails(tenantId, order.getId(), "CONFLICT", null);
-		
+		MozuOrderDetail orderDetails = orderHandler.getMozuOrderDetail(order);
 		
 		if (StringUtils.isNotEmpty(qbResponse)) {
 			// Make entry in conflict reason table
@@ -174,22 +167,19 @@ public class OrderStateHandler {
 					ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
 					
 					if (500 == itemSearchResponse.getStatusCode().intValue()&& "warn".equalsIgnoreCase(itemSearchResponse.getStatusSeverity())) {
-						OrderConflictDetail conflictDetail = new OrderConflictDetail();
-						conflictDetail.setMozuOrderNumber(String.valueOf(order.getOrderNumber()));
-						conflictDetail.setNatureOfConflict("Not Found");
 						for(MozuOrderItem mzOrderItem : productCodes) {
 							if (itemSearchResponse.getStatusMessage().toLowerCase().contains(mzOrderItem.getProductCode().toLowerCase())) {
+								OrderConflictDetail conflictDetail = new OrderConflictDetail();
+								conflictDetail.setNatureOfConflict("Not Found");
 								conflictDetail.setDataToFix(mzOrderItem.getProductCode());
+								conflictDetail.setId(order.getId()+"-"+mzOrderItem.getProductCode());
+								conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
+								conflictDetail.setOrderId(order.getId());
+								entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictDetailEntityName(), conflictDetail.getId(), conflictDetail);
+								logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
 								break;
 							}
 						}
-						
-						conflictDetail.setConflictReason(itemSearchResponse.getStatusMessage());
-				
-						conflictDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-						conflictDetail.setMozuOrderId(order.getId());
-						entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), conflictDetail.getEnteredTime(), conflictDetail);
-						logger.debug("Saved conflict for: "+ itemSearchResponse.getStatusMessage());
 					}
 				}
 				
@@ -204,20 +194,15 @@ public class OrderStateHandler {
 				CustomerAddRsType custAddRsType = (CustomerAddRsType)object;
 				orderDetails.setConflictReason(custAddRsType.getStatusMessage());
 			} 
-		} else
+		} 
+		if (StringUtils.isEmpty(orderDetails.getConflictReason()))
 			orderDetails.setConflictReason(error);
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "mozuOrderId eq "+order.getId()+" and orderStatus eq CONFLICT");
-		String id = orderDetails.getEnteredTime();
-		if (nodes.size() > 0) {
-			MozuOrderDetail updateOrderDetail = mapper.readValue(nodes.get(0).toString(), MozuOrderDetail.class);
-			id = updateOrderDetail.getEnteredTime();
-			orderDetails.setEnteredTime(id);
-		}
-		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), id, orderDetails);
+		
+		orderDetails.setExistsInQb(this.orderExistsInQB);
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderDetails.getId(), orderDetails);
 	}
 	
-	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, 
-			boolean queryResult, String action) throws Exception {
+	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, boolean queryResult, String action) throws Exception {
 		
 		if (currentStep.equalsIgnoreCase("cust_query") && !queryResult)
 			return "CUST_ADD";
@@ -228,7 +213,13 @@ public class OrderStateHandler {
 			return "CUST_QUERY";
 		} else if (!allItemsFound(tenantId, order)) {
 			return "ITEM_QUERY";
-		} else if ("Update".equalsIgnoreCase(action)) {
+		} if (currentStep.equalsIgnoreCase("order_query") && action.equalsIgnoreCase("add") && this.orderExistsInQB) {
+			this.conflictReason = "Order Already exists in QB";
+			return "CONFLICT";
+		}
+		else if ((action.equalsIgnoreCase("update") || action.equalsIgnoreCase("add"))  && !currentStep.equalsIgnoreCase("order_query")) 
+				return "ORDER_QUERY";
+		else if ("Update".equalsIgnoreCase(action) && this.orderExistsInQB) {
 			return "ORDER_UPDATE";
 		} else if ("Add".equalsIgnoreCase(action)){
 			return "ORDER_ADD";
@@ -255,7 +246,7 @@ public class OrderStateHandler {
 	private boolean isOrderInProcessing(Integer tenantId, String orderId) throws Exception {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
 		try {
-			JsonNode node = entityResource.getEntity(entityHandler.getOrderEntityName(), orderId);
+			JsonNode node = entityResource.getEntity(entityHandler.getTaskqueueEntityName(), orderId);
 			return node != null;
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
@@ -269,8 +260,8 @@ public class OrderStateHandler {
 	
 	private boolean isOrderProcessed(Integer tenantId,  String orderId) throws Exception {
 		
-		String filterCriteria = "mozuOrderId eq "+orderId+" and orderStatus eq POSTED";
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), filterCriteria );
+		String filterCriteria = "id eq "+orderId;
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderPostedEntityName(), filterCriteria );
 		
 		return nodes.size() > 0;
 		
@@ -278,11 +269,12 @@ public class OrderStateHandler {
 	
 	private boolean isOrderInConflict(Integer tenantId, String orderId) throws Exception {
 		
-		String filterCriteria = "mozuOrderId eq "+orderId+" and orderStatus eq CONFLICT";
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), filterCriteria );
+		String filterCriteria = "id eq "+orderId;
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderConflictEntityName(), filterCriteria );
 		
 		return nodes.size() > 0;
 	}	
+
 
 	private boolean processCurrentStep(Integer tenantId, Order order,CustomerAccount custAcct, String currentStep, String qbResponse) throws Exception {
 
@@ -299,13 +291,16 @@ public class OrderStateHandler {
 				return orderHandler.processOrderDelete(tenantId, order.getId(),qbResponse);
 			case "item_query":
 				return productHandler.processItemQuery(tenantId,qbResponse);
+			case "order_query":
+				orderExistsInQB = orderHandler.processOrderQuery(tenantId, order.getId(), qbResponse);
+				return orderExistsInQB;
 			default:
 				throw new Exception("Not supported");
 		}
 	}
 
 	private void deleteConflictOrders(Integer tenantId, String orderId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderEntityName(), "orderStatus eq CONFLICT");
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderConflictEntityName(), "id eq "+orderId);
 		
 		for(JsonNode jNode : nodes) {
 			String id =  jNode.findValue("enteredTime").asText();
@@ -315,10 +310,10 @@ public class OrderStateHandler {
 	}
 	
 	private void deleteConfictEntities(Integer tenantId, String orderId) throws Exception {
-		List<JsonNode> conflictNodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderConflictEntityName(), "mozuOrderId eq "+orderId, null, 200);
+		List<JsonNode> conflictNodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderConflictDetailEntityName(), "orderId eq "+orderId, null, 200);
 		for(JsonNode conflictNode : conflictNodes) {
-			String id =  conflictNode.findValue("enteredTime").asText();
-			entityHandler.deleteEntity(tenantId, entityHandler.getOrderConflictEntityName(), id);
+			String id =  conflictNode.findValue("id").asText();
+			entityHandler.deleteEntity(tenantId, entityHandler.getOrderConflictDetailEntityName(), id);
 		}
 	}
 	

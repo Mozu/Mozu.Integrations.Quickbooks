@@ -14,6 +14,7 @@ import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -50,8 +51,11 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		//final Integer siteId = apiContext.getSiteId();
 		try {
 			//Get it in only if User wants to process cancelled orders
-			if(quickbooksService.getSettingsFromEntityList(tenantId).getCancelled()) { 
+			GeneralSettings setting = quickbooksService.getSettingsFromEntityList(tenantId);
+			if(setting.getCancelled() != null && setting.getCancelled()) { 
 				orderStateHandler.deleteOrder(event.getEntityId(), tenantId);
+			}else {
+				logger.error("Skipping event "+event.getTopic()+" for "+event.getEntityId()+", user not interested");
 			}
 		} catch (Exception e) {
 			logger.error("Exception while processing order cancelled, tenantID: "+ tenantId + " exception:"	+ e.getMessage(), e);
@@ -76,15 +80,15 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	public EventHandlerStatus opened(final ApiContext apiContext, Event event) {
 		EventHandlerStatus status = new EventHandlerStatus(HttpStatus.SC_OK);
 		final Integer tenantId = apiContext.getTenantId();
-		final Integer siteId = apiContext.getSiteId();
 		try {
-			//quickbooksService.saveOrderInQuickbooks(event.getEntityId(),  tenantId);
-			//Get it in only if User wants to process accepted orders
-			if(quickbooksService.getSettingsFromEntityList(tenantId).getAccepted()) {
+			GeneralSettings setting = quickbooksService.getSettingsFromEntityList(tenantId);
+			if(setting.getAccepted() != null && setting.getAccepted()) {
 				orderStateHandler.processOrder(event.getEntityId(), apiContext);
+			} else {
+				logger.error("Skipping event "+event.getTopic()+" for "+event.getEntityId()+", user not interested");
 			}
 		} catch (Exception e) {
-			logger.error("Exception while processing customer oepned, tenantID: "+ tenantId + " Site Id : " + siteId, " exception:"	+ e.getMessage(), e);
+			logger.error("Exception while processing order oepned, tenantID: "+ tenantId + " exception:"	+ e.getMessage(), e);
 			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);
 		}
 					

@@ -36,6 +36,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemDiscountRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAssemblyRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
@@ -127,8 +128,12 @@ public class ProductHandler {
 				ItemDiscountRet itemInvRet = (ItemDiscountRet) object;
 				productName =  itemInvRet.getFullName();
 				productQbListID = itemInvRet.getName();
+			}else if (object instanceof ItemInventoryAssemblyRet) {
+				ItemInventoryAssemblyRet itemInvRet = (ItemInventoryAssemblyRet) object;
+				productName =  itemInvRet.getFullName();
+				productQbListID = itemInvRet.getName();
 			} else
-				continue;
+				throw new Exception(object.getClass() +" not supported");
 			MozuProduct mozuProduct = new MozuProduct();
 			mozuProduct.setProductCode(productName);
 			mozuProduct.setQbProductListID(productQbListID);
@@ -361,7 +366,7 @@ public class ProductHandler {
 		for(MozuOrderItem orderItem : productCodes) {
 			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
 				continue;
-			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate queries
+			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate query
 				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
 				itemQueryRqType.getFullName().add(orderItem.getProductCode());	
 				itemQueryRqType.setRequestID(order.getId());
@@ -446,11 +451,9 @@ public class ProductHandler {
 				mzItem.setQbItemCode(this.getQBId(tenantId, productCode));
 			
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				mzItem.setAmount(item.getUnitPrice().getSaleAmount()
-						* item.getQuantity());
+				mzItem.setAmount(item.getUnitPrice().getSaleAmount());
 			} else {
-				mzItem.setAmount(item.getUnitPrice().getListAmount()
-						* item.getQuantity());
+				mzItem.setAmount(item.getUnitPrice().getListAmount());
 			}
 			
 			mzItem.setQty(item.getQuantity());
@@ -519,17 +522,17 @@ public class ProductHandler {
 			
 		}
 		
-		/*if (StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && order.getShippingDiscounts() != null) {
 			for(ShippingDiscount discount : order.getShippingDiscounts()) {
 				MozuOrderItem mzItem = new MozuOrderItem();
 				mzItem.setProductCode(settings.getDiscountProductCode());
 				mzItem.setQbItemCode(qbDiscProductCode);
 				mzItem.setDescription(discount.getDiscount().getDiscount().getName());
-				mzItem.setAmount(discount.getDiscount().);
+				mzItem.setAmount(discount.getDiscount().getImpact());
 				mzItem.setMisc(true);
 				productCodes.add(mzItem);
 			}
-		}*/
+		}
 
 		if (order.getShippingAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
@@ -540,8 +543,6 @@ public class ProductHandler {
 			mzItem.setMisc(true);
 			productCodes.add(mzItem);
 		}
-		
-		
 		
 		return productCodes;
 	}

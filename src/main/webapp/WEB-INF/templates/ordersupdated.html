@@ -48,28 +48,14 @@
 			</div>
 			
 			<div class="row">
-				<div class="tab-full-column">
-					<table id="compareDisplay" width="100%" class="display">
-						<thead>
-							<tr>
-								<th>Parameter</th>
-								<th>Posted Order</th>
-								<th>Updated Order</th>
-							</tr>
-						</thead>
-						<tbody data-bind="foreach: orderCompareDetails">
-					        <tr>
-					        	<td data-bind="text: parameter"></td>
-					            <td data-bind="text: postedOrderDetail"></td>
-					            <td data-bind="text: updatedOrderDetail"></td>
-					        </tr>
-					    </tbody>
-					</table>
+				<div class="tab-first-column" data-bind="with: compare.postedOrder">
+					<h3>Posted Order</h3>
+					<div data-bind="text: subTotal" ></div>
 				</div>
-			</div>
-			
-			<div class="row">
-				<div class="tab-full-column" style="margin-top:10px;"></div>
+				<div class="tab-second-column" data-bind="with: compare.updatedOrder">
+					<h3>New Order</h3>
+					<div data-bind="text: subTotal" ></div>
+				</div>
 			</div>
 			
 		</div>
