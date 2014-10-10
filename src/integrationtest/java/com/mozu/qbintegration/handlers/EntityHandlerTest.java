@@ -68,7 +68,7 @@ public class EntityHandlerTest {
 		try {
 			runCleanup(entityHandler.getOrderEntityName(), "enteredTime");
 			runCleanup(entityHandler.getTaskqueueEntityName(), "id");
-			//runCleanup(entityHandler.getTaskqueueLogEntityName(), "id");
+			runCleanup(entityHandler.getTaskqueueLogEntityName(), "id");
 			runCleanup(entityHandler.getOrderConflictEntityName(), "enteredTime");
 			runCleanup(entityHandler.getOrderUpdatedEntityName(), "enteredTime");
 			runCleanup(entityHandler.getCustomerEntityName(), "custEmail");

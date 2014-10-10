@@ -15,19 +15,42 @@
 		<div class="row">
 			<div class="tab-full-column">
 				<div><label th:text="#{label.downloadtext}"></label></div>
-	
-				<div class="tab-checkbox-container">
-					<input type="checkbox" class="orderfilter" id="acceptedCb" data-bind="checked: settings.accepted"></input>
-					<label th:text="#{label.accepted}"></label>
-				</div>
-				<div class="tab-checkbox-container">
-					<input type="checkbox" class="orderfilter" id="completedCb"  data-bind="checked: settings.completed"></input>
-					<label th:text="#{label.completed}"></label>
-				</div>
-				<div class="tab-checkbox-container">
-					<input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"></input>
-					<label th:text="#{label.cancelled}"></label>
-				</div>
+				
+				<table>
+					<tr>
+						<td>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="acceptedCb" data-bind="checked: settings.accepted"></input>
+								<label th:text="#{label.accepted}"></label>
+							</div>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="completedCb"  data-bind="checked: settings.completed"></input>
+								<label th:text="#{label.completed}"></label>
+							</div>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="cancelledCb"  data-bind="checked: settings.cancelled"></input>
+								<label th:text="#{label.cancelled}"></label>
+							</div>
+						</td>
+						<td style="padding-left:30px;"></td>
+						<td>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="paidCb" data-bind="checked: settings.paid"></input>
+								<label th:text="#{label.paid}"></label>
+							</div>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="fulFilledCb"  data-bind="checked: settings.fulFilled"></input>
+								<label th:text="#{label.fulfilled}"></label>
+							</div>
+							<div class="tab-checkbox-container">
+								<input type="checkbox" class="orderfilter" id="updatedCb"  data-bind="checked: settings.updated"></input>
+								<label th:text="#{label.updated}"></label>
+							</div>
+						</td>
+					</tr>
+					
+				</table>
+
 			</div>
 		</div>
 		
