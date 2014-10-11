@@ -25,6 +25,7 @@ import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.handlers.ProductHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.WorkTaskLog;
 import com.mozu.qbintegration.service.QueueManagerService;
@@ -86,6 +87,9 @@ public class QuickbooksServiceEndPoint {
 	
 	@Autowired
 	OrderStateHandler orderStateHandler;
+	
+	@Autowired
+	QBDataHandler qbDataHandler;
 	
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 
@@ -225,6 +229,9 @@ public class QuickbooksServiceEndPoint {
 					else if (workTask.getAction().equalsIgnoreCase("refresh"))
 						productHandler.processItemQueryAll(tenantId, workTask,responseXML.getResponse());
 					break;
+				case "datasync":
+					queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "COMPLETED");
+					break;
 				default:
 					throw new Exception("Not supported");
 
@@ -294,12 +301,23 @@ public class QuickbooksServiceEndPoint {
 				default:
 					throw new Exception("Not supported");
 			}
-		} else {
+		} else if (workTask.getType().equalsIgnoreCase("product")){
 			switch(workTask.getAction().toLowerCase()) {
 				case "add":
 					return productHandler.getQBProductSaveXML(tenantId, workTask.getId());
 				case "refresh":
 					return productHandler.getAllQBProductsGetXML(tenantId);
+				default:
+					throw new Exception("Not supported");
+			}
+		} else {
+			switch(workTask.getAction().toLowerCase()) {
+				case "getaccounts":
+					return qbDataHandler.getAccountQueryXml();
+				case "getvendors":
+					return qbDataHandler.getVendorQueryXml();
+				case "getsalestaxcodes":
+					return qbDataHandler.getSalesTaxCodeQueryXml();
 				default:
 					throw new Exception("Not supported");
 			}
