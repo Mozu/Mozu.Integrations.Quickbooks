@@ -51,9 +51,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 
 
-	@Autowired 
-	OrderHandler orderHandler;
-	
 	@Autowired
 	EntityHandler entityHandler;
 	

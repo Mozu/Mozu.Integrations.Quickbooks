@@ -9,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.mozu.api.ApiContext;
+import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.event.Event;
 import com.mozu.api.events.EventManager;
 import com.mozu.api.events.handlers.OrderEventHandler;
 import com.mozu.api.events.model.EventHandlerStatus;
+import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.service.QueueManagerService;
@@ -26,9 +28,12 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 	@Autowired
 	private QuickbooksService quickbooksService;
 	
-	@Autowired
+	/*@Autowired
 	private QueueManagerService queueManagerService;
-
+*/
+	@Autowired
+	private OrderHandler orderHandler;
+	
 	@Autowired
 	private OrderStateHandler orderStateHandler;
 	
@@ -106,8 +111,15 @@ public class OrderEventHandlerImpl implements OrderEventHandler {
 		final Integer tenantId = apiContext.getTenantId();
 		final String orderId = event.getEntityId();
 		try {
-			orderStateHandler.processOrder(orderId, apiContext);
-			status = new EventHandlerStatus(HttpStatus.SC_OK);
+			GeneralSettings setting = quickbooksService.getSettingsFromEntityList(tenantId);
+			Order order = orderHandler.getOrder(orderId, tenantId);
+			if (order.getPaymentStatus().equalsIgnoreCase("paid") && setting.getPaid() ||
+				order.getFulfillmentStatus().equalsIgnoreCase("fulfilled") && setting.getFulFilled() ||
+				order.getStatus().equalsIgnoreCase("completed") && setting.getCompleted() ||
+				setting.getUpdated())
+				orderStateHandler.processOrder(orderId, apiContext);
+			else
+				logger.error("Skipping event "+event.getTopic()+" for "+event.getEntityId()+", user not interested");
 		} catch (Exception e) {
 			logger.error("Exception while processing customer update, tenantID: "+ tenantId + ", exception:"	+ e.getMessage(), e);
 			status = new EventHandlerStatus(e.getMessage(),	HttpStatus.SC_INTERNAL_SERVER_ERROR);

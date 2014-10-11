@@ -88,7 +88,7 @@ public class OrderStateHandler {
 	public void transitionState(String orderId, Integer tenantId, String qbResponse, String action) throws Exception {
 		Order order = orderHandler.getOrder(orderId, tenantId);
 		final CustomerAccount orderingCust = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
-		
+		action = (order.getStatus().equalsIgnoreCase("cancelled") ? "cancel" : action);
 		transitionState(tenantId,order, orderingCust, qbResponse, action);
 	}
 	

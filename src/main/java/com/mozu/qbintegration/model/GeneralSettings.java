@@ -11,16 +11,29 @@ public class GeneralSettings {
 	
 	private String qbPassword;
 	
-	private Boolean accepted;
+	private Boolean accepted = false;
 	
-	private Boolean completed;
+	private Boolean completed = false;
 	
-	private Boolean cancelled;
+	private Boolean cancelled = false;
 
+	private Boolean paid = false;
+	
+	private Boolean fulFilled = false;
+	
+	private Boolean updated = false;
+	
 	private String shippingProductCode;
 	
 	private String discountProductCode;
 	
+	private String giftCardProductCode;
+	
+	private String orderSalesTaxCode;
+	
+	private String orderNonSalesTaxCode;
+	
+	private String qbwFile;
 	/**
 	 * @return the wsURL
 	 */
@@ -135,6 +148,63 @@ public class GeneralSettings {
 	public void setDiscountProductCode(String discountProductCode) {
 		this.discountProductCode = discountProductCode;
 	}
+
+	public Boolean getPaid() {
+		return paid;
+	}
+
+	public void setPaid(Boolean paid) {
+		this.paid = paid;
+	}
+
+	public Boolean getFulFilled() {
+		return fulFilled;
+	}
+
+	public void setFulFilled(Boolean fulFilled) {
+		this.fulFilled = fulFilled;
+	}
+
+	public Boolean getUpdated() {
+		return updated;
+	}
+
+	public void setUpdated(Boolean updated) {
+		this.updated = updated;
+	}
+
+	public String getQbwFile() {
+		return qbwFile;
+	}
+
+	public void setQbwFile(String qbwFile) {
+		this.qbwFile = qbwFile;
+	}
+
+	public String getGiftCardProductCode() {
+		return giftCardProductCode;
+	}
+
+	public void setGiftCardProductCode(String giftCardProductCode) {
+		this.giftCardProductCode = giftCardProductCode;
+	}
+
+	public String getOrderSalesTaxCode() {
+		return orderSalesTaxCode;
+	}
+
+	public void setOrderSalesTaxCode(String orderSalesTaxCode) {
+		this.orderSalesTaxCode = orderSalesTaxCode;
+	}
+
+	public String getOrderNonSalesTaxCode() {
+		return orderNonSalesTaxCode;
+	}
+
+	public void setOrderNonSalesTaxCode(String orderNonSalesTaxCode) {
+		this.orderNonSalesTaxCode = orderNonSalesTaxCode;
+	}
+	
 	
 	
 }

@@ -54,6 +54,7 @@ public class MozuOrderDetail {
 	private String conflictReason;
 	
 	private boolean existsInQb;
+	
 	/**
 	 * 
 	 */
