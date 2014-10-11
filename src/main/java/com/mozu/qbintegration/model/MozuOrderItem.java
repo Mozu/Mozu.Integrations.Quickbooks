@@ -42,7 +42,9 @@ public class MozuOrderItem {
 	
 	
 	public double getTotalAmount() {
-		return this.amount * this.qty;
+		if (qty != null)
+			return this.amount * this.qty;
+		else return this.amount;
 	}
 	public String getDescription() {
 		return description;

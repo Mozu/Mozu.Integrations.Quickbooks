@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
+import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
@@ -94,9 +95,7 @@ public class OrderHandler {
 		return order;
 	}
 
-		
-	
-	
+
 	public boolean processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
 		QBXML orderAddResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
 		SalesReceiptAddRsType salesOrderResponse = (SalesReceiptAddRsType) orderAddResp
@@ -319,24 +318,24 @@ public class OrderHandler {
 		
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		NumberFormat numberFormat = new DecimalFormat("#.00");
-		//Double productDiscounts = 0.0;
 		for (MozuOrderItem item : orderItems) {
-			if (item.isMic()) {
-				addSOAddLineItemAmount(salesReceiptAdd, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
-			} else {
-				ItemRef itemRef = new ItemRef();
-				itemRef.setListID(item.getQbItemCode());
-				SalesReceiptLineAdd salesReceiptLineAdd = new SalesReceiptLineAdd();
-				salesReceiptLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
-				salesReceiptLineAdd.setItemRef(itemRef);
-				salesReceiptLineAdd.setDesc(item.getDescription());
-				salesReceiptLineAdd.setQuantity(item.getQty().toString());
-				
-				salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
-				
-				salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
-			}
+		
+			ItemRef itemRef = new ItemRef();
+			SalesReceiptLineAdd salesReceiptLineAdd = new SalesReceiptLineAdd();
+			salesReceiptLineAdd.setAmount(numberFormat.format(item.getTotalAmount()));
 			
+			if (!item.isMic()) {
+				itemRef.setListID(item.getQbItemCode());
+				salesReceiptLineAdd.setQuantity(item.getQty().toString());
+			} else
+				itemRef.setFullName(item.getProductCode());
+			
+			salesReceiptLineAdd.setItemRef(itemRef);
+			salesReceiptLineAdd.setDesc(item.getDescription());
+			
+			salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			
+			salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 		}
 
 		return XMLHelper.getMarshalledValue(qbxml);
@@ -371,6 +370,12 @@ public class OrderHandler {
 		
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
+		
+		if (order.getIsTaxExempt()) {
+			CustomerSalesTaxCodeRef customerSalesTaxCodeRef = new CustomerSalesTaxCodeRef();
+			customerSalesTaxCodeRef.setFullName("Non");
+			salesReceiptmod.setCustomerSalesTaxCodeRef(customerSalesTaxCodeRef);
+		}
 		salesReceiptmod.setCustomerRef(customerRef);
 		
 		TxnID txnId = new TxnID();
@@ -387,58 +392,36 @@ public class OrderHandler {
 		NumberFormat numberFormat = new DecimalFormat("#.00");
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, true);
 		for (MozuOrderItem item : orderItems) {
-			if (item.isMic()) {
-				addSOModLineItemAmount(salesReceiptmod, numberFormat.format(item.getAmount()), item.getQbItemCode(), item.getDescription());
-			} else {
-				ItemRef itemRef = new ItemRef();
-				itemRef.setListID(item.getQbItemCode());
-				SalesReceiptLineMod salesReceiptLineMod = new SalesReceiptLineMod();
-				
-				if( salesReceiptRet.getOrderLines() != null) {
-					for(QuickBooksSavedOrderLine qbItem: salesReceiptRet.getOrderLines()) {
-						if(item.getProductCode().equalsIgnoreCase(qbItem.getFullName())) {
-							TxnLineID txnLineId = new TxnLineID();
-							txnLineId.setValue(qbItem.getTxnLineId());
-							salesReceiptLineMod.setTxnLineID(txnLineId );
-						}
+			TxnLineID txnLineId = new TxnLineID();
+			if( salesReceiptRet.getOrderLines() != null) {
+				for(QuickBooksSavedOrderLine qbItem: salesReceiptRet.getOrderLines()) {
+					if(item.getProductCode().equalsIgnoreCase(qbItem.getFullName())) {
+						txnLineId.setValue(qbItem.getTxnLineId());
 					}
 				}
 				
-				salesReceiptLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
-				salesReceiptLineMod.setQuantity(item.getQty().toString());
-				salesReceiptLineMod.setDesc(item.getDescription());
-				salesReceiptLineMod.setItemRef(itemRef);
-				salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
-				salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
-
+				if (StringUtils.isEmpty(txnLineId.getValue()))
+					txnLineId.setValue("-1");
 			}
+			ItemRef itemRef = new ItemRef();
+
+			SalesReceiptLineMod salesReceiptLineMod = new SalesReceiptLineMod();
+			salesReceiptLineMod.setTxnLineID(txnLineId);
+			salesReceiptLineMod.setAmount(numberFormat.format(item.getTotalAmount()));
+			if (!item.isMic()) {
+				itemRef.setListID(item.getQbItemCode());
+				salesReceiptLineMod.setQuantity(item.getQty().toString());
+			} else
+				itemRef.setFullName(item.getProductCode());
+
+			salesReceiptLineMod.setDesc(item.getDescription());
+			salesReceiptLineMod.setItemRef(itemRef);
+			salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
 		}
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
 
-	private void addSOAddLineItemAmount(SalesReceiptAdd salesOrderAdd, String amount, String fieldName, String descrption) {
-		SalesReceiptLineAdd salesReceiptLineAdd = new SalesReceiptLineAdd();
-		salesReceiptLineAdd.setAmount(amount);
-		ItemRef itemRef = new ItemRef();
-		itemRef.setFullName(fieldName);
-		salesReceiptLineAdd.setDesc(descrption);
-		salesReceiptLineAdd.setItemRef(itemRef);
-		salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef("Non"));
-		salesOrderAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
-	}
-	
-	private void addSOModLineItemAmount(SalesReceiptMod salesOrdermod, String amount, String fieldName, String descrption) {
-		SalesReceiptLineMod salesReceiptLineMod = new SalesReceiptLineMod();
-		salesReceiptLineMod.setAmount(amount);
-		ItemRef itemRef = new ItemRef();
-		itemRef.setFullName(fieldName);
-		salesReceiptLineMod.setItemRef(itemRef);
-		
-		salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef("Non"));
-
-		salesReceiptLineMod.setDesc(descrption);
-		salesOrdermod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
-	}
 	
 	private SalesTaxCodeRef getSalesTaxCodeRef(String taxCode) {
 		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();
@@ -458,15 +441,18 @@ public class OrderHandler {
 		return itemSalesTaxRef;
 	}
 	
+	
 	private PaymentMethodRef getPayment(Order order) {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
-		if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
-			paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
+		for(Payment payment : order.getPayments()) {
+			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
+			if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
+				paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
+			}
+			else {
+				paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
+			}
 		}
-		else {
-			paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
-		}
-		
 		return paymentRef;
 	}
 	

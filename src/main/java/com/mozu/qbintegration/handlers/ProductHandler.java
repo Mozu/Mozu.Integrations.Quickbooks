@@ -500,6 +500,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingProductCode);
 			mzItem.setAmount(order.getShippingSubTotal());
 			mzItem.setMisc(true);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
@@ -532,6 +533,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
