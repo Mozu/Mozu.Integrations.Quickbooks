@@ -3,13 +3,7 @@
  */
 package com.mozu.qbintegration.model;
 
-import java.util.List;
-
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mozu.api.contracts.core.Address;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 
 /**
  * @author Akshay

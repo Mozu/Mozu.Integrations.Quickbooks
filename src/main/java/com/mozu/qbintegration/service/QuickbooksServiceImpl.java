@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.contracts.mzdb.EntityContainer;
 import com.mozu.api.contracts.mzdb.EntityContainerCollection;
@@ -29,13 +27,10 @@ import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.base.utils.ApplicationUtils;
 import com.mozu.qbintegration.handlers.EntityHandler;
-import com.mozu.qbintegration.handlers.OrderHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
-import com.mozu.qbintegration.model.QuickBooksOrder;
 import com.mozu.qbintegration.model.SubnavLink;
 
 /**
@@ -49,10 +44,11 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
 
-
-
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	private QBDataHandler qbDataHandler;
 	
 	public QuickbooksServiceImpl() {
 
@@ -80,12 +76,15 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			}
 		}
 
-		JsonNode custNode = mapper.valueToTree(generalSettings);
+		JsonNode settingsNode = mapper.valueToTree(generalSettings);
 		try {
 			if (!isUpdate) { // insert scenario.
-				custNode = entityResource.insertEntity(custNode, mapName);
+				settingsNode = entityResource.insertEntity(settingsNode, mapName);
+				
+				//Akshay 11-Oct-2014 added Account, Vendor and sales tax cod setup data fetch tasks to queue.
+				configureInitialSetupData(tenantId);
 			} else {
-				custNode = entityResource.updateEntity(custNode, mapName,generalSettings.getId());
+				settingsNode = entityResource.updateEntity(settingsNode, mapName,generalSettings.getId());
 			}
 
 			Application application = ApplicationUtils.setApplicationToInitialized(context);
@@ -97,6 +96,43 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		return generalSettings;
 	}
+
+	/**
+	 * Pull all available Accounts, Vendors and Sales Tax codes from QB and save
+	 * while saving for the first time. Subsequent updates happen with the help
+	 * of on demand buttons.
+	 * 
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	private void configureInitialSetupData(Integer tenantId) throws Exception {
+		//Account setup
+		initiateAccountsRefresh(tenantId);
+		
+		//Vendor setup
+		initiateVendorRefresh(tenantId);
+		
+		//Sales Tax 
+		initiateSalesTaxRefresh(tenantId);
+	}
+	
+	@Override
+	public void initiateAccountsRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateAccountDataFetch(tenantId);
+	}
+
+
+	@Override
+	public void initiateVendorRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateVendorDataFetch(tenantId);
+	}
+
+
+	@Override
+	public void initiateSalesTaxRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateSalesTaxDataFetch(tenantId);
+	}
+
 
 	@Override
 	public GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception {
@@ -265,6 +301,5 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		}
 		return mozuProductList;
 	}
-
 
 }

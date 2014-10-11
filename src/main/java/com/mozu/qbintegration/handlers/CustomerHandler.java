@@ -105,7 +105,9 @@ public class CustomerHandler {
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
 				.add(customerQueryRqType);
 
-		customerQueryRqType.getFullName().add(cust.getFirstName() + " "+ cust.getLastName());
+		//customerQueryRqType.getFullName().add(cust.getFirstName() + " "+ cust.getLastName());
+		//Akshay 11-oct-2014 - use email address for full name
+		customerQueryRqType.getFullName().add(cust.getEmailAddress());
 
 		return XMLHelper.getMarshalledValue(qbXML);
 	}
@@ -129,7 +131,11 @@ public class CustomerHandler {
 		qbXMCustomerAddType.setFirstName(cust.getFirstName());
 		qbXMCustomerAddType.setLastName(cust.getLastName());
 		qbXMCustomerAddType.setMiddleName("");
-		qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
+		
+		//qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
+		//Akshay 11-Oct-2014 Use email for full name
+		qbXMCustomerAddType.setName(cust.getEmailAddress());
+		
 		qbXMCustomerAddType.setPhone(cust.getContacts().get(0).getPhoneNumbers().getMobile());
 		qbXMCustomerAddType.setEmail(cust.getEmailAddress());
 		qbXMCustomerAddType.setContact("Self");

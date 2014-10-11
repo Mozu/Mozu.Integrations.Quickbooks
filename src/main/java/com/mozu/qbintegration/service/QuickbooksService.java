@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
 
 /**
@@ -50,6 +49,22 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	public List<MozuProduct> getMozuProductList(Integer tenantId);
+
+	/**
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	void initiateAccountsRefresh(Integer tenantId) throws Exception;
+
+	/**
+	 * @param tenantId
+	 */
+	void initiateVendorRefresh(Integer tenantId) throws Exception;
+
+	/**
+	 * @param tenantId
+	 */
+	void initiateSalesTaxRefresh(Integer tenantId) throws Exception;
 	
 
 }

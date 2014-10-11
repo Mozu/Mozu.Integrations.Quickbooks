@@ -35,16 +35,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemSalesTaxRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.PaymentMethodRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAdd;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineAdd;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineMod;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderLineRet;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderMod;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRqType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderQueryRsType;
-import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesReceiptLineAdd;
@@ -247,7 +237,7 @@ public class OrderHandler {
 		
 		try {
 			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityName, null, orderBy +" desc", null);
-			if (nodes.size() > 0) {
+			if (nodes != null && nodes.size() > 0) {
 				for (JsonNode node : nodes) {
 					mozuOrders.add(mapper.readValue(node.toString(), MozuOrderDetail.class));
 				}
@@ -266,7 +256,7 @@ public class OrderHandler {
 		
 		qbxmlMsgsRq.setOnError("stopOnError");
 		
-		SalesReceiptQueryRqType  salesOrderQueryRqType = new SalesReceiptQueryRqType();
+		SalesReceiptQueryRqType salesOrderQueryRqType = new SalesReceiptQueryRqType();
 		salesOrderQueryRqType.setRequestID(order.getId());
 		
 		salesOrderQueryRqType.setIncludeLineItems("true");
