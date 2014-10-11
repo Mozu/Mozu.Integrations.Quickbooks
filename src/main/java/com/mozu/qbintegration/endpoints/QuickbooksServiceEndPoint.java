@@ -230,7 +230,7 @@ public class QuickbooksServiceEndPoint {
 						productHandler.processItemQueryAll(tenantId, workTask,responseXML.getResponse());
 					break;
 				case "datasync":
-					queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "COMPLETED");
+					qbDataHandler.processResponseXml(tenantId, workTask, responseXML.getResponse());
 					break;
 				default:
 					throw new Exception("Not supported");
@@ -310,17 +310,8 @@ public class QuickbooksServiceEndPoint {
 				default:
 					throw new Exception("Not supported");
 			}
-		} else {
-			switch(workTask.getAction().toLowerCase()) {
-				case "getaccounts":
-					return qbDataHandler.getAccountQueryXml();
-				case "getvendors":
-					return qbDataHandler.getVendorQueryXml();
-				case "getsalestaxcodes":
-					return qbDataHandler.getSalesTaxCodeQueryXml();
-				default:
-					throw new Exception("Not supported");
-			}
+		} else  {
+			return qbDataHandler.getRequestXml(workTask.getAction());
 		}
 	}
 
