@@ -383,6 +383,7 @@ public class EntityHandler {
 		entityList.setContextLevel("tenant");
 		entityList.setName(LOOKUP_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("id", "string"));
+		entityList.setIndexA(getIndexedProperty("type", "string")); //ACCOUNT, VENDOR, TAXCODE for now
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);

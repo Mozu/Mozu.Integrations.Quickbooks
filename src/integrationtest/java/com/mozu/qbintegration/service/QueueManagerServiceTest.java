@@ -33,7 +33,7 @@ public class QueueManagerServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4647;
+		tenantId = 5872;
 	}
 
 	@After

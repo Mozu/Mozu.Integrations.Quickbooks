@@ -616,7 +616,51 @@ var homeViewModel = function() {
 				}
 			});		
 	};
-
+	
+	self.initiateAccountsRefresh = function() {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "initiateAccountsRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				type : "PUT",
+				dataType : "json",
+				success : function(data) {
+					//TODO show success msg
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
+	};
+	
+	self.initiateVendorRefresh = function() {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "initiateVendorRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				type : "PUT",
+				dataType : "json",
+				success : function(data) {
+					//TODO show success msg
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
+	};
+	
+	self.initiateSalesTaxRefresh = function() {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "initiateSalesTaxRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				type : "PUT",
+				dataType : "json",
+				success : function(data) {
+					//TODO show success msg
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
+	};
 
 	self.getSettings();
 }

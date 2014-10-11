@@ -112,4 +112,40 @@ public class QBDataFetchController {
 		
 	}
 	
+	@RequestMapping(value = "/initiateAccountsRefresh", method = RequestMethod.PUT)
+	public @ResponseBody
+	String initiateAccountsRefresh(HttpServletRequest httpRequest,
+			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+
+		quickbooksService.initiateAccountsRefresh(tenantId);
+		
+		logger.debug("Initiated QB account data setup at: " + new Date());
+		return "The request to refresh QB accounts data has been scheduled.";
+		
+	}
+	
+	@RequestMapping(value = "/initiateVendorRefresh", method = RequestMethod.PUT)
+	public @ResponseBody
+	String initiateVendorRefresh(HttpServletRequest httpRequest,
+			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+
+		quickbooksService.initiateVendorRefresh(tenantId);
+		
+		logger.debug("Initiated QB vendor data setup at: " + new Date());
+		return "The request to refresh QB vendor list has been scheduled.";
+		
+	}
+	
+	@RequestMapping(value = "/initiateSalesTaxRefresh", method = RequestMethod.PUT)
+	public @ResponseBody
+	String initiateSalesTaxRefresh(HttpServletRequest httpRequest,
+			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+
+		quickbooksService.initiateSalesTaxRefresh(tenantId);
+		
+		logger.debug("Initiated QB sales tax codes data setup at: " + new Date());
+		return "The request to refresh QB sales tax codes has been scheduled.";
+		
+	}
+	
 }

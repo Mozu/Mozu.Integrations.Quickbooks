@@ -17,7 +17,6 @@ import com.mozu.api.events.model.EventHandlerStatus;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 
 @Component
