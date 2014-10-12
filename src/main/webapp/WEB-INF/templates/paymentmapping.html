@@ -1,0 +1,43 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.paymentMapping}" class="label-bold"></label>
+			</div>
+		</div>
+		<div class="tab-divider"></div>
+
+
+		<div class="row">
+			<div class="tab-full-column">
+				 <select data-bind="options: mozuPayments,optionsText: 'name',
+                       value: selectedMozuPayment"></select>
+                       
+                  <select data-bind="options: qbPaymentMethods, optionsText: 'fullName',
+                       value: selectedQBPayment"></select>
+				 <button data-bind="click: mapPayment">Add</button>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				 <table>
+				    <thead>
+				        <tr><th>Mozu Payment</th><th>Quickbooks Payment</th></tr>
+				    </thead>
+				    <tbody data-bind="foreach: paymentMappings">
+				        <tr>
+				            <td data-bind="text: mzData().name"></td>
+				            <td data-bind="text: qbData().fullName"></td>
+				        </tr>
+				    </tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

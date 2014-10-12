@@ -17,7 +17,7 @@ public class QBData {
 	/**
 	 * 
 	 */
-	private String type;
+	private String dataType;
 	
 	/**
 	 * 
@@ -41,15 +41,15 @@ public class QBData {
 	/**
 	 * @return the type
 	 */
-	public String getType() {
-		return type;
+	public String getDataType() {
+		return dataType;
 	}
 
 	/**
 	 * @param type the type to set
 	 */
-	public void setType(String type) {
-		this.type = type;
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
 	}
 
 	/**

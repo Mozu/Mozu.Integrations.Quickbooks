@@ -22,6 +22,7 @@ import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.DataMapping;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
@@ -74,6 +75,9 @@ public class OrderHandler {
 	
 	@Autowired 
 	QuickbooksService quickbooksService;
+	
+	@Autowired
+	QBDataHandler qbDataHandler;
 	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));
@@ -315,7 +319,7 @@ public class OrderHandler {
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
 		salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
-		salesReceiptAdd.setPaymentMethodRef(getPayment(order) );
+		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
@@ -385,11 +389,11 @@ public class OrderHandler {
 		txnId.setValue(salesReceiptRet.getTxnID());
 		salesReceiptmod.setTxnID(txnId);
 		salesReceiptmod.setEditSequence(salesReceiptRet.getEditSequence());
-		salesReceiptmod.setPaymentMethodRef(getPayment(order));
+		
 		salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
-		salesReceiptmod.setPaymentMethodRef(getPayment(order) );
+		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
 		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
@@ -445,7 +449,7 @@ public class OrderHandler {
 	}
 	
 	
-	private PaymentMethodRef getPayment(Order order) {
+	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
@@ -455,6 +459,11 @@ public class OrderHandler {
 			else {
 				paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
 			}
+		}
+		
+		DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
+		if (mapping != null) {
+			paymentRef.setFullName(mapping.getQbData().getFullName());
 		}
 		return paymentRef;
 	}
