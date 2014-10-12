@@ -21,6 +21,10 @@ import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.OrderStates;
+import com.mozu.qbintegration.model.QBResponse;
+import com.mozu.qbintegration.model.WorkTaskActions;
+import com.mozu.qbintegration.model.WorkTaskStatus;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
@@ -57,6 +61,9 @@ public class OrderStateHandler {
 
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
+	
+	private QBResponse processStatus = new QBResponse();
+	//public static String CONFLICT = "CONFLICT";
 	
 	/*
 	 * Bug fix 9-Oct-2014: Added order_delete as a state in the queue
@@ -100,23 +107,22 @@ public class OrderStateHandler {
 			currentStep = task.getCurrentStep();
 		}
 		
-		boolean queryResult = false;
+		//boolean processResult = false;
 		if (StringUtils.isNotEmpty(qbResponse))
-			queryResult = processCurrentStep(tenantId, order, custAcct, currentStep,qbResponse);
+			processCurrentStep(tenantId, order, custAcct, currentStep,qbResponse);
 		
-		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, queryResult, action); //Need to incorporate reponse from QB
-		
+		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, action); //Need to incorporate reponse from QB
 		
 		if (node == null) {
 			queueManagerService.addTask(tenantId, order.getId(), "Order", nextStep, action);
 		} else {
-			String status = "PROCESSING";
-			if (lastSteps.contains(currentStep.toLowerCase()) )
-				status = "COMPLETED";
+			String status = WorkTaskStatus.PROCESSING;
+			if (lastSteps.contains(currentStep.toLowerCase()) && !processStatus.hasError())
+				status = WorkTaskStatus.COMPLETED;
 			
-			if (nextStep.equalsIgnoreCase("conflict")) {
+			if (nextStep.equalsIgnoreCase(OrderStates.CONFLICT)) {
 				addToConflictQueue(tenantId, order, qbResponse, conflictReason);
-				status = "COMPLETED";
+				status = WorkTaskStatus.COMPLETED;
 			}
 			queueManagerService.updateTask(tenantId,order.getId(), nextStep, status);
 		}
@@ -202,30 +208,44 @@ public class OrderStateHandler {
 		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderDetails.getId(), orderDetails);
 	}
 	
-	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, boolean queryResult, String action) throws Exception {
-		
-		if (currentStep.equalsIgnoreCase("cust_query") && !queryResult)
-			return "CUST_ADD";
-		else if ((currentStep.equalsIgnoreCase("item_query") ||  currentStep.equalsIgnoreCase("order_add") || 
-				currentStep.equalsIgnoreCase("order_update")) && !queryResult)
-			return "CONFLICT";
+	private String ORDER_FAIL_ADD_REASON = "QuickBooks error message: You need to delete this transaction from the deposit before you can edit its name or amount.";
+	private String getNextStep(Integer tenantId, Order order,CustomerAccount custAcct,String currentStep, String action) throws Exception {
+		if ( processStatus.hasError()) {
+			if (currentStep.equals(OrderStates.UPDATE) && 
+					processStatus.getStatusMessage().toLowerCase().contains(ORDER_FAIL_ADD_REASON.toLowerCase()))
+				return OrderStates.ADD;
+			else {
+				conflictReason = processStatus.getStatusMessage();
+				return OrderStates.CONFLICT;
+			}
+		}
+		if (currentStep.equals(OrderStates.CUST_QUERY) && 
+				processStatus.hasWarning() && 
+				processStatus.getStatusCode().equals(500)) //Customer not found...add new customer
+			return OrderStates.CUST_ADD;
 		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) {
-			return "CUST_QUERY";
+			return OrderStates.CUST_QUERY;
 		} else if (!allItemsFound(tenantId, order)) {
-			return "ITEM_QUERY";
-		} if (currentStep.equalsIgnoreCase("order_query") && action.equalsIgnoreCase("add") && this.orderExistsInQB) {
-			this.conflictReason = "Order Already exists in QB";
-			return "CONFLICT";
+			return OrderStates.ITEM_QUERY;
+		} if (currentStep.equals(OrderStates.ORDER_QUERY) && 
+				action.equals(WorkTaskActions.ADD) && 
+				this.orderExistsInQB) {
+			this.conflictReason = "Order Already exists in Quickbooks";
+			return OrderStates.CONFLICT;
 		}
-		else if ((action.equalsIgnoreCase("update") || action.equalsIgnoreCase("add"))  && !currentStep.equalsIgnoreCase("order_query")) 
-				return "ORDER_QUERY";
-		else if ("Update".equalsIgnoreCase(action) && this.orderExistsInQB) {
-			return "ORDER_UPDATE";
-		} else if ("Add".equalsIgnoreCase(action)){
-			return "ORDER_ADD";
-		} else {
-			return "ORDER_DELETE";
-		}
+		else if ((action.equals(WorkTaskActions.UPDATE) || 
+				action.equals(WorkTaskActions.ADD))  && 
+				!currentStep.equals(OrderStates.ORDER_QUERY)) 
+			return OrderStates.ORDER_QUERY;
+		else if (action.equals(WorkTaskActions.UPDATE) && 
+				this.orderExistsInQB) {
+			return OrderStates.UPDATE;
+		} else if (action.equals(WorkTaskActions.ADD)){
+			return OrderStates.ADD;
+		} else if (action.equals(WorkTaskActions.DELETE)){
+			return OrderStates.DELETE;
+		} else
+			throw new Exception("Could not determine next step");
 	}
 	
 	private boolean isCustomerFound(Integer tenantId, String emailAddress) throws Exception {
@@ -276,27 +296,31 @@ public class OrderStateHandler {
 	}	
 
 
-	private boolean processCurrentStep(Integer tenantId, Order order,CustomerAccount custAcct, String currentStep, String qbResponse) throws Exception {
+	
+	private void processCurrentStep(Integer tenantId, Order order,CustomerAccount custAcct, String currentStep, String qbResponse) throws Exception {
 
-		switch(currentStep.toLowerCase()) {
-			case "cust_query" :
-				return customerHandler.processCustomerQuery(tenantId, custAcct,qbResponse);
-			case "cust_add":
-				return customerHandler.processCustomerAdd(tenantId, custAcct,qbResponse);
-			case "order_add":
-				return orderHandler.processOrderAdd(tenantId, order.getId(),qbResponse); //TODO : pass order object
-			case "order_update":
-				return orderHandler.processOrderUpdate(tenantId, order.getId(),qbResponse); //TODO : pass order object
-			case "order_delete":
-				return orderHandler.processOrderDelete(tenantId, order.getId(),qbResponse);
-			case "item_query":
-				return productHandler.processItemQuery(tenantId,qbResponse);
-			case "order_query":
-				orderExistsInQB = orderHandler.processOrderQuery(tenantId, order.getId(), qbResponse);
-				return orderExistsInQB;
-			default:
-				throw new Exception("Not supported");
-		}
+		
+		if (currentStep.equals(OrderStates.CUST_QUERY)) {
+			processStatus = customerHandler.processCustomerQuery(tenantId, custAcct,qbResponse);
+		} else if (currentStep.equals(OrderStates.CUST_ADD)) {
+			processStatus = customerHandler.processCustomerAdd(tenantId, custAcct,qbResponse);
+		} else if (currentStep.equals(OrderStates.ADD)) {
+			processStatus = orderHandler.processOrderAdd(tenantId, order.getId(),qbResponse); //TODO : pass order object
+		} else if (currentStep.equals(OrderStates.UPDATE)) {
+			processStatus = orderHandler.processOrderUpdate(tenantId, order.getId(),qbResponse); //TODO : pass order object
+		} else if (currentStep.equals(OrderStates.DELETE)) {
+			processStatus = orderHandler.processOrderDelete(tenantId, order.getId(),qbResponse);
+		} else if (currentStep.equals(OrderStates.ITEM_QUERY)) {
+			 productHandler.processItemQuery(tenantId,qbResponse);
+		} else if (currentStep.equals(OrderStates.ORDER_QUERY)) {
+			processStatus = orderHandler.processOrderQuery(tenantId, order.getId(), qbResponse);
+			if (!processStatus.hasWarning()) {
+				this.orderExistsInQB = true;
+			} else
+				this.orderExistsInQB = false;
+		} else
+			throw new Exception("Not supported");
+		
 	}
 
 	private void deleteConflictOrders(Integer tenantId, String orderId) throws Exception {

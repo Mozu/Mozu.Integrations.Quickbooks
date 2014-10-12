@@ -7,6 +7,7 @@ package com.mozu.qbintegration.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +30,9 @@ import org.springframework.web.context.ServletContextAware;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
+import com.mozu.qbintegration.model.QBData;
 import com.mozu.qbintegration.model.QuickWebConnector;
 import com.mozu.qbintegration.model.Scheduler;
 import com.mozu.qbintegration.service.QuickbooksService;
@@ -48,6 +51,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	@Autowired
 	private EncryptDecryptHandler encryptDecryptHandler;
 	
+
+	
 	@Value("${webserviceName}")
 	private String webserviceName;
 	
@@ -57,7 +62,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	@Value("${wsdlFileName}")
 	private String wsdlFileName;
 
-	 private ServletContext context;
+	
+	private ServletContext context;
 	    
     @Override
     public void setServletContext(ServletContext servletContext) {
@@ -131,7 +137,7 @@ public class GeneralSettingsController implements ServletContextAware {
 		return node;
 	}
 	
-	@RequestMapping(value = "generatePwd", method = RequestMethod.POST)
+	/*@RequestMapping(value = "generatePwd", method = RequestMethod.POST)
 	public @ResponseBody ObjectNode generatePwd(@RequestParam(value = "tenantId", required = false) Integer tenantId,@RequestBody String name, final HttpServletRequest request) throws Exception {
 		String password = encryptDecryptHandler.encrypt(tenantId+"~"+name);
 		
@@ -140,7 +146,9 @@ public class GeneralSettingsController implements ServletContextAware {
 		node.put("pwd", password);
 		
 		return node;
-	}
+	}*/
+	
+	
 	
 	@RequestMapping(value = "download", method = RequestMethod.POST)
 	public void download(@RequestParam(value="qwcfilestr", required=false) String fileContent,

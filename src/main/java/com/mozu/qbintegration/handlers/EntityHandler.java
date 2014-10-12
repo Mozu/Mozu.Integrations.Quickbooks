@@ -39,7 +39,8 @@ public class EntityHandler {
 	private  final String ORDER_POSTED_ENTITY = "QB_POSTED";
 	private  final String ORDER_CANCELLED_ENTITY = "QB_CANCELLED";
 	private  final String ORDERS_ENTITY = "QB_ORDERS";	
-	private final String LOOKUP_ENTITY = "QB_LOOKUP";
+	private  final String LOOKUP_ENTITY = "QB_LOOKUPDATA";
+	private	 final String MAPPING_ENTITY = "QB_MAPPING";
 
 
 
@@ -113,6 +114,10 @@ public class EntityHandler {
 		return LOOKUP_ENTITY + "@" + getNamespace();
 	}
 	
+	public String getMappingEntity() {
+		return MAPPING_ENTITY + "@" + getNamespace();
+	}
+	
 	public  String getSubnavLinksEntityName() {
 		return "subnavlinks@mozu";
 	}
@@ -138,6 +143,7 @@ public class EntityHandler {
 		installOrderConflictDetailsSchema(tenantId);
 		installOrderCancelledSchema(tenantId);
 		installLookupSchema(tenantId);
+		installMappingSchema(tenantId);
 	}
 	
 	/**
@@ -383,13 +389,30 @@ public class EntityHandler {
 		entityList.setContextLevel("tenant");
 		entityList.setName(LOOKUP_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("id", "string"));
-		entityList.setIndexA(getIndexedProperty("type", "string")); //ACCOUNT, VENDOR, TAXCODE for now
+		entityList.setIndexA(getIndexedProperty("dataType", "string")); //ACCOUNT, VENDOR, TAXCODE for now
+		entityList.setIndexB(getIndexedProperty("fullname", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
 		entityList.setIsShopperSpecific(false);
 
 		String mapName = this.getLookupEntity();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+	
+	private void installMappingSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(this.MAPPING_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("mozuId", "string"));
+		entityList.setIndexA(getIndexedProperty("type", "string")); //ACCOUNT, VENDOR, TAXCODE for now
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = this.getMappingEntity();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 	
