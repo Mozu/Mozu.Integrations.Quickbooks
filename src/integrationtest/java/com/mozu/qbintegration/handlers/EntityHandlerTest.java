@@ -45,7 +45,7 @@ public class EntityHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 5872;
+		tenantId = 4647;
 	}
 
 	@After
@@ -66,14 +66,15 @@ public class EntityHandlerTest {
 	public void cleanupEntity() {
 
 		try {
-			runCleanup(entityHandler.getOrderEntityName(), "refNumber");
-			runCleanup(entityHandler.getTaskqueueEntityName(), "id");
-			runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
-			runCleanup(entityHandler.getOrderConflictEntityName(), "id");
-			runCleanup(entityHandler.getOrderUpdatedEntityName(), "id");
+			//runCleanup(entityHandler.getOrderEntityName(), "refNumber");
+			//runCleanup(entityHandler.getTaskqueueEntityName(), "id");
+			//runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
+			//runCleanup(entityHandler.getOrderConflictEntityName(), "id");
+			//runCleanup(entityHandler.getOrderUpdatedEntityName(), "id");
+			//runCleanup(entityHandler.getLookupEntity(), "id");
+			//runCleanup(entityHandler.getOrderPostedEntityName(), "enteredTime");
+			//runCleanup(entityHandler.getOrderCancelledEntityName(), "enteredTime");
 			runCleanup(entityHandler.getLookupEntity(), "id");
-			runCleanup(entityHandler.getOrderPostedEntityName(), "enteredTime");
-			runCleanup(entityHandler.getOrderCancelledEntityName(), "enteredTime");
 			//runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
 			//runCleanup(entityHandler.getProductEntityName(), "productCode");
 			

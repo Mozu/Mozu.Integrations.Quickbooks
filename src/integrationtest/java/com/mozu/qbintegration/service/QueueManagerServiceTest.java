@@ -33,7 +33,7 @@ public class QueueManagerServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 5872;
+		tenantId = 4647;
 	}
 
 	@After
@@ -74,6 +74,15 @@ public class QueueManagerServiceTest {
 	public void queueSalesTaxCodeQueryTest() {
 		try {
 			queueManagerService.addTask(tenantId, "SalesTaxCode", "DataSync", "QUERY", "GETSALESTAXCODES");
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void paymentMethodQueryTest() {
+		try {
+			queueManagerService.addTask(tenantId, "PaymentMethod", "DataSync", "QUERY", "GETPAYMENTMETHODS");
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

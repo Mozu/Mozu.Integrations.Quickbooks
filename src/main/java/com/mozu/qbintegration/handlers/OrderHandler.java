@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.OrderCompareDetail;
+import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.QuickBooksOrder;
 import com.mozu.qbintegration.model.QuickBooksSavedOrderLine;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
@@ -86,7 +88,7 @@ public class OrderHandler {
 	}
 
 
-	public boolean processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
+	public QBResponse processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
 		QBXML orderAddResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
 		SalesReceiptAddRsType salesOrderResponse = (SalesReceiptAddRsType) orderAddResp
 				.getQBXMLMsgsRs()
@@ -94,31 +96,31 @@ public class OrderHandler {
 				.get(0);
 
 		
-		if (salesOrderResponse.getStatusSeverity().equalsIgnoreCase("error")) //An error occurred while processing the order
-		{
-			return false;
-		} 
-		else 
-		{
-			QuickBooksOrder order = getQuickBooksOrder(salesOrderResponse.getSalesReceiptRet());
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
-			MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
-			mozuOrderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-			entityHandler.addEntity(tenantId, entityHandler.getOrderPostedEntityName(), mozuOrderDetail);
-			logger.debug((new StringBuilder())
-					.append("Processed order with id: ")
-					.append(orderId)
-					.append(" with QB status code: ")
-					.append(salesOrderResponse.getStatusCode())
-					.append(" with status: ")
-					.append(salesOrderResponse.getStatusMessage())
-					.toString());
-			return true;
-		}
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(salesOrderResponse.getStatusCode());
+		qbResponse.setStatusSeverity(salesOrderResponse.getStatusSeverity());
+		qbResponse.setStatusMessage(salesOrderResponse.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
+		
+		QuickBooksOrder order = getQuickBooksOrder(salesOrderResponse.getSalesReceiptRet());
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
+		MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
+		mozuOrderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+		entityHandler.addEntity(tenantId, entityHandler.getOrderPostedEntityName(), mozuOrderDetail);
+		logger.debug((new StringBuilder())
+				.append("Processed order with id: ")
+				.append(orderId)
+				.append(" with QB status code: ")
+				.append(salesOrderResponse.getStatusCode())
+				.append(" with status: ")
+				.append(salesOrderResponse.getStatusMessage())
+				.toString());
+		
+		return qbResponse;
 
 	}
 	
-	public boolean processOrderUpdate(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
+	public QBResponse processOrderUpdate(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
 		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
 
 		SalesReceiptModRsType orderModRsType = (SalesReceiptModRsType) orderModResp.getQBXMLMsgsRs()
@@ -126,46 +128,57 @@ public class OrderHandler {
 																				.get(0);
 
 		
-		if (orderModRsType.getStatusSeverity().equalsIgnoreCase("error"))
-			return false;
-		else {
-			
-			QuickBooksOrder order = getQuickBooksOrder(orderModRsType.getSalesReceiptRet());
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
-			
-			MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
-			mozuOrderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-			entityHandler.addEntity(tenantId, entityHandler.getOrderPostedEntityName(), mozuOrderDetail);
-			logger.debug((new StringBuilder())
-					.append("Processed order with id: ")
-					.append(orderId)
-					.append(" with QB status code: ")
-					.append(orderModRsType.getStatusCode())
-					.append(" with status: ")
-					.append(orderModRsType.getStatusMessage()).toString());
-			return true;
-		}
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(orderModRsType.getStatusCode());
+		qbResponse.setStatusSeverity(orderModRsType.getStatusSeverity());
+		qbResponse.setStatusMessage(orderModRsType.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
+		
+		QuickBooksOrder order = getQuickBooksOrder(orderModRsType.getSalesReceiptRet());
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
+		
+		MozuOrderDetail mozuOrderDetail = getMozuOrderDetail(tenantId, orderId);
+		mozuOrderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+		entityHandler.addEntity(tenantId, entityHandler.getOrderPostedEntityName(), mozuOrderDetail);
+		logger.debug((new StringBuilder())
+				.append("Processed order with id: ")
+				.append(orderId)
+				.append(" with QB status code: ")
+				.append(orderModRsType.getStatusCode())
+				.append(" with status: ")
+				.append(orderModRsType.getStatusMessage()).toString());
+		return qbResponse;
 	}
 	
-	public boolean processOrderQuery(int tenantId, String orderId, String qbResponse) throws Exception {
+	public QBResponse processOrderQuery(int tenantId, String orderId, String response) throws Exception {
 		
-		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
+		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(response);
 
 		SalesReceiptQueryRsType  orderQueryRsType = (SalesReceiptQueryRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
 
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(orderQueryRsType.getStatusCode());
+		qbResponse.setStatusSeverity(orderQueryRsType.getStatusSeverity());
+		qbResponse.setStatusMessage(orderQueryRsType.getStatusMessage());
+		if (qbResponse.hasError() || qbResponse.hasWarning()) return qbResponse;
 		
-		if (orderQueryRsType.getStatusSeverity().equalsIgnoreCase("error"))
-			throw new Exception(orderQueryRsType.getStatusMessage());
-		else if (orderQueryRsType.getStatusSeverity().equalsIgnoreCase("warn"))
-			return false;
-		else {
+		
+		//Get the last modified and store it
+		SalesReceiptRet selected = null;
+		DateTime timeCreated = null;
+		for(SalesReceiptRet salesReceiptRet : orderQueryRsType.getSalesReceiptRet()) {
+			if (timeCreated == null) 
+				selected = salesReceiptRet;
 			
-			QuickBooksOrder order = getQuickBooksOrder(orderQueryRsType.getSalesReceiptRet().get(0));
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
-			return true;
+			if (DateTime.parse(selected.getTimeCreated()).getMillis() > DateTime.parse(salesReceiptRet.getTimeCreated()).getMillis()) {
+				selected = salesReceiptRet; //Get the most recently created salesrecipt for mozu order number
+			}
 		}
+		QuickBooksOrder order = getQuickBooksOrder(selected);
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderEntityName(), order.getRefNumber(),order);
+		return qbResponse;
 	}
 	
 	private QuickBooksOrder getQuickBooksOrder(SalesReceiptRet salesOrderRet) {
@@ -476,9 +489,9 @@ public class OrderHandler {
 	 * Process the response of cancelling a sales order in QB. 
 	 * Initiated on Order Cancelled event in mozu
 	 */
-	public boolean processOrderDelete(Integer tenantId, String orderId,
-			String qbResponse) throws Exception {
-		QBXML deleteTxResp = (QBXML) XMLHelper.getUnmarshalledValue(qbResponse);
+	public QBResponse processOrderDelete(Integer tenantId, String orderId,
+			String responseXml) throws Exception {
+		QBXML deleteTxResp = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
 
 		TxnDelRsType deleteTxRespType = (TxnDelRsType) deleteTxResp
 				.getQBXMLMsgsRs()
@@ -486,27 +499,29 @@ public class OrderHandler {
 				.get(0);
 
 		// An error occurred while processing the order
-		if (deleteTxRespType.getStatusSeverity().equalsIgnoreCase("error")) {
-			return false;
-		} else {
-			MozuOrderDetail orderDetail = getMozuOrderDetail(tenantId, orderId);
-			orderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
-			entityHandler.addEntity(tenantId, entityHandler.getOrderCancelledEntityName(), orderDetail);
-			
-			logger.debug((new StringBuilder())
-					.append("Processed cancelling order with id: ")
-					.append(orderId)
-					.append(" with QB status code: ")
-					.append(deleteTxRespType.getStatusCode())
-					.append(" with status: ")
-					.append(deleteTxRespType.getStatusMessage())
-					.append(" for tenantId: ")
-					.append(tenantId)
-					.toString());
-			
-			return true;
-		}
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(deleteTxRespType.getStatusCode());
+		qbResponse.setStatusSeverity(deleteTxRespType.getStatusSeverity());
+		qbResponse.setStatusMessage(deleteTxRespType.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
 		
+		MozuOrderDetail orderDetail = getMozuOrderDetail(tenantId, orderId);
+		orderDetail.setEnteredTime(String.valueOf(System.currentTimeMillis()));
+		entityHandler.addEntity(tenantId, entityHandler.getOrderCancelledEntityName(), orderDetail);
+		
+		logger.debug((new StringBuilder())
+				.append("Processed cancelling order with id: ")
+				.append(orderId)
+				.append(" with QB status code: ")
+				.append(deleteTxRespType.getStatusCode())
+				.append(" with status: ")
+				.append(deleteTxRespType.getStatusMessage())
+				.append(" for tenantId: ")
+				.append(tenantId)
+				.toString());
+			
+			return qbResponse;
+		//}
 	}
 		
 	

@@ -16,6 +16,7 @@ import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
+import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRqType;
@@ -105,9 +106,9 @@ public class CustomerHandler {
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()
 				.add(customerQueryRqType);
 
-		//customerQueryRqType.getFullName().add(cust.getFirstName() + " "+ cust.getLastName());
+		customerQueryRqType.getFullName().add(cust.getFirstName() + " "+ cust.getLastName());
 		//Akshay 11-oct-2014 - use email address for full name
-		customerQueryRqType.getFullName().add(cust.getEmailAddress());
+		//customerQueryRqType.getFullName().add(cust.getEmailAddress());
 
 		return XMLHelper.getMarshalledValue(qbXML);
 	}
@@ -132,9 +133,9 @@ public class CustomerHandler {
 		qbXMCustomerAddType.setLastName(cust.getLastName());
 		qbXMCustomerAddType.setMiddleName("");
 		
-		//qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
+		qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
 		//Akshay 11-Oct-2014 Use email for full name
-		qbXMCustomerAddType.setName(cust.getEmailAddress());
+		//qbXMCustomerAddType.setName(cust.getEmailAddress());
 		
 		qbXMCustomerAddType.setPhone(cust.getContacts().get(0).getPhoneNumbers().getMobile());
 		qbXMCustomerAddType.setEmail(cust.getEmailAddress());
@@ -161,40 +162,47 @@ public class CustomerHandler {
 	}
 
 	
-	public boolean processCustomerQuery(int tenantId,CustomerAccount custAcct, String qbTaskResponse) throws Exception {
-		QBXML response = (QBXML) XMLHelper.getUnmarshalledValue(qbTaskResponse);
+	public QBResponse processCustomerQuery(int tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
+		QBXML response = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
 		CustomerQueryRsType custQueryResponse = (CustomerQueryRsType) response.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
 
-		if ("warn".equalsIgnoreCase(custQueryResponse.getStatusSeverity())
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(custQueryResponse.getStatusCode());
+		qbResponse.setStatusSeverity(custQueryResponse.getStatusSeverity());
+		qbResponse.setStatusMessage(custQueryResponse.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
+		
+		/*if ("warn".equalsIgnoreCase(custQueryResponse.getStatusSeverity())
 				&& 500 == custQueryResponse.getStatusCode().intValue()) {
 			// Customer not found. So CUST_ADD
 			// ENTER the new task
 			//qbService.addCustAddTaskToQueue(orderId, tenantId, custAcct);
 			return false;
-		} else {
+		} else {*/
 			String qbCustListID = custQueryResponse.getCustomerRet().get(0).getListID();
 			saveCustInEntityList(custAcct, qbCustListID, tenantId);
 			
-			return true;
-		}
+			return qbResponse;
+		//}
 	}
 	
-	public boolean processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String qbTaskResponse) throws Exception {
-		QBXML custAddResp = (QBXML) XMLHelper.getUnmarshalledValue(qbTaskResponse);
+	public QBResponse processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
+		QBXML custAddResp = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
 		CustomerAddRsType custAddResponse = (CustomerAddRsType) custAddResp.getQBXMLMsgsRs()
 																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																			.get(0);
 		
-		if (custAddResponse.getStatusSeverity().equalsIgnoreCase("error")) {
-			return false;
-		} else {
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(custAddResponse.getStatusCode());
+		qbResponse.setStatusSeverity(custAddResponse.getStatusSeverity());
+		qbResponse.setStatusMessage(custAddResponse.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
+	
+		String customerListId = custAddResponse.getCustomerRet().getListID();
+		saveCustInEntityList(custAcct, customerListId, tenantId);
 		
-			String customerListId = custAddResponse.getCustomerRet().getListID();
-			saveCustInEntityList(custAcct, customerListId, tenantId);
-			
-			return true;
-		}
+		return qbResponse;
 	}
 }

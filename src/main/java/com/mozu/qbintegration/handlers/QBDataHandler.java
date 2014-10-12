@@ -7,10 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.mozu.qbintegration.model.CreateProductSetupData;
+import com.mozu.qbintegration.model.QBData;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.PaymentMethodQueryRqType;
+import com.mozu.qbintegration.model.qbmodel.allgen.PaymentMethodQueryRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.PaymentMethodRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeQueryRqType;
@@ -70,6 +73,8 @@ public class QBDataHandler {
 				return getVendorQueryXml();
 			case "getsalestaxcodes":
 				return getSalesTaxCodeQueryXml();
+			case "getpaymentmethods":
+				return getPaymentMethodQueryXml();
 			default:
 				throw new Exception("Not supported");
 		}
@@ -86,6 +91,9 @@ public class QBDataHandler {
 			case "getsalestaxcodes":
 				processSalesTaxCodeQueryXml(tenantId, respXml);
 				break;
+			case "getpaymentmethods":
+				 processPaymentMethodQueryResponse(tenantId, respXml);
+				 break;
 			default:
 				throw new Exception("Not supported");
 		}
@@ -121,13 +129,14 @@ public class QBDataHandler {
 				.get(0);
 		
 		List<AccountRet> returnedAccts = accountResponse.getAccountRet();
-		CreateProductSetupData singleAcctData = null;
+		QBData singleAcctData = null;
 		for (AccountRet singleAcct : returnedAccts) {
-			singleAcctData = new CreateProductSetupData();
+			singleAcctData = new QBData();
 			//Concatenate name since it's composite -- quickbooks has been seen to have same listIDs for diff records
 			//search will happen on this composite and
 			// returned value's fullName will be used.
-			singleAcctData.setId(singleAcct.getListID() + singleAcct.getName());
+			//singleAcctData.setId(singleAcct.getListID() + singleAcct.getName().replace(" ", ""));
+			singleAcctData.setId(singleAcct.getListID());
 			singleAcctData.setType("ACCOUNT");
 			singleAcctData.setFullName(singleAcct.getFullName());
 			
@@ -161,13 +170,14 @@ public class QBDataHandler {
 				.get(0);
 		
 		List<VendorRet> returnedVendor = vendorResponse.getVendorRet();
-		CreateProductSetupData singleAcctData = null;
+		QBData singleAcctData = null;
 		for (VendorRet singleVendor : returnedVendor) {
-			singleAcctData = new CreateProductSetupData();
+			singleAcctData = new QBData();
 			//Concatenate name since it's composite -- quickbooks has been seen to have same listIDs for diff records
 			//search will happen on this composite and
 			// returned value's fullName will be used.
-			singleAcctData.setId(singleVendor.getListID() + singleVendor.getName());
+			//singleAcctData.setId(singleVendor.getListID() + singleVendor.getName());
+			singleAcctData.setId(singleVendor.getListID());
 			singleAcctData.setType("VENDOR");
 			singleAcctData.setFullName(singleVendor.getName());
 			
@@ -201,13 +211,14 @@ public class QBDataHandler {
 				.get(0);
 		
 		List<SalesTaxCodeRet> returnedSalesTaxCodes = salesTaxCodeResp.getSalesTaxCodeRet();
-		CreateProductSetupData singleAcctData = null;
+		QBData singleAcctData = null;
 		for (SalesTaxCodeRet singleSalesTax : returnedSalesTaxCodes) {
-			singleAcctData = new CreateProductSetupData();
+			singleAcctData = new QBData();
 			//Concatenate name since it's composite -- quickbooks has been seen to have same listIDs for diff records
 			//search will happen on this composite and
 			// returned value's fullName will be used.
-			singleAcctData.setId(singleSalesTax.getListID() + singleSalesTax.getName());
+			//singleAcctData.setId(singleSalesTax.getListID() + singleSalesTax.getName());
+			singleAcctData.setId(singleSalesTax.getListID());
 			singleAcctData.setType("TAXCODE");
 			singleAcctData.setFullName(singleSalesTax.getName());
 			
@@ -217,20 +228,45 @@ public class QBDataHandler {
 		logger.debug("Saved all tax codes in EL for tenantId: " + tenantId);
 	}
 	
+	private String getPaymentMethodQueryXml() throws Exception {
+		QBXML qbxml = getQBXML();
+		PaymentMethodQueryRqType salesTaxCodeQueryRqType = new PaymentMethodQueryRqType();
+
+		qbxml.getQBXMLMsgsRq()
+				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
+						salesTaxCodeQueryRqType);
+
+		return XMLHelper.getMarshalledValue(qbxml);
+	}
 	
+	private void processPaymentMethodQueryResponse(Integer tenantId, String respXml) throws Exception {
+		QBXML accountQueryResp = (QBXML) XMLHelper.getUnmarshalledValue(respXml);
+		
+		PaymentMethodQueryRsType salesTaxCodeResp = (PaymentMethodQueryRsType) accountQueryResp
+				.getQBXMLMsgsRs()
+				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+				.get(0);
+		
+		List<PaymentMethodRet> paymentMethods = salesTaxCodeResp.getPaymentMethodRet();
+		QBData singleAcctData = null;
+		for (PaymentMethodRet paymentMethod : paymentMethods) {
+			singleAcctData = new QBData();
+			singleAcctData.setId(paymentMethod.getListID());
+			singleAcctData.setType("PAYMENTMETHOD");
+			singleAcctData.setFullName(paymentMethod.getName());
+			
+			//Save only as much required - also update if available already
+			entityHandler.addUpdateEntity(tenantId, entityHandler.getLookupEntity(), singleAcctData.getId(), singleAcctData);
+		}
+		logger.debug("Saved all tax codes in EL for tenantId: " + tenantId);
+	}
 	
-	/*public String getIncomeAccountQueryXml() throws Exception {
+	private QBXML getQBXML() {
 		QBXML qbxml = new QBXML();
 		QBXMLMsgsRq qbxmlMsgsRqType = new QBXMLMsgsRq();
 
 		qbxmlMsgsRqType.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRqType);
-		IncomeAccountQueryRqType itemQueryRqType = new IncomeAccountQueryRqType();
-
-		qbxmlMsgsRqType
-				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
-						itemQueryRqType);
-
-		return XMLHelper.getMarshalledValue(qbxml);
-	}*/
+		return qbxml;
+	}
 }
