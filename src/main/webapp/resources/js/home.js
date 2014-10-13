@@ -22,6 +22,18 @@ function funEdit(orderNumber) {
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
 			getAllProductsFromEntityList();
+			
+			homeViewModel.loadQBData("taxcode", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableTaxCodes);
+			});
+			
+			homeViewModel.loadQBData("vendor", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableVendors);
+			});
+			
+			homeViewModel.loadQBData("account", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableAccounts);
+			});
 		},
 		error : function() {
 			$("#content").hide();
@@ -75,7 +87,7 @@ function saveDataToTable(data) {
 
 function getAllProductsFromEntityList() {
 	$.ajax({
-		url : "getAllPostedProducts",
+		url : "api/qb/getAllPostedProducts",
 		type : "GET",
 		data : {
 			"tenantId" : $("#tenantIdHdn").val(),
@@ -114,11 +126,12 @@ var qbItem = function(itemNumber) {
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
     self.itemManuPartNum = ko.observable("");
-    self.itemTaxCode = ko.observable("");
-    self.itemExpenseAccount = ko.observable("");
-    self.itemAssetAccount = ko.observable("");
-    self.itemIncomeAccount = ko.observable("");
     self.selectedChoice = ko.observable();
+    self.itemTaxCode = ko.observable();
+    self.itemExpenseAccount = ko.observable();
+    self.itemAssetAccount = ko.observable();
+    self.itemIncomeAccount = ko.observable();
+    self.selectedVendor = ko.observable();
 }
 
 var compare = {
@@ -130,7 +143,10 @@ var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
-	
+	self.selectedTab = ko.observable();
+	self.availableTaxCodes = ko.observableArray([]);
+	self.availableAccounts = ko.observableArray([]);
+	self.availableVendors = ko.observableArray([]);
 	self.compare = ko.mapping.fromJS(compare);
 	
 	//For the detail section
@@ -181,7 +197,7 @@ var homeViewModel = function() {
     self.saveItemToQuickbooks = function() {
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(self.itemToFix),
@@ -201,7 +217,7 @@ var homeViewModel = function() {
     	
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
@@ -306,20 +322,34 @@ var homeViewModel = function() {
     
     
 	self.save = function() {
-		$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  ko.mapping.toJSON(self.settings),
-			success : function(data) {
-				self.showDownload(true)
-				ko.mapping.fromJS(data, self.settings);
-			},
-			error : function() {
-			}
-		});
-		
+		if (self.selectedTab() == "paymentMappingTab") {
+			$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/qb/data?tenantId=" + $("#tenantIdHdn").val(),
+				type : "POST",
+				dataType : "json",
+				data:  ko.mapping.toJSON(self.paymentMappings),
+				success : function(data) {
+					console.log(data);
+				},
+				error : function() {
+				}
+			});	
+		} else {
+			$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
+				type : "POST",
+				dataType : "json",
+				data:  ko.mapping.toJSON(self.settings),
+				success : function(data) {
+					self.showDownload(true)
+					ko.mapping.fromJS(data, self.settings);
+				},
+				error : function() {
+				}
+			});			
+		}
 	};
 
 	self.qwcFileContent = ko.observable();
@@ -601,14 +631,20 @@ var homeViewModel = function() {
 					ko.applyBindings(window.homeViewModel);
 
 					
-					if ($("#selectedTab").val() != "") {
-						$("#"+$("#selectedTab").val()+"Tab").click();
-					} else {
-						window.homeViewModel.getVersion();
-						if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
-							self.showDownload(true);
-					}
-							
+						if ($("#selectedTab").val() != "") {
+							$("#"+$("#selectedTab").val()+"Tab").click();
+						} else {
+							window.homeViewModel.getVersion();
+							if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
+								self.showDownload(true);
+						}
+								
+						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );
+						self.mozuPayments.push(new mozuPayment("Amex", "American Express") );
+						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
+						self.mozuPayments.push(new mozuPayment("Check", "Check"));
+						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
+						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
 					}
 				},
 				error : function() {
@@ -620,7 +656,7 @@ var homeViewModel = function() {
 	self.initiateAccountsRefresh = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "initiateAccountsRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/qb/initiateAccountsRefresh?tenantId=" + $("#tenantIdHdn").val(),
 				type : "PUT",
 				dataType : "json",
 				success : function(data) {
@@ -635,7 +671,7 @@ var homeViewModel = function() {
 	self.initiateVendorRefresh = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "initiateVendorRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/qb/initiateVendorRefresh?tenantId=" + $("#tenantIdHdn").val(),
 				type : "PUT",
 				dataType : "json",
 				success : function(data) {
@@ -650,7 +686,7 @@ var homeViewModel = function() {
 	self.initiateSalesTaxRefresh = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "initiateSalesTaxRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/qb/initiateSalesTaxRefresh?tenantId=" + $("#tenantIdHdn").val(),
 				type : "PUT",
 				dataType : "json",
 				success : function(data) {
@@ -662,8 +698,92 @@ var homeViewModel = function() {
 			});		
 	};
 
+	self.loadQBData = function(type, callback) {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/data?tenantId=" + $("#tenantIdHdn").val()+"&type="+type,
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				callback(data);
+			},
+			error : function() {
+				$("#content").hide();
+			}
+		});		
+	}
+	
+	self.qbPaymentMethods =  ko.observableArray([]);
+	self.loadPaymentMapping = function() {
+		
+		//Clear the existing mapping table
+		self.paymentMappings.removeAll();
+		
+		self.loadQBData("paymentmethod", function(data) {
+			console.log(data);
+			ko.mapping.fromJS(data,{},self.qbPaymentMethods);
+		});
+		
+		//Load any mappings already done
+		self.getPaymentMappings(function(data) {
+			
+			$(data).each(function(index) {
+				self.paymentMappings.push(
+						new paymentMapping(data[index].mzData.id,
+								data[index].mzData, data[index].qbData));
+			});
+			//ko.mapping.fromJS(data,{},self.paymentMappings);
+		});
+	};
+	
+	self.getPaymentMappings = function(callback) {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/getPaymentMappings?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				callback(data);
+			},
+			error : function() {
+				$("#content").hide();
+			}
+		});		
+	}
+	
+	self.mapPayment = function() {
+		var exists = false;
+		for(var i=0;i<self.paymentMappings().length;i++) {
+			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mozuId()) {
+				exists = true;
+			}	
+		}
+		
+		if (!exists)
+			self.paymentMappings.push(new paymentMapping(self.selectedMozuPayment().id(),self.selectedMozuPayment(), self.selectedQBPayment()));
+	}
+	
+	self.mozuPayments = ko.observableArray([]);
+	self.selectedMozuPayment = ko.observable();
+	self.selectedQBPayment = ko.observable();
+	self.paymentMappings = ko.observableArray([]);
+	
 	self.getSettings();
 }
+
+
+var mozuPayment = function(id, name) {
+	this.id = ko.observable(id);
+	this.name = ko.observable(name);
+}
+
+var paymentMapping = function(mozuId, mozuPayment, qbPayment) {
+	this.type = ko.observable("payment");
+	this.mozuId = ko.observable(mozuId);
+	this.mzData = ko.observable(mozuPayment);
+	this.qbData = ko.observable(qbPayment);
+}
+
 
 function unixToHumanTime(data) {
 	return moment.unix(data/1000).format("YYYY-MM-DD HH:mm:ss")
@@ -719,7 +839,7 @@ $(function() {
 
 		if (activeTabId == newTabId)
 			return;
-
+		window.homeViewModel.selectedTab(newTabId);
 		activeTab.removeClass('active');
 		$(newTab).addClass('active');
 

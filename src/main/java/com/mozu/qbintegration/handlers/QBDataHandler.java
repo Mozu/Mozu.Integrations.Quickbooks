@@ -1,5 +1,7 @@
 package com.mozu.qbintegration.handlers;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -7,6 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.DataMapping;
 import com.mozu.qbintegration.model.QBData;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountQueryRsType;
@@ -29,9 +37,9 @@ import com.mozu.qbintegration.utils.XMLHelper;
 @Component
 public class QBDataHandler {
 	
-	private static final Logger logger = LoggerFactory
-			.getLogger(QBDataHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(QBDataHandler.class);
 
+	private ObjectMapper mapper = JsonUtils.initObjectMapper();
 	@Autowired
 	EntityHandler entityHandler;
 	
@@ -100,7 +108,7 @@ public class QBDataHandler {
 	}
 	
 	public void processResponseXml(Integer tenantId, WorkTask workTask, String xml) throws Exception {
-		logger.debug("Received response: " + xml);
+		//logger.debug("Received response: " + xml);
 		processResponseXml(tenantId, workTask.getAction(), xml);
 		queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "COMPLETED");
 	}
@@ -137,7 +145,7 @@ public class QBDataHandler {
 			// returned value's fullName will be used.
 			//singleAcctData.setId(singleAcct.getListID() + singleAcct.getName().replace(" ", ""));
 			singleAcctData.setId(singleAcct.getListID());
-			singleAcctData.setType("ACCOUNT");
+			singleAcctData.setDataType("account");
 			singleAcctData.setFullName(singleAcct.getFullName());
 			
 			//Save only as much required - also update if available already
@@ -178,7 +186,7 @@ public class QBDataHandler {
 			// returned value's fullName will be used.
 			//singleAcctData.setId(singleVendor.getListID() + singleVendor.getName());
 			singleAcctData.setId(singleVendor.getListID());
-			singleAcctData.setType("VENDOR");
+			singleAcctData.setDataType("vendor");
 			singleAcctData.setFullName(singleVendor.getName());
 			
 			//Save only as much required - also update if available already
@@ -219,7 +227,7 @@ public class QBDataHandler {
 			// returned value's fullName will be used.
 			//singleAcctData.setId(singleSalesTax.getListID() + singleSalesTax.getName());
 			singleAcctData.setId(singleSalesTax.getListID());
-			singleAcctData.setType("TAXCODE");
+			singleAcctData.setDataType("taxcode");
 			singleAcctData.setFullName(singleSalesTax.getName());
 			
 			//Save only as much required - also update if available already
@@ -252,13 +260,29 @@ public class QBDataHandler {
 		for (PaymentMethodRet paymentMethod : paymentMethods) {
 			singleAcctData = new QBData();
 			singleAcctData.setId(paymentMethod.getListID());
-			singleAcctData.setType("PAYMENTMETHOD");
+			singleAcctData.setDataType("paymentmethod");
 			singleAcctData.setFullName(paymentMethod.getName());
 			
 			//Save only as much required - also update if available already
 			entityHandler.addUpdateEntity(tenantId, entityHandler.getLookupEntity(), singleAcctData.getId(), singleAcctData);
 		}
 		logger.debug("Saved all tax codes in EL for tenantId: " + tenantId);
+	}
+	
+	public List<QBData> getData(Integer tenantId, String type) throws Exception {
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getLookupEntity(), "dataType eq "+type, "fullName", 200);
+		List<QBData> data = new ArrayList<QBData>();
+		for(JsonNode node : nodes) {
+			data.add(mapper.readValue(node.toString(), QBData.class));
+		}
+		
+		return data;
+	}
+	
+	public DataMapping getMapping(Integer tenantId, String id, String type) throws Exception {
+		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getMappingEntity(), id);
+		if (node == null) return null;
+		return mapper.readValue(node.toString(), DataMapping.class);
 	}
 	
 	private QBXML getQBXML() {

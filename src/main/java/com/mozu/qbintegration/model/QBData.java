@@ -12,17 +12,17 @@ public class QBData {
 	/**
 	 * 
 	 */
-	private String id; 
+	private String id; //ID of mozu payment method. E.g. MC corresponds to mastercard.
 	
 	/**
 	 * 
 	 */
-	private String type;
+	private String dataType;
 	
 	/**
 	 * 
 	 */
-	private String fullName; //used for creating product
+	private String fullName; //name of QB payment method
 
 	/**
 	 * @return the id
@@ -41,15 +41,15 @@ public class QBData {
 	/**
 	 * @return the type
 	 */
-	public String getType() {
-		return type;
+	public String getDataType() {
+		return dataType;
 	}
 
 	/**
 	 * @param type the type to set
 	 */
-	public void setType(String type) {
-		this.type = type;
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
 	}
 
 	/**
@@ -65,5 +65,4 @@ public class QBData {
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
 	}
-
 }

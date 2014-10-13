@@ -1,5 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -220,14 +221,15 @@ public class OrderStateHandler {
 			}
 		}
 		if (currentStep.equals(OrderStates.CUST_QUERY) && 
-				processStatus.hasWarning() && 
-				processStatus.getStatusCode().equals(500)) //Customer not found...add new customer
+				processStatus.hasWarning() && processStatus.getStatusCode().intValue() == 500) //Customer not found...add new customer
 			return OrderStates.CUST_ADD;
-		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) {
+		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) 
 			return OrderStates.CUST_QUERY;
-		} else if (!allItemsFound(tenantId, order)) {
+		else if (currentStep.equals(OrderStates.ITEM_QUERY) && processStatus.hasWarning())
+			return OrderStates.CONFLICT;
+		else if (!allItemsFound(tenantId, order))
 			return OrderStates.ITEM_QUERY;
-		} if (currentStep.equals(OrderStates.ORDER_QUERY) && 
+		else if (currentStep.equals(OrderStates.ORDER_QUERY) && 
 				action.equals(WorkTaskActions.ADD) && 
 				this.orderExistsInQB) {
 			this.conflictReason = "Order Already exists in Quickbooks";
@@ -240,11 +242,11 @@ public class OrderStateHandler {
 		else if (action.equals(WorkTaskActions.UPDATE) && 
 				this.orderExistsInQB) {
 			return OrderStates.UPDATE;
-		} else if (action.equals(WorkTaskActions.ADD)){
+		} else if (action.equals(WorkTaskActions.ADD))
 			return OrderStates.ADD;
-		} else if (action.equals(WorkTaskActions.DELETE)){
+		else if (action.equals(WorkTaskActions.DELETE))
 			return OrderStates.DELETE;
-		} else
+		else
 			throw new Exception("Could not determine next step");
 	}
 	
@@ -311,7 +313,7 @@ public class OrderStateHandler {
 		} else if (currentStep.equals(OrderStates.DELETE)) {
 			processStatus = orderHandler.processOrderDelete(tenantId, order.getId(),qbResponse);
 		} else if (currentStep.equals(OrderStates.ITEM_QUERY)) {
-			 productHandler.processItemQuery(tenantId,qbResponse);
+			processStatus =  productHandler.processItemQuery(tenantId,qbResponse);
 		} else if (currentStep.equals(OrderStates.ORDER_QUERY)) {
 			processStatus = orderHandler.processOrderQuery(tenantId, order.getId(), qbResponse);
 			if (!processStatus.hasWarning()) {

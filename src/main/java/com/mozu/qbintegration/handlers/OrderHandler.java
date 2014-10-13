@@ -22,6 +22,7 @@ import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.DataMapping;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuOrderItem;
@@ -74,6 +75,9 @@ public class OrderHandler {
 	
 	@Autowired 
 	QuickbooksService quickbooksService;
+	
+	@Autowired
+	QBDataHandler qbDataHandler;
 	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));
@@ -313,9 +317,10 @@ public class OrderHandler {
 		
 		salesReceiptAdd.setCustomerRef(customerRef);
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
-		salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
-		salesReceiptAdd.setPaymentMethodRef(getPayment(order) );
+		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
@@ -336,7 +341,8 @@ public class OrderHandler {
 			salesReceiptLineAdd.setItemRef(itemRef);
 			salesReceiptLineAdd.setDesc(item.getDescription());
 			
-			salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			if (!StringUtils.isEmpty(item.getTaxCode()))
+				salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
 			
 			salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 		}
@@ -385,11 +391,12 @@ public class OrderHandler {
 		txnId.setValue(salesReceiptRet.getTxnID());
 		salesReceiptmod.setTxnID(txnId);
 		salesReceiptmod.setEditSequence(salesReceiptRet.getEditSequence());
-		salesReceiptmod.setPaymentMethodRef(getPayment(order));
-		salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
-		salesReceiptmod.setPaymentMethodRef(getPayment(order) );
+		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
 		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
@@ -419,7 +426,8 @@ public class OrderHandler {
 
 			salesReceiptLineMod.setDesc(item.getDescription());
 			salesReceiptLineMod.setItemRef(itemRef);
-			salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			if (!StringUtils.isEmpty(item.getTaxCode()))
+				salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
 			salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
 		}
 		return XMLHelper.getMarshalledValue(qbxml);
@@ -445,18 +453,26 @@ public class OrderHandler {
 	}
 	
 	
-	private PaymentMethodRef getPayment(Order order) {
+	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
-			if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
-				paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
-			}
+			if (payment.getPaymentType().equalsIgnoreCase("check") || payment.getPaymentType().equalsIgnoreCase("storecredit")) {
+				paymentRef.setFullName(payment.getPaymentType());
+			} 
 			else {
-				paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
+				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
 			}
 		}
-		return paymentRef;
+		
+		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
+			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
+			if (mapping != null) {
+				paymentRef.setFullName(mapping.getQbData().getFullName());
+			}
+			return paymentRef;
+		}
+		return null;
 	}
 	
 	/*
@@ -539,7 +555,9 @@ public class OrderHandler {
 		
 		QuickBooksOrder newOrder = new QuickBooksOrder();
 		
-		newOrder.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			newOrder.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		
 		newOrder.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		newOrder.setSubTotal(order.getSubtotal());
 		newOrder.setTotalAmount(order.getTotal());

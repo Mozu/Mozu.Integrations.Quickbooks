@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.paymentMapping}" class="label-bold"></label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="tab-full-column">
+				 <select data-bind="options: mozuPayments,optionsText: 'name',
+                       value: selectedMozuPayment"></select>
+                       
+                  <select data-bind="options: qbPaymentMethods, optionsText: 'fullName',
+                       value: selectedQBPayment"></select>
+				 <button data-bind="click: mapPayment">Add</button>
+			</div>
+		</div>
+		
+		<div class="tab-divider"></div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.existingmappings}" class="label-bold"></label>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="comparecontainer-left" style="width:100%">
+				    <div class="compareheading">
+				         <div class="compare-col">Mozu Payment Method</div>
+				         <div class="compare-col">Quickbooks Payment Method</div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: paymentMappings">
+					    <div class="compare-table-row">
+					         <div class="compare-col" data-bind="text: mzData().name"></div>
+					         <div class="compare-col" data-bind="text: qbData().fullName"></div>
+					    </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>
