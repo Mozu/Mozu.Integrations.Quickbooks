@@ -21,6 +21,7 @@ import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDi
 import com.mozu.api.contracts.commerceruntime.discounts.ShippingDiscount;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
@@ -40,6 +41,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAssemblyRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
@@ -132,8 +134,12 @@ public class ProductHandler {
 			}else if (object instanceof ItemInventoryAssemblyRet) {
 				ItemInventoryAssemblyRet itemInvRet = (ItemInventoryAssemblyRet) object;
 				productName =  itemInvRet.getFullName();
-				productQbListID = itemInvRet.getName();
-			} else
+				productQbListID = itemInvRet.getListID();
+			} else if (object instanceof ItemPaymentRet) {
+				ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
+				productName =  itemInvRet.getName();
+				productQbListID = itemInvRet.getListID();
+			}else
 				throw new Exception(object.getClass() +" not supported");
 			MozuProduct mozuProduct = new MozuProduct();
 			mozuProduct.setProductCode(productName);
@@ -423,6 +429,7 @@ public class ProductHandler {
 		
 		String qbDiscProductCode = null;
 		String shippingProductCode = null;
+		String giftCardProductCode = null;
 		
 		GeneralSettings settings = quickbooksService
 				.getSettingsFromEntityList(tenantId);
@@ -433,6 +440,10 @@ public class ProductHandler {
 
 			if (StringUtils.isNotEmpty(settings.getShippingProductCode()))
 				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
+			
+			if (StringUtils.isNotEmpty(settings.getGiftCardProductCode()))
+				giftCardProductCode = getQBId(tenantId,	settings.getGiftCardProductCode());
+			
 		}
 		
 		double qbDiscount = 0.0; // this sums up all item discounts
@@ -535,6 +546,22 @@ public class ProductHandler {
 			mzItem.setMisc(true);
 			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
+		}
+		
+		//Get store credit product
+		if (StringUtils.isNoneEmpty(settings.getGiftCardProductCode())) {
+			for(Payment payment : order.getPayments()) {
+				if (payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit") && payment.getStatus().equalsIgnoreCase("collected")) {
+					MozuOrderItem mzItem = new MozuOrderItem();
+					mzItem.setProductCode(settings.getGiftCardProductCode());
+					mzItem.setQbItemCode(giftCardProductCode);
+					mzItem.setAmount(payment.getAmountCollected());
+					mzItem.setMisc(true);
+					mzItem.setDescription(payment.getBillingInfo().getStoreCreditCode());
+					//mzItem.setTaxCode("Non");
+					productCodes.add(mzItem);
+				}
+			}
 		}
 		
 		return productCodes;
