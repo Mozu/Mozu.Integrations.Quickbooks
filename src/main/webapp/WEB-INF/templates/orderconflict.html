@@ -92,25 +92,27 @@
 							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown"></select>
 							<label class="tab-field-label" for="field">Item Name/Number</label>
 							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" />
-							<label class="tab-field-label" for="field">Purchase Info</label>
+							<label class="tab-field-label" for="field">Description on Purchase Transactions:</label>
 							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" />
-							<label class="tab-field-label" for="field">Sales Info</label>
+							<label class="tab-field-label" for="field">Cost:</label>
+							<input type="text" data-bind="value: itemToFix.itemPurchaseCost" class="tab-field" />
+							<label class="tab-field-label" for="field">Sales Information:</label>
 							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" />
-							<label class="tab-field-label" for="field">Sales Price</label>
+							<label class="tab-field-label" for="field">Sales Price:</label>
 							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"/>
 							
 						</div>
 						<div class="tab-second-column">
-							<label class="tab-field-label" for="field">Manufacturer Part Number</label>
+							<label class="tab-field-label" for="field">Manufacturer's Part Number</label>
 							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
-							<label class="tab-field-label" for="field">Tax Code</label>
-							<select data-bind="options: availableTaxCodes, value: itemToFix.itemTaxCode, optionsText: 'fullName'"  class="dropdown"></select>
-							<label class="tab-field-label" for="field">Expense Account</label>
-							<select data-bind="options: availableAccounts, value: itemToFix.incomeExpenseAccount, optionsText: 'fullName'"  class="dropdown"></select>
-							<label class="tab-field-label" for="field">Income Account</label>
-							<select data-bind="options: availableAccounts, value: itemToFix.itemIncomeAccount, optionsText: 'fullName'"  class="dropdown"></select>
-							<label class="tab-field-label" for="field">Preferred Vendor</label>
-							<select data-bind="options: availableVendors, value: itemToFix.selectedVendor, optionsText: 'fullName'"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Tax Code:</label>
+							<select data-bind="options: availableTaxCodes, value: itemToFix.itemTaxCode, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Expense Account:</label>
+							<select data-bind="options: availableAccounts, value: itemToFix.itemExpenseAccount, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Income Account:</label>
+							<select data-bind="options: availableAccounts, value: itemToFix.itemIncomeAccount, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
+							<label class="tab-field-label" for="field">Preferred Vendor:</label>
+							<select data-bind="options: availableVendors, value: itemToFix.selectedVendor, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
 						</div>
 					</div>
 					<div>

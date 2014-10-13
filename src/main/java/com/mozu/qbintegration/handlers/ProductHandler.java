@@ -367,6 +367,11 @@ public class ProductHandler {
 		inventoryAdd.setSalesDesc(productToQuickbooks.getItemSalesDesc());
 		inventoryAdd.setSalesPrice(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemSalesPrice())));
+		
+		//Akshay: Set purchase information
+		inventoryAdd.setPurchaseDesc(productToQuickbooks.getItemPurchaseDesc());
+		inventoryAdd.setPurchaseCost(numberFormat.format(Double
+				.valueOf(productToQuickbooks.getItemPurchaseCost())));
 
 		return XMLHelper.getMarshalledValue(qbxml);
 	}
