@@ -22,6 +22,18 @@ function funEdit(orderNumber) {
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
 			getAllProductsFromEntityList();
+			
+			homeViewModel.loadQBData("taxcode", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableTaxCodes);
+			});
+			
+			homeViewModel.loadQBData("vendor", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableVendors);
+			});
+			
+			homeViewModel.loadQBData("account", function(data) {
+				ko.mapping.fromJS(data,{},homeViewModel.availableAccounts);
+			});
 		},
 		error : function() {
 			$("#content").hide();
@@ -132,7 +144,9 @@ var homeViewModel = function() {
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
 	self.selectedTab = ko.observable();
-	
+	self.availableTaxCodes = ko.observableArray([]);
+	self.availableAccounts = ko.observableArray([]);
+	self.availableVendors = ko.observableArray([]);
 	self.compare = ko.mapping.fromJS(compare);
 	
 	//For the detail section
@@ -630,6 +644,7 @@ var homeViewModel = function() {
 						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
+						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
 					}
 				},
 				error : function() {
@@ -739,8 +754,7 @@ var homeViewModel = function() {
 	self.mapPayment = function() {
 		var exists = false;
 		for(var i=0;i<self.paymentMappings().length;i++) {
-			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mzData().id && 
-					self.selectedQBPayment().id() == self.paymentMappings()[i].qbData().id) {
+			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mozuId()) {
 				exists = true;
 			}	
 		}

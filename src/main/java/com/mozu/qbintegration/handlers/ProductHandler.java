@@ -1,5 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
+import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.IncomeAccountRef;
@@ -150,25 +152,34 @@ public class ProductHandler {
 		}
 	}
 	
-	public boolean processItemQuery(Integer tenantId, String qbTaskResponse)
+	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)
 			throws Exception {
 		QBXML itemSearchEle = (QBXML) XMLHelper
 				.getUnmarshalledValue(qbTaskResponse);
 		List<Object> results = itemSearchEle.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
-		boolean foundAllItems = true;
+		//boolean foundAllItems = true;
+		QBResponse qbResponse = new QBResponse();
 		for(Object obj : results) {
 			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
 			if (500 == itemSearchResponse.getStatusCode().intValue()
 					&& "warn".equalsIgnoreCase(itemSearchResponse
 							.getStatusSeverity())) {
-				foundAllItems = false;
+				qbResponse.setStatusCode(itemSearchResponse.getStatusCode());
+				qbResponse.setStatusSeverity(itemSearchResponse.getStatusSeverity());
+				qbResponse.setStatusMessage(itemSearchResponse.getStatusMessage());
 			} else {
 				saveProductInEntityList(itemSearchResponse, tenantId);
 			}
 		}
 
-		return foundAllItems;
+		if (StringUtils.isEmpty(qbResponse.getStatusMessage())) {
+			qbResponse.setStatusCode(BigInteger.ZERO);
+			qbResponse.setStatusMessage("Status OK");
+			qbResponse.setStatusSeverity("Info");
+		}
+		
+		return qbResponse;
 	}
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask,
