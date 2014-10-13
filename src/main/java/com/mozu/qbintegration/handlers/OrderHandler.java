@@ -317,7 +317,8 @@ public class OrderHandler {
 		
 		salesReceiptAdd.setCustomerRef(customerRef);
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
-		salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
@@ -340,7 +341,8 @@ public class OrderHandler {
 			salesReceiptLineAdd.setItemRef(itemRef);
 			salesReceiptLineAdd.setDesc(item.getDescription());
 			
-			salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			if (!StringUtils.isEmpty(item.getTaxCode()))
+				salesReceiptLineAdd.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
 			
 			salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 		}
@@ -390,7 +392,8 @@ public class OrderHandler {
 		salesReceiptmod.setTxnID(txnId);
 		salesReceiptmod.setEditSequence(salesReceiptRet.getEditSequence());
 		
-		salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
@@ -423,7 +426,8 @@ public class OrderHandler {
 
 			salesReceiptLineMod.setDesc(item.getDescription());
 			salesReceiptLineMod.setItemRef(itemRef);
-			salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
+			if (!StringUtils.isEmpty(item.getTaxCode()))
+				salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
 			salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
 		}
 		return XMLHelper.getMarshalledValue(qbxml);
@@ -452,7 +456,7 @@ public class OrderHandler {
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
-			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
+			if (payment.getStatus().equalsIgnoreCase("voided") || payment.getPaymentType().equalsIgnoreCase("storecredit")) continue;
 			if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
 				paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
 			}
@@ -461,11 +465,14 @@ public class OrderHandler {
 			}
 		}
 		
-		DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
-		if (mapping != null) {
-			paymentRef.setFullName(mapping.getQbData().getFullName());
+		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
+			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
+			if (mapping != null) {
+				paymentRef.setFullName(mapping.getQbData().getFullName());
+			}
+			return paymentRef;
 		}
-		return paymentRef;
+		return null;
 	}
 	
 	/*
@@ -548,7 +555,9 @@ public class OrderHandler {
 		
 		QuickBooksOrder newOrder = new QuickBooksOrder();
 		
-		newOrder.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		if (order.getBillingInfo().getBillingContact().getAddress() != null)
+			newOrder.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
+		
 		newOrder.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		newOrder.setSubTotal(order.getSubtotal());
 		newOrder.setTotalAmount(order.getTotal());

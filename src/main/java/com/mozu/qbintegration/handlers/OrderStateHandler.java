@@ -1,5 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -220,8 +221,7 @@ public class OrderStateHandler {
 			}
 		}
 		if (currentStep.equals(OrderStates.CUST_QUERY) && 
-				processStatus.hasWarning() && 
-				processStatus.getStatusCode().equals(500)) //Customer not found...add new customer
+				processStatus.hasWarning() && processStatus.getStatusCode().intValue() == 500) //Customer not found...add new customer
 			return OrderStates.CUST_ADD;
 		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) {
 			return OrderStates.CUST_QUERY;
