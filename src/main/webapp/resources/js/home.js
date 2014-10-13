@@ -114,11 +114,12 @@ var qbItem = function(itemNumber) {
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
     self.itemManuPartNum = ko.observable("");
-    self.itemTaxCode = ko.observable("");
-    self.itemExpenseAccount = ko.observable("");
-    self.itemAssetAccount = ko.observable("");
-    self.itemIncomeAccount = ko.observable("");
     self.selectedChoice = ko.observable();
+    self.itemTaxCode = ko.observable();
+    self.itemExpenseAccount = ko.observable();
+    self.itemAssetAccount = ko.observable();
+    self.itemIncomeAccount = ko.observable();
+    self.selectedVendor = ko.observable();
 }
 
 var compare = {
@@ -308,7 +309,6 @@ var homeViewModel = function() {
     
 	self.save = function() {
 		if (self.selectedTab() == "paymentMappingTab") {
-			
 			$.ajax({
 				contentType: 'application/json; charset=UTF-8',
 				url : "api/qb/data?tenantId=" + $("#tenantIdHdn").val(),
@@ -698,23 +698,51 @@ var homeViewModel = function() {
 		});		
 	}
 	
-
-	
 	self.qbPaymentMethods =  ko.observableArray([]);
 	self.loadPaymentMapping = function() {
+		
+		//Clear the existing mapping table
+		self.paymentMappings.removeAll();
+		
 		self.loadQBData("paymentmethod", function(data) {
 			console.log(data);
 			ko.mapping.fromJS(data,{},self.qbPaymentMethods);
 		});
+		
+		//Load any mappings already done
+		self.getPaymentMappings(function(data) {
+			
+			$(data).each(function(index) {
+				self.paymentMappings.push(
+						new paymentMapping(data[index].mzData.id,
+								data[index].mzData, data[index].qbData));
+			});
+			//ko.mapping.fromJS(data,{},self.paymentMappings);
+		});
 	};
+	
+	self.getPaymentMappings = function(callback) {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/getPaymentMappings?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				callback(data);
+			},
+			error : function() {
+				$("#content").hide();
+			}
+		});		
+	}
 	
 	self.mapPayment = function() {
 		var exists = false;
 		for(var i=0;i<self.paymentMappings().length;i++) {
-			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mzData().id() && 
-					self.selectedQBPayment().id() == self.paymentMappings()[i].qbData().id()) 	{
+			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mzData().id && 
+					self.selectedQBPayment().id() == self.paymentMappings()[i].qbData().id) {
 				exists = true;
-			}
+			}	
 		}
 		
 		if (!exists)

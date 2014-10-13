@@ -226,7 +226,8 @@ public class OrderStateHandler {
 		else if (!isCustomerFound(tenantId, custAcct.getEmailAddress())) {
 			return OrderStates.CUST_QUERY;
 		} else if (!allItemsFound(tenantId, order)) {
-			return OrderStates.ITEM_QUERY;
+			//return OrderStates.ITEM_QUERY;
+			return OrderStates.CONFLICT;
 		} if (currentStep.equals(OrderStates.ORDER_QUERY) && 
 				action.equals(WorkTaskActions.ADD) && 
 				this.orderExistsInQB) {

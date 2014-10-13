@@ -9,8 +9,6 @@
 				<label th:text="#{label.paymentMapping}" class="label-bold"></label>
 			</div>
 		</div>
-		<div class="tab-divider"></div>
-
 
 		<div class="row">
 			<div class="tab-full-column">
@@ -23,21 +21,31 @@
 			</div>
 		</div>
 		
+		<div class="tab-divider"></div>
+		
 		<div class="row">
 			<div class="tab-full-column">
-				 <table>
-				    <thead>
-				        <tr><th>Mozu Payment</th><th>Quickbooks Payment</th></tr>
-				    </thead>
-				    <tbody data-bind="foreach: paymentMappings">
-				        <tr>
-				            <td data-bind="text: mzData().name"></td>
-				            <td data-bind="text: qbData().fullName"></td>
-				        </tr>
-				    </tbody>
-				</table>
+				<label th:text="#{label.existingmappings}" class="label-bold"></label>
 			</div>
 		</div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="comparecontainer-left">
+				    <div class="compareheading">
+				         <div class="compare-col">Mozu Payment</div>
+				         <div class="compare-col">Quickbooks Payment</div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: paymentMappings">
+					    <div class="compare-table-row">
+					         <div class="compare-col" data-bind="text: mzData().name"></div>
+					         <div class="compare-col" data-bind="text: qbData().fullName"></div>
+					    </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+
 	</div>
 </body>
 </html>

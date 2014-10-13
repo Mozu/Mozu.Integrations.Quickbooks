@@ -3,6 +3,7 @@
  */
 package com.mozu.qbintegration.controllers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.handlers.EntityHandler;
@@ -161,18 +165,51 @@ public class QBDataFetchController {
 	}
 	
 	@RequestMapping(value = "data", method = RequestMethod.GET)
-	public @ResponseBody List<QBData> getQbData(@RequestParam(value = "tenantId", required = true)  Integer tenantId, @RequestParam(value = "type", required = true)  String type , final HttpServletRequest request) throws Exception
-	{
-		return qbDataHandler.getData(tenantId, type);
+	public @ResponseBody
+	List<QBData> getQbData(
+			@RequestParam(value = "tenantId", required = true) Integer tenantId,
+			@RequestParam(value = "type", required = true) String type,
+			final HttpServletRequest request) throws Exception {
+		
+		List<QBData> qbData = qbDataHandler.getData(tenantId, type);
+		return qbData;
 	}
 	
 	@RequestMapping(value = "data", method = RequestMethod.POST)
-	public void mapQbData(@RequestParam(value = "tenantId", required = true)  Integer tenantId, @RequestBody List<DataMapping> dataMapping,final HttpServletRequest request) throws Exception
-	{
-		for(DataMapping mapping : dataMapping) {
-			entityHandler.addUpdateEntity(tenantId, entityHandler.getMappingEntity(), mapping.getMozuId(), mapping);
+	public @ResponseBody String mapQbData(
+			@RequestParam(value = "tenantId", required = true) Integer tenantId,
+			@RequestBody List<DataMapping> dataMapping,
+			final HttpServletRequest request) throws Exception {
+		for (DataMapping mapping : dataMapping) {
+			entityHandler.addUpdateEntity(tenantId,
+					entityHandler.getMappingEntity(), mapping.getMozuId(),
+					mapping);
 		}
-		
+
+		return "Mozu to Quickbooks Payment mapping is successful.";
 	}
+	
+	@RequestMapping(value = "getPaymentMappings", method = RequestMethod.GET)
+	public @ResponseBody
+	List<DataMapping> getExistingPaymentMappings(
+			@RequestParam(value = "tenantId", required = true) Integer tenantId,
+			final HttpServletRequest request) throws Exception {
+		
+		List<DataMapping> paymentData = getDataMappings(
+				entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 100)); //TODO 100 is placeholder
+		
+		return paymentData;
+	}
+
+	private List<DataMapping> getDataMappings(List<JsonNode> entityCollection) 
+			throws JsonParseException, JsonMappingException, IOException {
+		List<DataMapping> paymentData = new ArrayList<DataMapping>();
+		for(JsonNode singleDataMapping: entityCollection) {
+			paymentData.add(mapper.readValue(singleDataMapping.toString(), DataMapping.class));
+		}
+		return paymentData;
+	}
+	
+	
 	
 }

@@ -12,7 +12,7 @@ public class QBData {
 	/**
 	 * 
 	 */
-	private String id; 
+	private String id; //ID of mozu payment method. E.g. MC corresponds to mastercard.
 	
 	/**
 	 * 
@@ -22,7 +22,7 @@ public class QBData {
 	/**
 	 * 
 	 */
-	private String fullName; //used for creating product
+	private String fullName; //name of QB payment method
 
 	/**
 	 * @return the id
@@ -65,5 +65,4 @@ public class QBData {
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
 	}
-
 }
