@@ -456,12 +456,12 @@ public class OrderHandler {
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
-			if (payment.getStatus().equalsIgnoreCase("voided") || payment.getPaymentType().equalsIgnoreCase("storecredit")) continue;
-			if (order.getPayments().get(0).getPaymentType().equalsIgnoreCase("check")) {
-				paymentRef.setFullName(order.getPayments().get(0).getPaymentType());
-			}
+			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
+			if (payment.getPaymentType().equalsIgnoreCase("check") || payment.getPaymentType().equalsIgnoreCase("storecredit")) {
+				paymentRef.setFullName(payment.getPaymentType());
+			} 
 			else {
-				paymentRef.setFullName(order.getPayments().get(0).getBillingInfo().getCard().getPaymentOrCardType());
+				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
 			}
 		}
 		
