@@ -3,10 +3,13 @@
  */
 package com.mozu.qbintegration.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Akshay
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductToQuickbooks {
 
 	private String itemNameNumber;
@@ -23,8 +26,6 @@ public class ProductToQuickbooks {
 
 	private String itemExpenseAccount;
 
-	private String itemAssetAccount;
-
 	private String itemIncomeAccount;
 
 	private String status;
@@ -32,6 +33,10 @@ public class ProductToQuickbooks {
 	private String errorMessage;
 	
 	private String selectedChoice;
+	
+	private String selectedVendor;
+	
+	private String itemPurchaseCost;
 	
 	/**
 	 * @return the itemNameNumber
@@ -139,21 +144,6 @@ public class ProductToQuickbooks {
 	}
 
 	/**
-	 * @return the itemAssetAccount
-	 */
-	public String getItemAssetAccount() {
-		return itemAssetAccount;
-	}
-
-	/**
-	 * @param itemAssetAccount
-	 *            the itemAssetAccount to set
-	 */
-	public void setItemAssetAccount(String itemAssetAccount) {
-		this.itemAssetAccount = itemAssetAccount;
-	}
-
-	/**
 	 * @return the itemIncomeAccount
 	 */
 	public String getItemIncomeAccount() {
@@ -197,6 +187,34 @@ public class ProductToQuickbooks {
 
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
+	}
+
+	/**
+	 * @return the selectedVendor
+	 */
+	public String getSelectedVendor() {
+		return selectedVendor;
+	}
+
+	/**
+	 * @param selectedVendor the selectedVendor to set
+	 */
+	public void setSelectedVendor(String selectedVendor) {
+		this.selectedVendor = selectedVendor;
+	}
+
+	/**
+	 * @return the itemPurchaseCost
+	 */
+	public String getItemPurchaseCost() {
+		return itemPurchaseCost;
+	}
+
+	/**
+	 * @param itemPurchaseCost the itemPurchaseCost to set
+	 */
+	public void setItemPurchaseCost(String itemPurchaseCost) {
+		this.itemPurchaseCost = itemPurchaseCost;
 	}
 
 	

@@ -71,12 +71,13 @@ public class QBDataFetchController {
 	ObjectNode saveProductToQB(
 			@RequestParam(value = "tenantId", required = false) Integer tenantId,
 			@RequestParam(value = "siteId", required = false) Integer siteId,
-			@RequestBody ProductToQuickbooks productToQuickbooks,
+			@RequestBody String productToQuickbooksStr,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
+		ProductToQuickbooks productToQuickbooks = mapper.readValue(productToQuickbooksStr, ProductToQuickbooks.class);
 		productHandler.addProductToQB(tenantId, productToQuickbooks );
 				
-		return (mapper.createObjectNode()).put("savedProduct", mapper.writeValueAsString(productToQuickbooks));
+		return (mapper.createObjectNode()).put("savedProduct", productToQuickbooksStr);//Saved a conversion since we already have the str
 		
 	}
 	

@@ -123,13 +123,13 @@ var qbItem = function(itemNumber) {
 	var self = this;
     self.itemNameNumber = ko.observable(itemNumber);
     self.itemPurchaseDesc = ko.observable("");
+    self.itemPurchaseCost = ko.observable("");
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
     self.itemManuPartNum = ko.observable("");
     self.selectedChoice = ko.observable();
     self.itemTaxCode = ko.observable();
     self.itemExpenseAccount = ko.observable();
-    self.itemAssetAccount = ko.observable();
     self.itemIncomeAccount = ko.observable();
     self.selectedVendor = ko.observable();
 }
@@ -195,6 +195,7 @@ var homeViewModel = function() {
     }
     
     self.saveItemToQuickbooks = function() {
+    	console.log(ko.mapping.toJSON(self.itemToFix));
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
 			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
