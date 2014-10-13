@@ -33,14 +33,14 @@ public class QueueManagerServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4647;
+		tenantId = 5872;
 	}
 
 	@After
 	public void tearDown() throws Exception {
 	}
 
-	@Test
+	//@Test
 	public void queueTaskExiststest() {
 		try {
 			//boolean exists = queueManagerService.taskExists(tenantId, "052ca9c178bf8a0d9c9350b40000119c");
