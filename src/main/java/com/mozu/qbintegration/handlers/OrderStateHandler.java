@@ -1,6 +1,5 @@
 package com.mozu.qbintegration.handlers;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,7 +95,7 @@ public class OrderStateHandler {
 	public void transitionState(String orderId, Integer tenantId, String qbResponse, String action) throws Exception {
 		Order order = orderHandler.getOrder(orderId, tenantId);
 		final CustomerAccount orderingCust = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
-		action = (order.getStatus().equalsIgnoreCase("cancelled") ? "cancel" : action);
+		action = (order.getStatus().equalsIgnoreCase("cancelled") ? "Delete" : action); //Akshay: bug fix - Cancel was being compared with Delete
 		transitionState(tenantId,order, orderingCust, qbResponse, action);
 	}
 	
@@ -360,7 +359,7 @@ public class OrderStateHandler {
 		}
 
 		if (isProcessed) { //Delete only if it has been successfully posted to QB
-			transitionState(entityId, tenantId, null, "cancel");
+			transitionState(entityId, tenantId, null, "Delete");
 			return true;
 		} else {
 			//throw new Exception("Did not find an order with id: " + entityId + " in POSTED or CONFLICT status. " +

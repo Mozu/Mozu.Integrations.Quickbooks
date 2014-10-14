@@ -48,7 +48,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 
 			return task;
 		}
-		
+		logger.debug("No WorkTask to return from QueueManagerServiceImpl for tenantId: " + tenantId);
 		return null;
 	}
 	

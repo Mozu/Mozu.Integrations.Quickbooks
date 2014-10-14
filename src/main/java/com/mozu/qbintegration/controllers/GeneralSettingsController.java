@@ -7,7 +7,6 @@ package com.mozu.qbintegration.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -30,9 +29,7 @@ import org.springframework.web.context.ServletContextAware;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
-import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.QBData;
 import com.mozu.qbintegration.model.QuickWebConnector;
 import com.mozu.qbintegration.model.Scheduler;
 import com.mozu.qbintegration.service.QuickbooksService;
