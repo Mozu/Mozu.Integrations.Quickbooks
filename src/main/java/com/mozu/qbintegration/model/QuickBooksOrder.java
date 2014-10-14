@@ -1,7 +1,6 @@
 package com.mozu.qbintegration.model;
 
 import java.math.BigInteger;
-import java.util.Date;
 import java.util.List;
 
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
