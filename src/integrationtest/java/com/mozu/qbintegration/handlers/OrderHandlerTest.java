@@ -32,8 +32,8 @@ public class OrderHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 5872;
-		orderId = "05357e6721f6631de04a4598000016f0";
+		tenantId = 4647;
+		orderId = "053f145378bf8a09609a9db600001227";
 	}
 
 	@After
@@ -41,7 +41,7 @@ public class OrderHandlerTest {
 	}
 
 	@Test
-	public void getQBOrderSaveXMLTest() {
+	public void getQBOrderSaveXMLTest() throws InterruptedException {
 		try {
 			String xml = orderHandler.getQBOrderSaveXML(tenantId, orderId);
 			System.out.println(xml);

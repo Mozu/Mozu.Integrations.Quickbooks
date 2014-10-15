@@ -38,6 +38,9 @@ public class CustomerHandler {
 	@Autowired
 	EntityHandler entityHandler;
 	
+	@Autowired
+	XMLHelper xmlHelper;
+	
 	public CustomerAccount getCustomer(Integer tenantId, Integer customerAccountId) throws Exception {
 		CustomerAccountResource accountResource = new CustomerAccountResource(new MozuApiContext(tenantId));
 		CustomerAccount orderingCust = null;
@@ -51,7 +54,6 @@ public class CustomerHandler {
 	}
 	
 	public String getQbCustomerId(Integer tenantId, String emailAddress) throws Exception {
-		String mapName = entityHandler.getCustomerEntityName();
 		String qbListID = null;
 		
 		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), emailAddress);
@@ -113,7 +115,7 @@ public class CustomerHandler {
 		//Akshay 11-oct-2014 - use email address for full name
 		//customerQueryRqType.getFullName().add(cust.getEmailAddress());
 
-		return XMLHelper.getMarshalledValue(qbXML);
+		return xmlHelper.getMarshalledValue(qbXML);
 	}
 	
 	public String getQBCustomerSaveXML(Integer tenantId, String orderId, Integer customerAccountId) throws Exception {
@@ -213,7 +215,7 @@ public class CustomerHandler {
 			salesTaxCodeRef.setFullName("Non");
 		
 		qbXMCustomerAddType.setSalesTaxCodeRef(salesTaxCodeRef);
-		return XMLHelper.getMarshalledValue(qbXML);
+		return xmlHelper.getMarshalledValue(qbXML);
 	}
 	
 	public String getQBCustomerUpdateXML(final Order order, final CustomerAccount customerAccount) {
@@ -223,7 +225,7 @@ public class CustomerHandler {
 
 	
 	public QBResponse processCustomerQuery(int tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
-		QBXML response = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
+		QBXML response = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerQueryRsType custQueryResponse = (CustomerQueryRsType) response.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
@@ -249,7 +251,7 @@ public class CustomerHandler {
 	}
 	
 	public QBResponse processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
-		QBXML custAddResp = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
+		QBXML custAddResp = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerAddRsType custAddResponse = (CustomerAddRsType) custAddResp.getQBXMLMsgsRs()
 																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																			.get(0);

@@ -58,6 +58,9 @@ public class OrderStateHandler {
 	
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	XMLHelper xmlHelper;
 
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
@@ -162,7 +165,7 @@ public class OrderStateHandler {
 		if (StringUtils.isNotEmpty(qbResponse)) {
 			// Make entry in conflict reason table
 			// Log the not found product in error conflict
-			QBXML qbXml = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
+			QBXML qbXml = (QBXML)  xmlHelper.getUnmarshalledValue(qbResponse);
 			Object object = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs().get(0);
 			if (object instanceof ItemQueryRsType) {
 				
