@@ -74,14 +74,11 @@
 					<div class="tab-full-column" style="margin-top:10px;"></div>
 					<div class="tab-first-column">
 						<div class="tab-checkbox-container">
-							<input name="item" type="radio" data-bind="click: enableNewItem" value="new"></input>
-							<label class="tab-checkbox-label" for="newItem">Create New Item</label>	
-						</div>
-					</div>
-					<div class="tab-second-column">
-						<div class="tab-checkbox-container">
-							<input name="item" type="radio" data-bind="click: enableExistingItem" value="map"></input>
-							<label class="tab-checkbox-label" for="existingItem">Map to Existing Item</label>	
+							<input name="item_conflict_option" id="item_new" type="radio" data-bind="click: enableNewItem" value="new"></input>
+							<label class="tab-checkbox-label" for="newItem">Create New Item</label>
+							&nbsp;&nbsp;
+							<input name="item_conflict_option" id="item_map" type="radio" data-bind="click: enableExistingItem" value="map"></input>
+							<label class="tab-checkbox-label" for="existingItem">Map to Existing Item</label>		
 						</div>
 					</div>
 				</div>
@@ -107,7 +104,7 @@
 							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
 							<label class="tab-field-label" for="field">Tax Code:</label>
 							<select data-bind="options: availableTaxCodes, value: itemToFix.itemTaxCode, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
-							<label class="tab-field-label" for="field">Expense Account:</label>
+							<label class="tab-field-label" for="field">COGS Account:</label>
 							<select data-bind="options: availableAccounts, value: itemToFix.itemExpenseAccount, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
 							<label class="tab-field-label" for="field">Income Account:</label>
 							<select data-bind="options: availableAccounts, value: itemToFix.itemIncomeAccount, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>

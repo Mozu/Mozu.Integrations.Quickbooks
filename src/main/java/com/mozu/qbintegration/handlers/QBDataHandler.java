@@ -76,32 +76,6 @@ public class QBDataHandler {
 		queueManagerService.addTask(tenantId, id, type, currentStep, action);
 	}
 			
-	/**
-	 * Slot a task for pulling accounts from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	/*public void initiateAccountDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "Account", "DataSync", "QUERY", "GETACCOUNTS");
-	}*/
-	
-	/**
-	 * Slot a task for pulling vendors from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	/*public void initiateVendorDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "Vendor", "DataSync", "QUERY", "GETVENDORS");
-	}*/
-	
-	/**
-	 * Slot a task for pulling sales tax from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	/*public void initiateSalesTaxDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "SalesTaxCode", "DataSync", "QUERY", "GETSALESTAXCODES");
-	}*/
 	
 	public String getRequestXml(String action) throws Exception {
 		if (action.equalsIgnoreCase(DataActions.GETACCOUNTS)) {
