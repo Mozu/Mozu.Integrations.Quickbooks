@@ -45,6 +45,9 @@ public class QBDataHandler {
 	@Autowired
 	QueueManagerService queueManagerService;
 	
+	@Autowired
+	XMLHelper xmlHelper;
+	
 	public void refreshAllData(Integer tenantId) throws Exception {
 		refreshData(tenantId, "account");
 		refreshData(tenantId, "vendor");
@@ -76,7 +79,7 @@ public class QBDataHandler {
 		queueManagerService.addTask(tenantId, id, type, currentStep, action);
 	}
 			
-	
+
 	public String getRequestXml(String action) throws Exception {
 		if (action.equalsIgnoreCase(DataActions.GETACCOUNTS)) {
 			return getAccountQueryXml();
@@ -122,11 +125,11 @@ public class QBDataHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						accountQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	private void processAccountQueryXml(Integer tenantId, String respXml) throws Exception {
-		QBXML accountQueryResp = (QBXML) XMLHelper.getUnmarshalledValue(respXml);
+		QBXML accountQueryResp = (QBXML) xmlHelper.getUnmarshalledValue(respXml);
 		
 		AccountQueryRsType accountResponse = (AccountQueryRsType) accountQueryResp
 				.getQBXMLMsgsRs()
@@ -163,11 +166,11 @@ public class QBDataHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						vendorQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	private void processVendorQueryXml(Integer tenantId, String respXml) throws Exception {
-		QBXML accountQueryResp = (QBXML) XMLHelper.getUnmarshalledValue(respXml);
+		QBXML accountQueryResp = (QBXML) xmlHelper.getUnmarshalledValue(respXml);
 		
 		VendorQueryRsType vendorResponse = (VendorQueryRsType) accountQueryResp
 				.getQBXMLMsgsRs()
@@ -204,11 +207,11 @@ public class QBDataHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						salesTaxCodeQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	private void processSalesTaxCodeQueryXml(Integer tenantId, String respXml) throws Exception {
-		QBXML accountQueryResp = (QBXML) XMLHelper.getUnmarshalledValue(respXml);
+		QBXML accountQueryResp = (QBXML) xmlHelper.getUnmarshalledValue(respXml);
 		
 		SalesTaxCodeQueryRsType salesTaxCodeResp = (SalesTaxCodeQueryRsType) accountQueryResp
 				.getQBXMLMsgsRs()
@@ -241,11 +244,11 @@ public class QBDataHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						salesTaxCodeQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	private void processPaymentMethodQueryResponse(Integer tenantId, String respXml) throws Exception {
-		QBXML accountQueryResp = (QBXML) XMLHelper.getUnmarshalledValue(respXml);
+		QBXML accountQueryResp = (QBXML) xmlHelper.getUnmarshalledValue(respXml);
 		
 		PaymentMethodQueryRsType salesTaxCodeResp = (PaymentMethodQueryRsType) accountQueryResp
 				.getQBXMLMsgsRs()

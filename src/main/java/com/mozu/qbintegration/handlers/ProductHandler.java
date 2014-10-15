@@ -71,6 +71,9 @@ public class ProductHandler {
 	@Autowired
 	QuickbooksService quickbooksService;
 
+    @Autowired
+    XMLHelper xmlHelper;
+    
 	public String getQBId(Integer tenantId, String productCode)
 			throws Exception {
 		
@@ -88,7 +91,6 @@ public class ProductHandler {
 	
 	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse,
 			Integer tenantId) throws Exception {
-		String itemListId = null;
 		List<Object> invObj = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
 
@@ -97,12 +99,11 @@ public class ProductHandler {
 	
 	public void processItemQueryAll(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
 				.getQBXMLMsgsRs()
-																.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																.get(0);
+				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+				.get(0);
 		
 		List<Object> itemServiceRetCollection = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
@@ -154,8 +155,7 @@ public class ProductHandler {
 	
 	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)
 			throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		List<Object> results = itemSearchEle.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
 		//boolean foundAllItems = true;
@@ -184,13 +184,12 @@ public class ProductHandler {
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemAddEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemAddEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		ItemInventoryAddRsType invAddResponse = (ItemInventoryAddRsType) itemAddEle
 				.getQBXMLMsgsRs()
-																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																				.get(0);
+    			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+    			.get(0);
 		
 		JsonNode node = entityHandler.getEntity(tenantId,
 				entityHandler.getProdctAddEntity(), workTask.getId());
@@ -373,7 +372,7 @@ public class ProductHandler {
 		inventoryAdd.setPurchaseCost(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemPurchaseCost())));
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public String getQBProductsGetXML(Integer tenantId, Order order)
@@ -400,7 +399,7 @@ public class ProductHandler {
 				existing.add(orderItem.getProductCode());
 			}
 		}
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	public String getAllQBProductsGetXML(Integer tenantId) throws Exception {
@@ -416,7 +415,7 @@ public class ProductHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						itemQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public void addProductToQB(Integer tenantId,

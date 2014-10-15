@@ -5,29 +5,50 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.springframework.stereotype.Service;
+
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 
+@Service
 public class XMLHelper {
 
 	private static final String QBXML_PREFIX = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 			+ "<?qbxml version=\"13.0\"?>";
-	// One time as well
-	static JAXBContext contextObj = null;
+
+	protected JAXBContext contextObj = null;
 	
-	static ArrayBlockingQueue<Marshaller> marshallerPool = new ArrayBlockingQueue<>(10);
-	static ArrayBlockingQueue<Unmarshaller> unmarshallerPool = new ArrayBlockingQueue<>(10);
-	static Marshaller marshaller = null;
-	static Unmarshaller unmarshaller = null;
+	protected ArrayBlockingQueue<Marshaller> marshallerPool = new ArrayBlockingQueue<>(10);
+	protected ArrayBlockingQueue<Unmarshaller> unmarshallerPool = new ArrayBlockingQueue<>(10);
 	
-	public static String getMarshalledValue(QBXML qbxml) throws Exception {
+	protected Marshaller marshaller = null;
+	protected Unmarshaller unmarshaller = null;
+    
+    @PostConstruct
+    protected void getMarshallerObj() throws Exception {
+        if (contextObj == null) {
+             contextObj = JAXBContext.newInstance(QBXML.class);
+             //Marshaller marshaller = null;
+             marshaller = contextObj.createMarshaller();
+             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+             unmarshaller = contextObj.createUnmarshaller();
+             /*for(int i = 0; i < 10; i++) {
+                 marshaller = contextObj.createMarshaller();
+                 marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+                 marshallerPool.add(marshaller);
+                 unmarshallerPool.add(contextObj.createUnmarshaller());
+             }*/
+        }
+    }
+
+    public String getMarshalledValue(QBXML qbxml) throws Exception {
 		String qbXMLStr = null;
 		//Marshaller marshallerObj = null;
 		try {
-			getMarshallerObj();
 			StringWriter writer = new StringWriter();
 			//marshallerObj = marshallerPool.poll();
 			marshaller.marshal(qbxml, writer);
@@ -40,11 +61,10 @@ public class XMLHelper {
 		return qbXMLStr;
 	}
 
-	public static Object getUnmarshalledValue(String respFromQB) throws Exception {
+	public Object getUnmarshalledValue(String respFromQB) throws Exception {
 		Object umValue = null;
 		//Unmarshaller unmarshallerObj = null;
 		try {
-			getMarshallerObj();
 			//unmarshallerObj = unmarshallerPool.poll();
 			Reader r = new StringReader(respFromQB);
 			umValue = unmarshaller.unmarshal(r);
@@ -55,21 +75,5 @@ public class XMLHelper {
 		}
 
 		return umValue;
-	}
-	
-	private static void getMarshallerObj() throws Exception {
-		if (contextObj == null) {
-			 contextObj = JAXBContext.newInstance(QBXML.class);
-			 //Marshaller marshaller = null;
-			 marshaller = contextObj.createMarshaller();
-			 marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-			 unmarshaller = contextObj.createUnmarshaller();
-			 /*for(int i = 0; i < 10; i++) {
-				 marshaller = contextObj.createMarshaller();
-				 marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-				 marshallerPool.add(marshaller);
-				 unmarshallerPool.add(contextObj.createUnmarshaller());
-			 }*/
-		}
 	}
 }
