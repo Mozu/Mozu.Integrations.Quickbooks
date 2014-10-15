@@ -654,7 +654,22 @@ var homeViewModel = function() {
 			});		
 	};
 	
-	self.initiateAccountsRefresh = function() {
+	self.initiateRefresh = function(type) {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/qb/initiateDataRefresh?tenantId=" + $("#tenantIdHdn").val()+"&type="+type,
+				type : "PUT",
+				dataType : "json",
+				success : function(data) {
+					//TODO show success msg
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
+	};
+	
+	/*self.initiateAccountsRefresh = function() {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
 				url : "api/qb/initiateAccountsRefresh?tenantId=" + $("#tenantIdHdn").val(),
@@ -697,7 +712,7 @@ var homeViewModel = function() {
 					$("#content").hide();
 				}
 			});		
-	};
+	};*/
 
 	self.loadQBData = function(type, callback) {
 		$.ajax({

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.DataActions;
 import com.mozu.qbintegration.model.DataMapping;
 import com.mozu.qbintegration.model.QBData;
 import com.mozu.qbintegration.model.qbmodel.allgen.AccountQueryRqType;
@@ -36,6 +37,7 @@ public class QBDataHandler {
 	
 	private static final Logger logger = LoggerFactory.getLogger(QBDataHandler.class);
 
+	
 	private ObjectMapper mapper = JsonUtils.initObjectMapper();
 	@Autowired
 	EntityHandler entityHandler;
@@ -46,69 +48,67 @@ public class QBDataHandler {
 	@Autowired
 	XMLHelper xmlHelper;
 	
-	/**
-	 * Slot a task for pulling accounts from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	public void initiateAccountDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "Account", "DataSync", "QUERY", "GETACCOUNTS");
+	public void refreshAllData(Integer tenantId) throws Exception {
+		refreshData(tenantId, "account");
+		refreshData(tenantId, "vendor");
+		refreshData(tenantId, "salestaxcode");
+		refreshData(tenantId, "paymentmethod");
 	}
 	
-	/**
-	 * Slot a task for pulling vendors from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	public void initiateVendorDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "Vendor", "DataSync", "QUERY", "GETVENDORS");
-	}
-	
-	/**
-	 * Slot a task for pulling sales tax from QB
-	 * @param tenantId
-	 * @throws Exception
-	 */
-	public void initiateSalesTaxDataFetch(Integer tenantId) throws Exception {
-		queueManagerService.addTask(tenantId, "SalesTaxCode", "DataSync", "QUERY", "GETSALESTAXCODES");
-	}
-	
-	public String getRequestXml(String action) throws Exception {
-		switch(action.toLowerCase()) {
-			case "getaccounts":
-				return getAccountQueryXml();
-			case "getvendors":
-				return getVendorQueryXml();
-			case "getsalestaxcodes":
-				return getSalesTaxCodeQueryXml();
-			case "getpaymentmethods":
-				return getPaymentMethodQueryXml();
+	public void refreshData(Integer tenantId, String id) throws Exception {
+		String type = "DataSync";
+		String currentStep = "QUERY";
+		String action = "";
+		switch(id.toLowerCase()) {
+			case "account":
+				action =  DataActions.GETACCOUNTS;
+				break;
+			case "vendor":
+				action =  DataActions.GETVENDORS;
+				break;
+			case "salestaxcode":
+				action = DataActions.GETSALESTAXCODES;
+				break;
+			case "paymentmethod":
+				action = DataActions.GETPAYMENTMETHODS;
+				break;
 			default:
-				throw new Exception("Not supported");
+				throw new Exception("Not Implemented");
 		}
+		
+		queueManagerService.addTask(tenantId, id, type, currentStep, action);
+	}
+			
+
+	public String getRequestXml(String action) throws Exception {
+		if (action.equalsIgnoreCase(DataActions.GETACCOUNTS)) {
+			return getAccountQueryXml();
+		} else if (action.equalsIgnoreCase(DataActions.GETVENDORS)) {
+			return getVendorQueryXml();
+		} else if (action.equalsIgnoreCase(DataActions.GETSALESTAXCODES)) {
+			return getSalesTaxCodeQueryXml();
+		} else if (action.equalsIgnoreCase(DataActions.GETPAYMENTMETHODS)) {
+			return getPaymentMethodQueryXml();
+		} else
+			throw new Exception("Not implemented");
+		
 	}
 	
 	public void processResponseXml(Integer tenantId, String action, String respXml) throws Exception {
-		switch(action.toLowerCase()) {
-			case "getaccounts":
-				processAccountQueryXml(tenantId, respXml);
-				break;
-			case "getvendors":
-				processVendorQueryXml(tenantId, respXml);
-				break;
-			case "getsalestaxcodes":
-				processSalesTaxCodeQueryXml(tenantId, respXml);
-				break;
-			case "getpaymentmethods":
-				 processPaymentMethodQueryResponse(tenantId, respXml);
-				 break;
-			default:
-				throw new Exception("Not supported");
-		}
+		if (action.equalsIgnoreCase(DataActions.GETACCOUNTS)) {
+			processAccountQueryXml(tenantId, respXml);
+		} else if (action.equalsIgnoreCase(DataActions.GETVENDORS)) {
+			processVendorQueryXml(tenantId, respXml);
+		} else if (action.equalsIgnoreCase(DataActions.GETSALESTAXCODES)) {
+			processSalesTaxCodeQueryXml(tenantId, respXml);
+		} else if (action.equalsIgnoreCase(DataActions.GETPAYMENTMETHODS)) {
+			 processPaymentMethodQueryResponse(tenantId, respXml);
+		} else
+			throw new Exception("Not implemented");
+
 	}
 	
 	public void processResponseXml(Integer tenantId, WorkTask workTask, String xml) throws Exception {
-		//logger.debug("Received response: " + xml);
 		processResponseXml(tenantId, workTask.getAction(), xml);
 		queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "COMPLETED");
 	}

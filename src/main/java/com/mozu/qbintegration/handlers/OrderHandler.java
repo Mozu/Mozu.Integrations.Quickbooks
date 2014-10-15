@@ -322,7 +322,10 @@ public class OrderHandler {
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
 		if (order.getBillingInfo().getBillingContact().getAddress() != null)
 			salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
-		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
+		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
+			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
 		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );

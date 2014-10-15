@@ -51,21 +51,6 @@ public interface QuickbooksService {
 	 */
 	public List<MozuProduct> getMozuProductList(Integer tenantId);
 
-	/**
-	 * @param tenantId
-	 * @throws Exception 
-	 */
-	void initiateAccountsRefresh(Integer tenantId) throws Exception;
-
-	/**
-	 * @param tenantId
-	 */
-	void initiateVendorRefresh(Integer tenantId) throws Exception;
-
-	/**
-	 * @param tenantId
-	 */
-	void initiateSalesTaxRefresh(Integer tenantId) throws Exception;
 	
 
 	QBSession addSession(Integer tenantId) throws Exception;
