@@ -49,77 +49,115 @@
 			
 			<div class="row">
 				<div class="tab-first-column">
-				<div class="comparecontainer" data-bind="with: compare.postedOrder">
-				    <div class="compareheading">
-				         <div class="compare-col">Posted Order</div>
-				    </div>
-					
-					<div class="compare-table-row">
-						 <div class="compare-col">
+					<div class="comparecontainer" data-bind="with: compare.postedOrder">
+					    <div class="compareheading">
+					         <div class="compare-col">Posted Order</div>
+					    </div>
+						
+						<div class="compare-table-row">
+							 <div class="compare-col">
 						 		<div class="tab-first-column">
 						 			<div>Shipping Address:</div>
-						 			<div data-bind="with: shipAddress"> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
-				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
-				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span></div>
+						 			<div data-bind="with: shipAddress"> 
+						 					<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+								    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+								    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+								    </div>
 						 		</div>
 						 		<div class="tab-second-column">
 						 			<div>Billing Address</div>
-						 			<div data-bind="with: billAddress">
-						 				 <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
-				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
-				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
-						 			</div>
+					 				<div data-bind="with: billAddress">
+					 				 	<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+							    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+							    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+					 				</div>
 						 		</div>
-						 </div>
-					</div>		    
-					
-				    <div class="compare-table-row">
-				         <div class="compare-col" data-bind="text: subTotal"></div>
-				    </div>
-				    <div style="display:table-row-group;" data-bind="foreach: orderLines">
-					    <div class="compare-table-row">
-					    	<div class="compare-col" >
-					    		<strong><span data-bind="text: fullName"></span></strong>  | 
-					    		Qty: <strong><span data-bind="text: quantity"></span></strong> | 
-					    		Amount: <strong> <span data-bind="text: amount"></span> </strong>
-					    	</div>
-					    </div>
-				    </div>
-				    
-				</div>
+						 		 
+							 </div>
+						</div>		    
+						
+						<div class="compare-table-row" style="margin-bottom:20px;">
+							<div class="compare-col"></div>
+						</div>	
+						
+						<div class="compare-table-row">
+							<div class="compare-col">
+							 	 <div class="compareheading">
+							         <div class="compare-col"  style="width:85%;padding:5px;">Line Item</div>
+							         <div class="compare-col" style="width:10%;padding:5px;">Qty</div>
+							         <div class="compare-col" style="width:100%;padding:5px;">Amount</div>
+							    </div>
+							    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+								    <div class="compare-table-row">
+								    	<div class="compare-col" data-bind="text: fullName"></div>
+								    	<div class="compare-col" data-bind="text: quantity"></div>
+								    	<div class="compare-col" data-bind="text: amount"></div>
+								    </div>
+							    </div>
+							    <div class="compare-table-row">
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" data-bind="text: subTotal"></div>
+								    </div>
+							</div>		 
+						</div>	
+					</div>
 				</div>
 				<div class="tab-second-column">
-				<div class="comparecontainer" data-bind="with: compare.updatedOrder">
-				    <div class="compareheading">
-				         <div class="compare-col">Updated Order</div>
-				    </div>
-				    <div class="compare-table-row">
-				          <div class="compare-col" data-bind="text: subTotal"></div>
-				    </div>
-				    <div style="display:table-row-group;" data-bind="foreach: orderLines">
-					    <div class="compare-table-row">
-					    	<div class="compare-col">
-					    		<strong><span data-bind="text: fullName"></span></strong>  | 
-					    		Qty: <strong><span data-bind="text: quantity"></span></strong> | 
-					    		Amount: <strong> <span data-bind="text: amount"></span> </strong>
-					    	</div>
+					<div class="comparecontainer" data-bind="with: compare.updatedOrder">
+					    <div class="compareheading">
+					         <div class="compare-col">Updated Order</div>
 					    </div>
-				    </div>
-				    <div class="compare-table-row" data-bind="with: billAddress">
-				    	<div class="compare-col" >
-				    		<strong>Billing Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
-				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
-				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
-				    	</div>
+					    <div class="compare-table-row">
+							 <div class="compare-col">
+						 		<div class="tab-first-column">
+						 			<div>Shipping Address:</div>
+						 			<div data-bind="with: shipAddress"> 
+						 					<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+								    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+								    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+								    </div>
+						 		</div>
+						 		<div class="tab-second-column">
+						 			<div>Billing Address</div>
+					 				<div data-bind="with: billAddress">
+					 				 	<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+							    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+							    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+					 				</div>
+						 		</div>
+						 		 
+							 </div>
+						</div>		    
+						
+						<div class="compare-table-row" style="margin-bottom:20px;">
+							<div class="compare-col"></div>
+						</div>	
+						
+						<div class="compare-table-row">
+							<div class="compare-col">
+							 	 <div class="compareheading">
+							         <div class="compare-col"  style="width:85%;padding:5px;">Line Item</div>
+							         <div class="compare-col" style="width:10%;padding:5px;">Qty</div>
+							         <div class="compare-col" style="width:100%;padding:5px;">Amount</div>
+							    </div>
+							    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+								    <div class="compare-table-row">
+								    	<div class="compare-col" data-bind="text: fullName"></div>
+								    	<div class="compare-col" data-bind="text: quantity"></div>
+								    	<div class="compare-col" data-bind="text: amount"></div>
+								    </div>
+							    </div>
+							    <div class="compare-table-row">
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" data-bind="text: subTotal"></div>
+								    </div>
+							</div>		 
+						</div>
+					    
+					    
 					</div>
-					<div class="compare-table-row" data-bind="with: shipAddress">
-				    	<div class="compare-col" >
-				    		<strong>Shipping Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
-				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
-				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
-				    	</div>
-					</div>
-				</div>
 				</div>
 			</div>
 			

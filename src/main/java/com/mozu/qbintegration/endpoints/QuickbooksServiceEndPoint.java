@@ -214,8 +214,6 @@ public class QuickbooksServiceEndPoint {
 		}
 
 		try {
-
-			
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
 					try{
@@ -223,7 +221,6 @@ public class QuickbooksServiceEndPoint {
 						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(),workTask.getAction());
 					} catch(Exception ex) {
 						orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
-						queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
 						throw ex;
 					}
 					break;
@@ -244,6 +241,7 @@ public class QuickbooksServiceEndPoint {
 			
 		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
+			queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
 			throw ex;
 		}
 

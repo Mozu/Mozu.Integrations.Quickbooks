@@ -37,7 +37,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate desc", 1);
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate", 1);
 		
 		if (nodes.size() > 0) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
