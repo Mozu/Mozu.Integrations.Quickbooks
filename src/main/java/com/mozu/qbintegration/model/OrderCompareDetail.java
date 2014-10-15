@@ -9,61 +9,22 @@ package com.mozu.qbintegration.model;
  */
 public class OrderCompareDetail {
 	
-    /**
-     * 
-     */
-    private String parameter;
+	QuickBooksOrder postedOrder;
+	QuickBooksOrder updatedOrder;
     
-    /**
-     * 
-     */
-    private String postedOrderDetail;
+	public QuickBooksOrder getPostedOrder() {
+		return postedOrder;
+	}
+	public void setPostedOrder(QuickBooksOrder postedOrder) {
+		this.postedOrder = postedOrder;
+	}
+	public QuickBooksOrder getUpdatedOrder() {
+		return updatedOrder;
+	}
+	public void setUpdatedOrder(QuickBooksOrder updatedOrder) {
+		this.updatedOrder = updatedOrder;
+	}
     
-    /**
-     * 
-     */
-    private String updatedOrderDetail;
-
-	/**
-	 * @return the parameter
-	 */
-	public String getParameter() {
-		return parameter;
-	}
-
-	/**
-	 * @param parameter the parameter to set
-	 */
-	public void setParameter(String parameter) {
-		this.parameter = parameter;
-	}
-
-	/**
-	 * @return the postedOrderDetail
-	 */
-	public String getPostedOrderDetail() {
-		return postedOrderDetail;
-	}
-
-	/**
-	 * @param postedOrderDetail the postedOrderDetail to set
-	 */
-	public void setPostedOrderDetail(String postedOrderDetail) {
-		this.postedOrderDetail = postedOrderDetail;
-	}
-
-	/**
-	 * @return the updatedOrderDetail
-	 */
-	public String getUpdatedOrderDetail() {
-		return updatedOrderDetail;
-	}
-
-	/**
-	 * @param updatedOrderDetail the updatedOrderDetail to set
-	 */
-	public void setUpdatedOrderDetail(String updatedOrderDetail) {
-		this.updatedOrderDetail = updatedOrderDetail;
-	}
+    
 
 }

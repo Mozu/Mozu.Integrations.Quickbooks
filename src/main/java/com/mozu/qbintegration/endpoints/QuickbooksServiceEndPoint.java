@@ -1,12 +1,14 @@
 package com.mozu.qbintegration.endpoints;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.ws.WebServiceContext;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.qbintegration.handlers.CustomerHandler;
 import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
@@ -22,6 +25,10 @@ import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;
 import com.mozu.qbintegration.handlers.ProductHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
+import com.mozu.qbintegration.model.GeneralSettings;
+import com.mozu.qbintegration.model.QBSession;
+import com.mozu.qbintegration.model.WorkTaskLog;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -76,9 +83,14 @@ public class QuickbooksServiceEndPoint {
 	@Autowired
 	ProductHandler productHandler;
 	
+	@Autowired
+	QuickbooksService quickbooksService;
 	
 	@Autowired
 	OrderStateHandler orderStateHandler;
+	
+	@Autowired
+	QBDataHandler qbDataHandler;
 	
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 
@@ -114,25 +126,44 @@ public class QuickbooksServiceEndPoint {
 
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "authenticate")
 	@ResponsePayload
-	public AuthenticateResponse authenticate(@RequestPayload Authenticate authRequest)	throws java.rmi.RemoteException {
+	public AuthenticateResponse authenticate(@RequestPayload Authenticate authRequest)	throws Exception {
+		logger.info("Authenticate Request from QWC");
 		AuthenticateResponse response = new AuthenticateResponse();
 
-		String decryptedPwd = encryptDecryptHandler.decrypt(authRequest
-				.getStrPassword());
+		String password = authRequest.getStrPassword();
+		String decryptedPwd = encryptDecryptHandler.decrypt(password);
 		Integer tenantId = Integer.parseInt(decryptedPwd.split("~")[0]);
 		String userName = decryptedPwd.split("~")[1];
 
 		ArrayOfString arrStr = new ArrayOfString();
 		List<String> val = arrStr.getString();
-		val.add(tenantId + "~" + String.valueOf(System.currentTimeMillis())); // GUID
 
+		GeneralSettings generalSetting = quickbooksService.getSettingsFromEntityList(tenantId);
+		
 		// TODO: Add more security based on tenantId ?
 
-		if (userName.equals(authRequest.getStrUserName())) {
+		if (userName.equals(authRequest.getStrUserName()) && userName.equals(generalSetting.getQbAccount()) && password.equals(generalSetting.getQbPassword()) ) {
+			QBSession token = quickbooksService.addSession(tenantId);
+			
+			
+			
+			val.add(tenantId+"~"+token.getPwd()); // GUID
+			
+			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId,entityHandler.getTaskqueueEntityName(), null,null,1);
+			if (nodes.size() == 0) {
+				val.add("none");
+			}
+			else if (StringUtils.isNotEmpty(generalSetting.getQbwFile()))
+				val.add(generalSetting.getQbwFile()); // Pending work to do?
+			else {
+				val.add(""); // Pending work to do?
+				val.add("");
+				val.add(null);
+				val.add("10");
+			}
+		} else {
 			val.add(""); // Pending work to do?
-			val.add("");
-			val.add(null);
-			val.add("10");
+			val.add("nvu");
 		}
 
 		response.setAuthenticateResult(arrStr);
@@ -145,14 +176,15 @@ public class QuickbooksServiceEndPoint {
 
 		// Get the tenantID
 		try {
-			Integer tenantId = Integer.parseInt(requestXML.getTicket().split("~")[0]);
+			logger.info("request XML : "+requestXML.getTicket());
+			Integer tenantId = getTenantId(requestXML.getTicket());
 			
 			WorkTask workTask = queueManagerService.getNext(tenantId);
 	
 			SendRequestXMLResponse response = new SendRequestXMLResponse();
 			if (workTask != null) {
-	
 				String requestXml = getRequestXml(tenantId, workTask);
+				logRequestResponse(tenantId, workTask, requestXml);
 				logger.info(requestXML.getTicket()+"- Task Request - "+requestXml);
 				response.setSendRequestXMLResult(requestXml);
 			} else {
@@ -169,9 +201,9 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 
-		logger.info(responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
-		logger.info(responseXML.getTicket()+" - Task Response - "+responseXML.getResponse());
-		Integer tenantId = Integer.parseInt(responseXML.getTicket().split("~")[0]);
+		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
+		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Response - "+responseXML.getResponse().substring(0, 100)+"...");
+		Integer tenantId = getTenantId(responseXML.getTicket());
 		WorkTask workTask = queueManagerService.getActiveTask(tenantId);
 
 		if (workTask == null) { // nothing to do but work is not complete so
@@ -187,8 +219,8 @@ public class QuickbooksServiceEndPoint {
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
 					try{
-						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(), 
-								workTask.getAction());
+						logRequestResponse(tenantId, workTask, responseXML.getResponse());
+						orderStateHandler.transitionState(workTask.getId(), tenantId, responseXML.getResponse(),workTask.getAction());
 					} catch(Exception ex) {
 						orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
 						queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
@@ -196,10 +228,14 @@ public class QuickbooksServiceEndPoint {
 					}
 					break;
 				case "product":
+					logRequestResponse(tenantId, workTask, responseXML.getResponse());
 					if (workTask.getAction().equalsIgnoreCase("add"))
 						productHandler.processItemAdd(tenantId, workTask, responseXML.getResponse());
 					else if (workTask.getAction().equalsIgnoreCase("refresh"))
 						productHandler.processItemQueryAll(tenantId, workTask,responseXML.getResponse());
+					break;
+				case "datasync":
+					qbDataHandler.processResponseXml(tenantId, workTask, responseXML.getResponse());
 					break;
 				default:
 					throw new Exception("Not supported");
@@ -222,7 +258,7 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ConnectionErrorResponse connectionError(ConnectionError connError)
 			throws java.rmi.RemoteException {
-		logger.debug(connError.getMessage());
+		logger.info("connection Error : "+connError.getMessage());
 		ConnectionErrorResponse errorResponse = new ConnectionErrorResponse();
 		errorResponse.setConnectionErrorResult("");
 		return errorResponse;
@@ -231,8 +267,9 @@ public class QuickbooksServiceEndPoint {
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "getLastError")
 	@ResponsePayload
 	public GetLastErrorResponse getLastError(GetLastError lastError)
-			throws java.rmi.RemoteException {
-		logger.debug(lastError.getTicket());
+			throws Exception {
+		logger.info("getLastError : "+lastError.getTicket());
+		Integer tenantId = getTenantId(lastError.getTicket());
 		GetLastErrorResponse response = new GetLastErrorResponse();
 		response.setGetLastErrorResult("");
 		return response;
@@ -241,8 +278,10 @@ public class QuickbooksServiceEndPoint {
 	@PayloadRoot(namespace = "http://developer.intuit.com/", localPart = "closeConnection")
 	@ResponsePayload
 	public CloseConnectionResponse closeConnection(
-			CloseConnection closeConnection) throws java.rmi.RemoteException {
-		logger.debug(closeConnection.getTicket());
+			CloseConnection closeConnection) throws Exception {
+		logger.info("close Connection:"+closeConnection.getTicket());
+		Integer tenantId = getTenantId(closeConnection.getTicket());
+		quickbooksService.deleteSession(tenantId);
 		CloseConnectionResponse response = new CloseConnectionResponse();
 		response.setCloseConnectionResult("Thank you for using QB Connector");
 		return response;
@@ -264,10 +303,12 @@ public class QuickbooksServiceEndPoint {
 					return productHandler.getQBProductsGetXML(tenantId, order);
 				case "order_delete":
 					return orderHandler.getQBOrderDeleteXML(tenantId, workTask.getId());
+				case "order_query":
+					return orderHandler.getQBOrderQueryXml(tenantId, order);
 				default:
 					throw new Exception("Not supported");
 			}
-		} else {
+		} else if (workTask.getType().equalsIgnoreCase("product")){
 			switch(workTask.getAction().toLowerCase()) {
 				case "add":
 					return productHandler.getQBProductSaveXML(tenantId, workTask.getId());
@@ -276,7 +317,35 @@ public class QuickbooksServiceEndPoint {
 				default:
 					throw new Exception("Not supported");
 			}
+		} else  {
+			return qbDataHandler.getRequestXml(workTask.getAction());
 		}
 	}
 
+	private void logRequestResponse(int tenantId, WorkTask workTask, String xml) throws Exception {
+		WorkTaskLog log = new WorkTaskLog();
+		log.setAction(workTask.getAction());
+		log.setCreateDate(workTask.getCreateDate());
+		log.setCurrentStep(workTask.getCurrentStep());
+		log.setType(workTask.getType());
+		log.setId(workTask.getId());
+		log.setXml(xml);
+		log.setEnteredTime(String.valueOf((new Date()).getTime()));
+		//bug fix 10-oct-2014 - status cannot be null
+		log.setStatus(workTask.getStatus() == null ? "" : workTask.getStatus());
+		entityHandler.addEntity(tenantId, entityHandler.getTaskqueueLogEntityName(), log);
+	}
+	
+	private Integer getTenantId(String token) throws Exception {
+		String[] tokens = token.split("~");
+		Integer tenantId = Integer.parseInt(tokens[0]);
+		QBSession session = quickbooksService.getSession(tenantId);
+		if (!tokens[1].equals(session.getPwd()))
+			throw new Exception("Unaithorized");
+		String decryptedValue = encryptDecryptHandler.decrypt(session.getKey(), session.getPwd());
+		
+		if (!tenantId.equals(Integer.parseInt(decryptedValue.split("~")[0])))
+			throw new Exception("Unaithorized");
+		return tenantId;
+	}
 }

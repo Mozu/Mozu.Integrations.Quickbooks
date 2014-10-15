@@ -19,6 +19,8 @@
 				<input type="text" class="tab-field" id="qbUsername" data-bind="value : settings.qbAccount"></input>
 				<label class="tab-field-label"  th:text="#{label.password}"></label>
 				<input type="text" readonly="true" class="tab-field" id="qbPassword" data-bind="value : settings.qbPassword" placeholder="Generated on save"></input>
+				<label class="tab-field-label"  th:text="#{label.qbwFile}"></label>
+				<input type="text" class="tab-field" data-bind="value : settings.qbwFile" placeholder="Location of QBW file(c:\...\company.qbw)"></input>
 				
 			</div>
 

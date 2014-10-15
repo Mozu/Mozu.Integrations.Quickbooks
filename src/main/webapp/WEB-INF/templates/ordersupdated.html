@@ -48,28 +48,72 @@
 			</div>
 			
 			<div class="row">
-				<div class="tab-full-column">
-					<table id="compareDisplay" width="100%" class="display">
-						<thead>
-							<tr>
-								<th>Parameter</th>
-								<th>Posted Order</th>
-								<th>Updated Order</th>
-							</tr>
-						</thead>
-						<tbody data-bind="foreach: orderCompareDetails">
-					        <tr>
-					        	<td data-bind="text: parameter"></td>
-					            <td data-bind="text: postedOrderDetail"></td>
-					            <td data-bind="text: updatedOrderDetail"></td>
-					        </tr>
-					    </tbody>
-					</table>
+				<div class="tab-first-column">
+				<div class="comparecontainer-left" data-bind="with: compare.postedOrder">
+				    <div class="compareheading">
+				         <div class="compare-col">Posted Order</div>
+				    </div>
+				    <div class="compare-table-row">
+				         <div class="compare-col" data-bind="text: subTotal"></div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+					    <div class="compare-table-row">
+					    	<div class="compare-col" >
+					    		<strong><span data-bind="text: fullName"></span></strong>  | 
+					    		Qty: <strong><span data-bind="text: quantity"></span></strong> | 
+					    		Amount: <strong> <span data-bind="text: amount"></span> </strong>
+					    	</div>
+					    </div>
+				    </div>
+				    <div class="compare-table-row" data-bind="with: billAddress">
+				    	<div class="compare-col" >
+				    		<strong>Billing Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+				    	</div>
+					</div>
+					<div class="compare-table-row" data-bind="with: shipAddress">
+				    	<div class="compare-col" >
+				    		<strong>Shipping Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+				    	</div>
+					</div>
 				</div>
-			</div>
-			
-			<div class="row">
-				<div class="tab-full-column" style="margin-top:10px;"></div>
+				</div>
+				<div class="tab-second-column">
+				<div class="comparecontainer-right" data-bind="with: compare.updatedOrder">
+				    <div class="compareheading">
+				         <div class="compare-col">Updated Order</div>
+				    </div>
+				    <div class="compare-table-row">
+				          <div class="compare-col" data-bind="text: subTotal"></div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+					    <div class="compare-table-row">
+					    	<div class="compare-col">
+					    		<strong><span data-bind="text: fullName"></span></strong>  | 
+					    		Qty: <strong><span data-bind="text: quantity"></span></strong> | 
+					    		Amount: <strong> <span data-bind="text: amount"></span> </strong>
+					    	</div>
+					    </div>
+				    </div>
+				    <div class="compare-table-row" data-bind="with: billAddress">
+				    	<div class="compare-col" >
+				    		<strong>Billing Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+				    	</div>
+					</div>
+					<div class="compare-table-row" data-bind="with: shipAddress">
+				    	<div class="compare-col" >
+				    		<strong>Shipping Address:</strong> <span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+				    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+				    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+				    	</div>
+					</div>
+				</div>
+				</div>
 			</div>
 			
 		</div>

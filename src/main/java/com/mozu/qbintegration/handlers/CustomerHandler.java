@@ -12,10 +12,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
+import com.mozu.api.contracts.customer.ContactType;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
+import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAdd;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRqType;
@@ -24,6 +26,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
+import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
@@ -33,6 +37,9 @@ public class CustomerHandler {
 	
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	XMLHelper xmlHelper;
 	
 	public CustomerAccount getCustomer(Integer tenantId, Integer customerAccountId) throws Exception {
 		CustomerAccountResource accountResource = new CustomerAccountResource(new MozuApiContext(tenantId));
@@ -47,7 +54,6 @@ public class CustomerHandler {
 	}
 	
 	public String getQbCustomerId(Integer tenantId, String emailAddress) throws Exception {
-		String mapName = entityHandler.getCustomerEntityName();
 		String qbListID = null;
 		
 		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), emailAddress);
@@ -106,8 +112,10 @@ public class CustomerHandler {
 				.add(customerQueryRqType);
 
 		customerQueryRqType.getFullName().add(cust.getFirstName() + " "+ cust.getLastName());
+		//Akshay 11-oct-2014 - use email address for full name
+		//customerQueryRqType.getFullName().add(cust.getEmailAddress());
 
-		return XMLHelper.getMarshalledValue(qbXML);
+		return xmlHelper.getMarshalledValue(qbXML);
 	}
 	
 	public String getQBCustomerSaveXML(Integer tenantId, String orderId, Integer customerAccountId) throws Exception {
@@ -128,25 +136,86 @@ public class CustomerHandler {
 		qbXMLCustomerAddRqType.setCustomerAdd(qbXMCustomerAddType);
 		qbXMCustomerAddType.setFirstName(cust.getFirstName());
 		qbXMCustomerAddType.setLastName(cust.getLastName());
+		qbXMCustomerAddType.setCompanyName(cust.getCompanyOrOrganization());
 		qbXMCustomerAddType.setMiddleName("");
+		
 		qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
-		qbXMCustomerAddType.setPhone(cust.getContacts().get(0).getPhoneNumbers().getMobile());
+		//Akshay 11-Oct-2014 Use email for full name
+		//qbXMCustomerAddType.setName(cust.getEmailAddress());
+		
+		//
 		qbXMCustomerAddType.setEmail(cust.getEmailAddress());
 		qbXMCustomerAddType.setContact("Self");
 
 		// Set billing address
 		BillAddress qbXMLBillAddressType = new BillAddress();
+		ShipAddress qbXMLShipAddressType = new ShipAddress();
 		qbXMCustomerAddType.setBillAddress(qbXMLBillAddressType);
+		qbXMCustomerAddType.setShipAddress(qbXMLShipAddressType);
+		boolean isPrimaryShipping = false;
+		boolean isPrimaryBilling = false;
+		
+		for(CustomerContact contact : cust.getContacts()) {
+			for(ContactType type : contact.getTypes()) {
+				if (type.getName().equalsIgnoreCase("shipping") && type.getIsPrimary()) 
+					isPrimaryShipping = true;
+				
+				if (type.getName().equalsIgnoreCase("billing") && type.getIsPrimary())
+					isPrimaryBilling = true;
+			}
+			
+			
+			if (isPrimaryBilling) {
+				qbXMLBillAddressType.setAddr1(contact.getAddress().getAddress1());
+				qbXMLBillAddressType.setCity(contact.getAddress().getCityOrTown());
+				qbXMLBillAddressType.setState(contact.getAddress().getStateOrProvince());
+				qbXMLBillAddressType.setCountry(contact.getAddress().getCountryCode());
+				qbXMLBillAddressType
+						.setPostalCode(contact.getAddress().getPostalOrZipCode());
+			}
+			
+			if (isPrimaryShipping) {
+				qbXMLShipAddressType.setAddr1(contact.getAddress().getAddress1());
+				qbXMLShipAddressType.setCity(contact.getAddress().getCityOrTown());
+				qbXMLShipAddressType.setState(contact.getAddress().getStateOrProvince());
+				qbXMLShipAddressType.setCountry(contact.getAddress().getCountryCode());
+				qbXMLShipAddressType
+						.setPostalCode(contact.getAddress().getPostalOrZipCode());
+			}
+		}
 
-		CustomerContact cc = cust.getContacts().get(0);
-		qbXMLBillAddressType.setAddr1(cc.getAddress().getAddress1());
-		qbXMLBillAddressType.setCity(cc.getAddress().getCityOrTown());
-		qbXMLBillAddressType.setState(cc.getAddress().getStateOrProvince());
-		qbXMLBillAddressType.setCountry(cc.getAddress().getCountryCode());
-		qbXMLBillAddressType
-				.setPostalCode(cc.getAddress().getPostalOrZipCode());
+		if (!isPrimaryShipping) {
+			CustomerContact cc = cust.getContacts().get(0);
+			qbXMLShipAddressType.setAddr1(cc.getAddress().getAddress1());
+			qbXMLShipAddressType.setCity(cc.getAddress().getCityOrTown());
+			qbXMLShipAddressType.setState(cc.getAddress().getStateOrProvince());
+			qbXMLShipAddressType.setCountry(cc.getAddress().getCountryCode());
+			qbXMLShipAddressType
+					.setPostalCode(cc.getAddress().getPostalOrZipCode());
+		}
 
-		return XMLHelper.getMarshalledValue(qbXML);
+		if (!isPrimaryBilling) {
+			CustomerContact cc = cust.getContacts().get(0);
+			qbXMLBillAddressType.setAddr1(cc.getAddress().getAddress1());
+			qbXMLBillAddressType.setCity(cc.getAddress().getCityOrTown());
+			qbXMLBillAddressType.setState(cc.getAddress().getStateOrProvince());
+			qbXMLBillAddressType.setCountry(cc.getAddress().getCountryCode());
+			qbXMLBillAddressType
+					.setPostalCode(cc.getAddress().getPostalOrZipCode());
+		}
+		if (cust.getContacts().get(0).getPhoneNumbers() != null) {
+			qbXMCustomerAddType.setMobile(cust.getContacts().get(0).getPhoneNumbers().getMobile());
+			qbXMCustomerAddType.setPhone(cust.getContacts().get(0).getPhoneNumbers().getHome());
+			qbXMCustomerAddType.setAltPhone(cust.getContacts().get(0).getPhoneNumbers().getWork());
+		}
+		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();;
+		if (qbXMLShipAddressType.getState().equalsIgnoreCase("va"))
+			salesTaxCodeRef.setFullName("Tax");
+		else
+			salesTaxCodeRef.setFullName("Non");
+		
+		qbXMCustomerAddType.setSalesTaxCodeRef(salesTaxCodeRef);
+		return xmlHelper.getMarshalledValue(qbXML);
 	}
 	
 	public String getQBCustomerUpdateXML(final Order order, final CustomerAccount customerAccount) {
@@ -155,40 +224,47 @@ public class CustomerHandler {
 	}
 
 	
-	public boolean processCustomerQuery(int tenantId,CustomerAccount custAcct, String qbTaskResponse) throws Exception {
-		QBXML response = (QBXML) XMLHelper.getUnmarshalledValue(qbTaskResponse);
+	public QBResponse processCustomerQuery(int tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
+		QBXML response = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerQueryRsType custQueryResponse = (CustomerQueryRsType) response.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
 
-		if ("warn".equalsIgnoreCase(custQueryResponse.getStatusSeverity())
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(custQueryResponse.getStatusCode());
+		qbResponse.setStatusSeverity(custQueryResponse.getStatusSeverity());
+		qbResponse.setStatusMessage(custQueryResponse.getStatusMessage());
+		if (qbResponse.hasError() || qbResponse.hasWarning()) return qbResponse;
+		
+		/*if ("warn".equalsIgnoreCase(custQueryResponse.getStatusSeverity())
 				&& 500 == custQueryResponse.getStatusCode().intValue()) {
 			// Customer not found. So CUST_ADD
 			// ENTER the new task
 			//qbService.addCustAddTaskToQueue(orderId, tenantId, custAcct);
 			return false;
-		} else {
+		} else {*/
 			String qbCustListID = custQueryResponse.getCustomerRet().get(0).getListID();
 			saveCustInEntityList(custAcct, qbCustListID, tenantId);
 			
-			return true;
-		}
+			return qbResponse;
+		//}
 	}
 	
-	public boolean processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String qbTaskResponse) throws Exception {
-		QBXML custAddResp = (QBXML) XMLHelper.getUnmarshalledValue(qbTaskResponse);
+	public QBResponse processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
+		QBXML custAddResp = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerAddRsType custAddResponse = (CustomerAddRsType) custAddResp.getQBXMLMsgsRs()
 																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																			.get(0);
 		
-		if (custAddResponse.getStatusSeverity().equalsIgnoreCase("error")) {
-			return false;
-		} else {
+		QBResponse qbResponse = new QBResponse();
+		qbResponse.setStatusCode(custAddResponse.getStatusCode());
+		qbResponse.setStatusSeverity(custAddResponse.getStatusSeverity());
+		qbResponse.setStatusMessage(custAddResponse.getStatusMessage());
+		if (qbResponse.hasError()) return qbResponse;
+	
+		String customerListId = custAddResponse.getCustomerRet().getListID();
+		saveCustInEntityList(custAcct, customerListId, tenantId);
 		
-			String customerListId = custAddResponse.getCustomerRet().getListID();
-			saveCustInEntityList(custAcct, customerListId, tenantId);
-			
-			return true;
-		}
+		return qbResponse;
 	}
 }

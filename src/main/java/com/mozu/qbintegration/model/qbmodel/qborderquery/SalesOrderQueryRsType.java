@@ -14,6 +14,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderRet;
+
 
 /**
  * <p>Java class for SalesOrderQueryRsType complex type.
@@ -47,7 +49,7 @@ import javax.xml.bind.annotation.XmlType;
 public class SalesOrderQueryRsType {
 
     @XmlElement(name = "SalesOrderRet", required = true)
-    protected SalesOrderRetType salesOrderRet;
+    protected SalesOrderRet salesOrderRet;
     @XmlAttribute(name = "statusCode")
     protected String statusCode;
     @XmlAttribute(name = "statusSeverity")
@@ -69,7 +71,7 @@ public class SalesOrderQueryRsType {
      *     {@link SalesOrderRetType }
      *     
      */
-    public SalesOrderRetType getSalesOrderRet() {
+    public SalesOrderRet getSalesOrderRet() {
         return salesOrderRet;
     }
 
@@ -81,7 +83,7 @@ public class SalesOrderQueryRsType {
      *     {@link SalesOrderRetType }
      *     
      */
-    public void setSalesOrderRet(SalesOrderRetType value) {
+    public void setSalesOrderRet(SalesOrderRet value) {
         this.salesOrderRet = value;
     }
 

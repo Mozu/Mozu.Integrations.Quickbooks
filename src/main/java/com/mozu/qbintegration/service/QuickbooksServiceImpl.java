@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.contracts.mzdb.EntityContainer;
 import com.mozu.api.contracts.mzdb.EntityContainerCollection;
@@ -27,13 +26,13 @@ import com.mozu.api.resources.platform.entitylists.EntityContainerResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.base.utils.ApplicationUtils;
+import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.handlers.EntityHandler;
-import com.mozu.qbintegration.handlers.OrderHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.QBSession;
 import com.mozu.qbintegration.model.SubnavLink;
 
 /**
@@ -47,13 +46,14 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
 
-
-
-	@Autowired 
-	OrderHandler orderHandler;
-	
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	private QBDataHandler qbDataHandler;
+	
+	@Autowired
+	private EncryptDecryptHandler encryptDecryptHandler;
 	
 	public QuickbooksServiceImpl() {
 
@@ -81,12 +81,15 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			}
 		}
 
-		JsonNode custNode = mapper.valueToTree(generalSettings);
+		JsonNode settingsNode = mapper.valueToTree(generalSettings);
 		try {
 			if (!isUpdate) { // insert scenario.
-				custNode = entityResource.insertEntity(custNode, mapName);
+				settingsNode = entityResource.insertEntity(settingsNode, mapName);
+				
+				//Akshay 11-Oct-2014 added Account, Vendor and sales tax cod setup data fetch tasks to queue.
+				configureInitialSetupData(tenantId);
 			} else {
-				custNode = entityResource.updateEntity(custNode, mapName,generalSettings.getId());
+				settingsNode = entityResource.updateEntity(settingsNode, mapName,generalSettings.getId());
 			}
 
 			Application application = ApplicationUtils.setApplicationToInitialized(context);
@@ -98,6 +101,43 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 		return generalSettings;
 	}
+
+	/**
+	 * Pull all available Accounts, Vendors and Sales Tax codes from QB and save
+	 * while saving for the first time. Subsequent updates happen with the help
+	 * of on demand buttons.
+	 * 
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	private void configureInitialSetupData(Integer tenantId) throws Exception {
+		//Account setup
+		initiateAccountsRefresh(tenantId);
+		
+		//Vendor setup
+		initiateVendorRefresh(tenantId);
+		
+		//Sales Tax 
+		initiateSalesTaxRefresh(tenantId);
+	}
+	
+	@Override
+	public void initiateAccountsRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateAccountDataFetch(tenantId);
+	}
+
+
+	@Override
+	public void initiateVendorRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateVendorDataFetch(tenantId);
+	}
+
+
+	@Override
+	public void initiateSalesTaxRefresh(Integer tenantId) throws Exception {
+		qbDataHandler.initiateSalesTaxDataFetch(tenantId);
+	}
+
 
 	@Override
 	public GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception {
@@ -124,18 +164,18 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	
 
 	@Override
-	public List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId) {
+	public List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId, String orderId) throws Exception {
 		// First get an entity for settings if already present.
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId)); 
-		String mapName = entityHandler.getOrderConflictEntityName();
+		String mapName = entityHandler.getOrderConflictDetailEntityName();
 		
 		EntityCollection orderConflictCollection = null;
 		
 		List<OrderConflictDetail> conflictDetails = new ArrayList<OrderConflictDetail>();
 		try {
 			orderConflictCollection = entityResource.getEntities(mapName, null, null, 
-					"mozuOrderId eq " + orderId, null, null);
+					"orderId eq " + orderId, null, null);
 			
 			if (null != orderConflictCollection) {
 				for (JsonNode singleOrderConflict : orderConflictCollection.getItems()) {
@@ -144,118 +184,13 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			}
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 			logger.error("Error getting order conflict details for order id: " + orderId);
+			throw e;
 		}
 		
 		return conflictDetails;
 	}
-
-
-	@Override
-	public List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId,String mozuOrderId) throws Exception {
-		
-		//Step 1: Get original order from qb_orders EL
-		MozuOrderDetail criteria = new MozuOrderDetail();
-		criteria.setOrderStatus("POSTED");
-		criteria.setMozuOrderId(mozuOrderId);
-		
-		//Step 2: Get updated order from qb_updated_orders EL
-		MozuOrderDetail criteriaForUpDate = new MozuOrderDetail();
-		criteriaForUpDate.setOrderStatus("UPDATED");
-		criteriaForUpDate.setMozuOrderId(mozuOrderId);
-		
-		//1. Get from EL the order
-		List<MozuOrderDetail> postedOrders = orderHandler.getMozuOrderDetails(tenantId, 
-				criteria, entityHandler.getOrderEntityName());
-		
-		//2. Get from EL the updated order
-		List<MozuOrderDetail> updatedOrders = orderHandler.getMozuOrderDetails(tenantId, 
-				criteriaForUpDate, entityHandler.getOrderUpdatedEntityName());
-		
-		//1. Assume one only since mozuOrderNumber is going to be unique for a tenant (or is it?)
-		MozuOrderDetail postedOrder = postedOrders.get(0);
-		
-		//2. Get the updated order
-		MozuOrderDetail updatedOrder = updatedOrders.get(0);
-		
-		//3. Populate one order detail each for each difference
-		List<OrderCompareDetail> getOrderCompareData = getOrderCompareData(postedOrder, updatedOrder);
-		return getOrderCompareData;
-	}
-
-	private List<OrderCompareDetail> getOrderCompareData(
-			MozuOrderDetail postedOrder, MozuOrderDetail updatedOrder) {
-		List<OrderCompareDetail> compareDetails = new ArrayList<OrderCompareDetail>();
-		
-		OrderCompareDetail orderCompareDetail = null;
-		
-		//We are preserving order of items as those are sent over. So we can compare side by side
-		// without having to compare. Also, we will use the larger list as datum so other can
-		// be blindly blank.
-		boolean isUpdateLarger = updatedOrder.getOrderItems().size() > postedOrder.getOrderItems().size();
-		List<OrderItem> outerList = isUpdateLarger ? updatedOrder.getOrderItems() : postedOrder.getOrderItems();
-		List<OrderItem> innerList = isUpdateLarger ? postedOrder.getOrderItems() : updatedOrder.getOrderItems();
-		
-		OrderCompareDetail orderCompareDetail2 = null;
-		for(OrderItem outerItem: outerList) {
-			orderCompareDetail = new OrderCompareDetail();
-			orderCompareDetail.setParameter("Product Code");
-			
-			orderCompareDetail2 = new OrderCompareDetail();
-			orderCompareDetail2.setParameter("Quantity");
-			
-			String prodName = outerItem.getProduct().getProductCode() + " (" + 
-					outerItem.getProduct().getName() + ")";
-			Integer qty = outerItem.getQuantity();
-			
-			if(isUpdateLarger) {
-				orderCompareDetail.setUpdatedOrderDetail(prodName);
-				orderCompareDetail2.setUpdatedOrderDetail(String.valueOf(qty));
-				orderCompareDetail.setPostedOrderDetail(""); //placeholder since UI needs to show blank
-				orderCompareDetail2.setPostedOrderDetail("");
-			} else {
-				orderCompareDetail.setPostedOrderDetail(prodName);
-				orderCompareDetail2.setPostedOrderDetail(String.valueOf(qty));
-				orderCompareDetail.setUpdatedOrderDetail(""); //placeholder since UI needs to show blank
-				orderCompareDetail2.setUpdatedOrderDetail("");
-			}
-			
-			compareDetails.add(orderCompareDetail);
-			compareDetails.add(orderCompareDetail2);
-		}
-		
-		Integer counter = 0;
-		for(OrderItem innerItem: innerList) { //process smaller list.
-			orderCompareDetail = compareDetails.get(counter);
-			
-			orderCompareDetail2 = compareDetails.get(++counter);
-			
-			String prodName = innerItem.getProduct().getProductCode() + " (" + 
-					innerItem.getProduct().getName() + ")";
-			Integer qty = innerItem.getQuantity();
-			
-			if(isUpdateLarger) {
-				orderCompareDetail.setPostedOrderDetail(prodName); //here innerlist will be postedorder
-				orderCompareDetail2.setPostedOrderDetail(String.valueOf(qty));
-			} else {
-				orderCompareDetail.setUpdatedOrderDetail(prodName);
-				orderCompareDetail2.setUpdatedOrderDetail(String.valueOf(qty));
-			}
-			counter++;
-		}
-		
-		if(postedOrder.getAmount() != null && !postedOrder.getAmount().equals(updatedOrder.getAmount())) {
-			orderCompareDetail = new OrderCompareDetail();
-			orderCompareDetail.setParameter("Amount");
-			orderCompareDetail.setPostedOrderDetail(postedOrder.getAmount());
-			orderCompareDetail.setUpdatedOrderDetail(updatedOrder.getAmount());
-			compareDetails.add(0, orderCompareDetail);
-		}
-		
-		return compareDetails;
-	}
+	
 	
 	private void addUpdateExtensionLinks(Integer tenantId, Application application, String serverUrl) throws Exception {
 		ApiContext apiContext = new MozuApiContext(tenantId);
@@ -273,40 +208,17 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		link.setHref(serverUrl+"/Orders?tab=posted");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink conflictOrdersLink = new SubnavLink();
-		conflictOrdersLink.setParentId("orders");
-		conflictOrdersLink.setAppId(application.getAppId());
-		conflictOrdersLink.setWindowTitle(title);*/
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Conflicts"});
 		link.setHref(serverUrl+"/Orders?tab=conflicts");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink updatedOrdersLink = new SubnavLink();
-		updatedOrdersLink.setParentId("orders");
-		updatedOrdersLink.setAppId(application.getAppId());
-		updatedOrdersLink.setWindowTitle(title);*/
-		
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Updates"});
-
 		link.setHref(serverUrl+"/Orders?tab=updates");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink cancelledOrdersLink = new SubnavLink();
-		cancelledOrdersLink.setParentId("orders");
-		cancelledOrdersLink.setAppId(application.getAppId());
-		cancelledOrdersLink.setWindowTitle(title);*/
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Cancelled"});
-		
 		link.setHref(serverUrl+"/Orders?tab=cancels");
 		addUpdateSubNavLink(link, collection, entityResource);
-		
-		/*SubnavLink cancelledOrdersLink = new SubnavLink();
-		cancelledOrdersLink.setParentId("orders");
-		cancelledOrdersLink.setAppId(application.getAppId());
-		cancelledOrdersLink.setWindowTitle(title);*/
 		
 		link.setPath(new String[] {"Quickbooks","Orders","Pending"});
 		link.setHref(serverUrl+"/Orders?tab=queue");
@@ -371,4 +283,38 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 
+	@Override
+	public QBSession addSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		session.setKey(String.valueOf(System.currentTimeMillis()));
+		
+		String pwd = encryptDecryptHandler.encrypt(session.getKey(),tenantId+"~"+session.getKey());
+		session.setPwd(pwd);
+		
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getSettingEntityName(), session.getId(), session);
+		return session;
+	}
+
+
+	@Override
+	public void deleteSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		entityHandler.deleteEntity(tenantId, entityHandler.getSettingEntityName(), session.getId());
+		
+	}
+
+
+	@Override
+	public QBSession getSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		JsonNode node = entityHandler.getEntity(tenantId,  entityHandler.getSettingEntityName(), session.getId());
+		if (node != null) {
+			return mapper.readValue(node.toString(), QBSession.class);
+		} else {
+			throw new Exception("Session not found");
+		}
+	}
+
+	
+	
 }

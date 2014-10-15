@@ -145,12 +145,12 @@ public class OrdersController {
 			@RequestParam(value = "siteId") Integer siteId,
 			@RequestParam(value = "action") String action) throws Exception {	
 		
-		MozuOrderDetail criteria = new MozuOrderDetail();
+		//MozuOrderDetail criteria = new MozuOrderDetail();
 		
-		criteria.setOrderStatus(action); //POSTED, UPDATED, CONFLICT, CANCELLED
-		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, criteria, 
-						"UPDATED".equalsIgnoreCase(action)? 
-								entityHandler.getOrderUpdatedEntityName() : entityHandler.getOrderEntityName());
+		//criteria.setOrderStatus(action); //POSTED, UPDATED, CONFLICT, CANCELLED
+		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, action, 
+				("UPDATED".equalsIgnoreCase(action) || "CONFLICT".equalsIgnoreCase(action)) ? 
+										"orderNumber" : "enteredTime");
 
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
 		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
@@ -176,14 +176,17 @@ public class OrdersController {
 		
 		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),null, null, 20);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
-		for(JsonNode node : nodes) {
-			workTasks.add(mapper.readValue(node.toString(),WorkTask.class));
+		OrderQueueDataTable dataTable = new OrderQueueDataTable();
+		if(nodes != null) {
+			for(JsonNode node : nodes) {
+				workTasks.add(mapper.readValue(node.toString(),WorkTask.class));
+			}
 		}
 		
-		OrderQueueDataTable dataTable = new OrderQueueDataTable();
-		dataTable.setiTotalDisplayRecords((long)nodes.size());
+		dataTable.setiTotalDisplayRecords(nodes == null ? 0 : (long) nodes.size());
 		dataTable.setiTotalRecords(Long.parseLong(iDisplayLength));
 		dataTable.setAaData(workTasks);
+		
 		
 		String value = null;
 		try {
@@ -201,7 +204,7 @@ public class OrdersController {
 	String getConflictOrdersDetails(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
 			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {
+			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 
 		List<OrderConflictDetail> conflictDetails = 
 				quickbooksService.getOrderConflictReasons(tenantId, mozuOrderNumber);
@@ -218,22 +221,23 @@ public class OrdersController {
 	
 	@RequestMapping(value = "/getOrderCompareDetails", method = RequestMethod.GET)
 	public @ResponseBody
-	String getOrderCompareDetails(HttpServletRequest httpRequest, ModelMap model, 
+	OrderCompareDetail getOrderCompareDetails(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestParam(value = "mozuOrderNumber") String mozuOrderNumber,
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
 
-		List<OrderCompareDetail> compareDetails = 
-				quickbooksService.getOrderCompareDetails(tenantId, mozuOrderNumber);
-		
-		String value = null;
-		try {
+		OrderCompareDetail compareDetails = 
+				orderHandler.getOrderCompareDetails(tenantId, mozuOrderNumber);
+
+		return compareDetails;
+		//String value = null;
+		/*try {
 			value = mapper.writeValueAsString(compareDetails);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw e;
 		}
-		return value;
+		return value;*/
 	}
 	
 	@RequestMapping(value = "/postUpdatedOrderToQB", method = RequestMethod.POST)

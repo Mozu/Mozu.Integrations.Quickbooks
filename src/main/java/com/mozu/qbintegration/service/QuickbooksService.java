@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.QBSession;
 
 /**
  * @author Akshay
@@ -39,19 +39,10 @@ public interface QuickbooksService {
 	 * @param tenantId
 	 * @param orderId
 	 * @return
-	 */
-	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId);
-
-
-	/**
-	 * Get the order comparison data for originally posted order and updated order
-	 * 
-	 * @param tenantId
-	 * @param mozuOrderNumber
-	 * @return
 	 * @throws Exception 
 	 */
-	List<OrderCompareDetail> getOrderCompareDetails(Integer tenantId, String mozuOrderNumber) throws Exception;
+	List<OrderConflictDetail> getOrderConflictReasons(Integer tenantId,	String orderId) throws Exception;
+
 	
 	/**
 	 * Get all products from the entitylist
@@ -59,6 +50,25 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	public List<MozuProduct> getMozuProductList(Integer tenantId);
+
+	/**
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	void initiateAccountsRefresh(Integer tenantId) throws Exception;
+
+	/**
+	 * @param tenantId
+	 */
+	void initiateVendorRefresh(Integer tenantId) throws Exception;
+
+	/**
+	 * @param tenantId
+	 */
+	void initiateSalesTaxRefresh(Integer tenantId) throws Exception;
 	
 
+	QBSession addSession(Integer tenantId) throws Exception;
+	void deleteSession(Integer tenantId) throws Exception;
+	QBSession getSession(Integer tenantId) throws Exception;
 }
