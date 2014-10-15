@@ -116,7 +116,10 @@ public class ProductHandler {
 	
 	private void processItemQueryResult(Integer tenantId, List<Object> objects)
 			throws Exception {
+		
+	
 		for (Object object : objects) {
+			boolean supported = true;
 			String productName = null;
 			String productQbListID = null;
 			if (object instanceof ItemServiceRet) {
@@ -147,14 +150,18 @@ public class ProductHandler {
 				ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
 				productName =  itemInvRet.getName();
 				productQbListID = itemInvRet.getListID();
-			}else
-				throw new Exception(object.getClass() +" not supported");
-			MozuProduct mozuProduct = new MozuProduct();
-			mozuProduct.setProductCode(productName);
-			mozuProduct.setQbProductListID(productQbListID);
-			mozuProduct.setProductName(productName);
-			saveAllProductInEntityList(mozuProduct, tenantId);
-			logger.debug("Saved product through refresh all: "+ productName);
+			}else {
+				supported = false;
+				logger.info(object.getClass() +" not supported");
+			}
+			if (!supported) {
+				MozuProduct mozuProduct = new MozuProduct();
+				mozuProduct.setProductCode(productName);
+				mozuProduct.setQbProductListID(productQbListID);
+				mozuProduct.setProductName(productName);
+				saveAllProductInEntityList(mozuProduct, tenantId);
+				logger.debug("Saved product through refresh all: "+ productName);
+			}
 		}
 	}
 	

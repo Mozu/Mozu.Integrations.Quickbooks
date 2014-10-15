@@ -571,7 +571,7 @@ public class OrderHandler {
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, false);
 		for(MozuOrderItem orderItem : orderItems) {
 			QuickBooksSavedOrderLine savedOrderLine = new QuickBooksSavedOrderLine();
-			if (orderItem.getQty() == null)
+			if (orderItem.getQty() != null)
 				savedOrderLine.setQuantity(orderItem.getQty());
 			savedOrderLine.setAmount(orderItem.getAmount());
 			savedOrderLine.setFullName(orderItem.getProductCode());
