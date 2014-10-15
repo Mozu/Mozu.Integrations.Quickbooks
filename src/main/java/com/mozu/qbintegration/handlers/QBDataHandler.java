@@ -29,8 +29,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.VendorQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.VendorQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.VendorRet;
 import com.mozu.qbintegration.service.QueueManagerService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class QBDataHandler {
@@ -46,7 +46,7 @@ public class QBDataHandler {
 	QueueManagerService queueManagerService;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 	
 	public void refreshAllData(Integer tenantId) throws Exception {
 		refreshData(tenantId, "account");
