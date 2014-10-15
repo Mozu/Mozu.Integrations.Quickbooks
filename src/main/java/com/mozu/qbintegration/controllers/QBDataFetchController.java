@@ -120,8 +120,6 @@ public class QBDataFetchController {
 			@RequestParam(value = "tenantId") Integer tenantId,
 			@RequestParam(value = "siteId") Integer siteId) throws Exception {
 
-		//String requestXML = productHandler.getAllQBProductsGetXML(tenantId);
-
 		queueManagerService.addTask(tenantId, String.valueOf(tenantId)+"-Product", "Product", "ITEM", "Refresh");
 		
 		logger.debug("Saved get all items from quickbooks task at " + new Date());
@@ -129,41 +127,19 @@ public class QBDataFetchController {
 		
 	}
 	
-	@RequestMapping(value = "initiateAccountsRefresh", method = RequestMethod.PUT)
+	
+	@RequestMapping(value = "initiateDataRefresh", method = RequestMethod.PUT)
 	public @ResponseBody
-	String initiateAccountsRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+	String initiateDataRefresh(HttpServletRequest httpRequest,
+			@RequestParam(value = "tenantId") Integer tenantId, @RequestParam(value = "type") String type) throws Exception {
 
-		quickbooksService.initiateAccountsRefresh(tenantId);
+		qbDataHandler.refreshData(tenantId, type);
 		
-		logger.debug("Initiated QB account data setup at: " + new Date());
-		return "The request to refresh QB accounts data has been scheduled.";
+		logger.debug("Initiated QB data refresh at: " + new Date() + " for "+ type);
+		return "The request to refresh QB "+type+" has been scheduled.";
 		
 	}
 	
-	@RequestMapping(value = "initiateVendorRefresh", method = RequestMethod.PUT)
-	public @ResponseBody
-	String initiateVendorRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
-
-		quickbooksService.initiateVendorRefresh(tenantId);
-		
-		logger.debug("Initiated QB vendor data setup at: " + new Date());
-		return "The request to refresh QB vendor list has been scheduled.";
-		
-	}
-	
-	@RequestMapping(value = "initiateSalesTaxRefresh", method = RequestMethod.PUT)
-	public @ResponseBody
-	String initiateSalesTaxRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
-
-		quickbooksService.initiateSalesTaxRefresh(tenantId);
-		
-		logger.debug("Initiated QB sales tax codes data setup at: " + new Date());
-		return "The request to refresh QB sales tax codes has been scheduled.";
-		
-	}
 	
 	@RequestMapping(value = "data", method = RequestMethod.GET)
 	public @ResponseBody
