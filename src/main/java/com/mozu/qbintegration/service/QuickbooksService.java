@@ -8,6 +8,7 @@ import java.util.List;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.QBSession;
 
 /**
  * @author Akshay
@@ -67,4 +68,7 @@ public interface QuickbooksService {
 	void initiateSalesTaxRefresh(Integer tenantId) throws Exception;
 	
 
+	QBSession addSession(Integer tenantId) throws Exception;
+	void deleteSession(Integer tenantId) throws Exception;
+	QBSession getSession(Integer tenantId) throws Exception;
 }
