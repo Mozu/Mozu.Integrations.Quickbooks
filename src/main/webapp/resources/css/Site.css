@@ -628,16 +628,12 @@ label {
   	border-bottom: 3px solid #d2463c;
   }
   
- .comparecontainer-left {
+ .comparecontainer {
     display:table;
     border-collapse: collapse;
-    float: left;
+    width:100%
  }
  
-  .comparecontainer-right {
-    display:table;
-    border-collapse: collapse;
- }
  
 .compareheading {
      font-weight: bold;

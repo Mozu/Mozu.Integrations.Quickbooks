@@ -55,7 +55,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.XMLHelper;
+import com.mozu.qbintegration.service.XMLService;
 
 @Component
 public class OrderHandler {
@@ -80,7 +80,7 @@ public class OrderHandler {
 	QBDataHandler qbDataHandler;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));

@@ -28,7 +28,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
-import com.mozu.qbintegration.utils.XMLHelper;
+import com.mozu.qbintegration.service.XMLService;
 
 @Component
 public class CustomerHandler {
@@ -39,7 +39,7 @@ public class CustomerHandler {
 	EntityHandler entityHandler;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 	
 	public CustomerAccount getCustomer(Integer tenantId, Integer customerAccountId) throws Exception {
 		CustomerAccountResource accountResource = new CustomerAccountResource(new MozuApiContext(tenantId));

@@ -42,6 +42,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAssemblyRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemNonInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
@@ -52,8 +53,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class ProductHandler {
@@ -72,7 +73,7 @@ public class ProductHandler {
 	QuickbooksService quickbooksService;
 
     @Autowired
-    XMLHelper xmlHelper;
+    XMLService xmlHelper;
     
 	public String getQBId(Integer tenantId, String productCode)
 			throws Exception {
@@ -140,6 +141,10 @@ public class ProductHandler {
 				productQbListID = itemInvRet.getListID();
 			} else if (object instanceof ItemPaymentRet) {
 				ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
+				productName =  itemInvRet.getName();
+				productQbListID = itemInvRet.getListID();
+			} else if (object instanceof ItemNonInventoryRet) {
+				ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
 				productName =  itemInvRet.getName();
 				productQbListID = itemInvRet.getListID();
 			}else

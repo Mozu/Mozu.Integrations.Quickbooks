@@ -32,8 +32,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class OrderStateHandler {
@@ -60,7 +60,7 @@ public class OrderStateHandler {
 	EntityHandler entityHandler;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
