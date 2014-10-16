@@ -244,7 +244,7 @@ public class OrderStateHandler {
 		else if (action.equals(WorkTaskActions.UPDATE) && 
 				this.orderExistsInQB) {
 			return OrderStates.UPDATE;
-		} else if (action.equals(WorkTaskActions.ADD))
+		} else if (action.equals(WorkTaskActions.ADD) || (action.equals(WorkTaskActions.UPDATE) && !this.orderExistsInQB))
 			return OrderStates.ADD;
 		else if (action.equals(WorkTaskActions.DELETE))
 			return OrderStates.DELETE;

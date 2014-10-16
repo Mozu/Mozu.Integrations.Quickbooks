@@ -242,7 +242,7 @@ public class QuickbooksServiceEndPoint {
 		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
 			queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
-			throw ex;
+			//throw ex;
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
