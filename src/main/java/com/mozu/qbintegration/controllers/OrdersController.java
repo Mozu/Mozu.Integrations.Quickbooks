@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.Headers;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.security.AppAuthenticator;
 import com.mozu.api.security.Crypto;
 import com.mozu.api.utils.JsonUtils;
@@ -147,15 +148,27 @@ public class OrdersController {
 		
 		//MozuOrderDetail criteria = new MozuOrderDetail();
 		
+		int dispStartIdx = Integer.parseInt(iDisplayStart);
+		int dispLength = Integer.parseInt(iDisplayLength);
+		
 		//criteria.setOrderStatus(action); //POSTED, UPDATED, CONFLICT, CANCELLED
-		List<MozuOrderDetail> mozuOrderDetails = orderHandler.getMozuOrderDetails(tenantId, action, 
+		//Akshay 16-Oct-2014 - server side pagination by passing pageSize and startIndex to EL.
+		EntityCollection mozuOrderDetailsCollection = orderHandler.getMozuOrderDetails(tenantId, action, 
 				("UPDATED".equalsIgnoreCase(action) || "CONFLICT".equalsIgnoreCase(action)) ? 
-										"orderNumber" : "enteredTime");
+										"orderNumber" : "enteredTime", dispStartIdx, dispLength);
 
+		List<MozuOrderDetail> mozuOrders = new ArrayList<MozuOrderDetail>();
+		List<JsonNode> nodes = mozuOrderDetailsCollection.getItems();
+		if (nodes != null && nodes.size() > 0) {
+			for (JsonNode node : nodes) {
+				mozuOrders.add(mapper.readValue(node.toString(), MozuOrderDetail.class));
+			}
+		}
+		
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
-		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
-		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
-		orderJsonObject.setAaData(mozuOrderDetails);
+		orderJsonObject.setiTotalDisplayRecords((long) mozuOrderDetailsCollection.getTotalCount());
+		orderJsonObject.setiTotalRecords((long) mozuOrderDetailsCollection.getTotalCount());
+		orderJsonObject.setAaData(mozuOrders);
 		
 		String value = null;
 		try {

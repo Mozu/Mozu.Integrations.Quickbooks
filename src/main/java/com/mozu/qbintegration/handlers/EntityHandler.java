@@ -556,14 +556,34 @@ public class EntityHandler {
 	public List<JsonNode> getEntityCollection(Integer tenantId,
 			String entityName, String filterCriteria, String sortBy,
 			Integer pageSize) throws Exception {
+		EntityCollection nodesCollection = getEntityCollection(tenantId, entityName, filterCriteria, sortBy, null, pageSize);
+		return nodesCollection.getItems();
+	}
+	
+	/**
+	 * Get the collection so that we get totalCount and nodes.
+	 * @param tenantId
+	 * @param entityName
+	 * @param filterCriteria
+	 * @param sortBy
+	 * @param startIndex
+	 * @param pageSize
+	 * @return
+	 * @throws Exception
+	 */
+	public EntityCollection getEntityCollection(Integer tenantId,
+			String entityName, String filterCriteria, String sortBy,
+			Integer startIndex, Integer pageSize) throws Exception {
 
-		List<JsonNode> nodes = null;
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
+		EntityCollection collection = null;
 		try {
-			EntityCollection collection = entityResource.getEntities(
-					entityName, pageSize, 0, filterCriteria, sortBy, null);
-			nodes = collection.getItems();
+			if(startIndex == null) {
+				startIndex = 0;
+			}
+			collection = entityResource.getEntities(
+					entityName, pageSize, startIndex, filterCriteria, sortBy, null);
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND")) {
@@ -572,6 +592,6 @@ public class EntityHandler {
 			}
 		}
 
-		return nodes;
+		return collection;
 	}
 }
