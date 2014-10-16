@@ -155,7 +155,7 @@ public class ProductHandler {
 				//throw new Exception("Not supported");
 				supported = false;
 			}
-			if (!supported) {
+			if (supported) {
 				MozuProduct mozuProduct = new MozuProduct();
 				mozuProduct.setProductCode(productName);
 				mozuProduct.setQbProductListID(productQbListID);
