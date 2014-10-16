@@ -130,6 +130,11 @@ var compare = {
 	updatedOrder : ""
 }
 
+var dataType = function(id,name) {
+	this.id = ko.observable(id);
+	this.name = ko.observable(name);
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -139,6 +144,8 @@ var homeViewModel = function() {
 	self.availableAccounts = ko.observableArray([]);
 	self.availableVendors = ko.observableArray([]);
 	self.compare = ko.mapping.fromJS(compare);
+	self.dataTypes = ko.observableArray([]);
+	self.selectedDataType = ko.observable();
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -635,6 +642,10 @@ var homeViewModel = function() {
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
+						
+						self.dataTypes.push(new dataType("account", "Accounts"));
+						self.dataTypes.push(new dataType("vendor", "Vendors"));
+						self.dataTypes.push(new dataType("taxcode", "Sales Taxcodes"));
 					}
 				},
 				error : function() {
@@ -658,6 +669,21 @@ var homeViewModel = function() {
 			});		
 	};
 	
+	
+	self.selectedDataType.subscribe(function(newValue){
+		self.loadData();
+	}, self);
+	
+	self.qbData = ko.observableArray([]);
+	self.loadData = function() {
+		self.loadQBData(self.selectedDataType().id(), function(data) {
+			ko.mapping.fromJS(data,{},self.qbData);
+		});
+	}
+	
+	self.refreshData = function() {
+		self.initiateRefresh(self.selectedDataType().id());
+	}
 	
 	self.loadQBData = function(type, callback) {
 		$.ajax({
