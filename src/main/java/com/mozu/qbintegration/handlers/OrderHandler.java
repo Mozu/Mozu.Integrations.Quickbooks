@@ -20,6 +20,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.DataMapping;
@@ -231,7 +232,8 @@ public class OrderHandler {
 	}
 	
 	
-	public List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, String action, String orderBy) throws Exception {
+	public EntityCollection getMozuOrderDetails(Integer tenantId, String action, String orderBy,
+			Integer startIndex, Integer pageSize) throws Exception {
 
 		String entityName = null;
 		
@@ -252,21 +254,16 @@ public class OrderHandler {
 				throw new Exception("Not implemented");
 		}
 		
-		List<MozuOrderDetail> mozuOrders = new ArrayList<MozuOrderDetail>();
-		
-		
+		EntityCollection nodesCollection = null;
 		try {
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityName, null, orderBy +" desc", null);
-			if (nodes != null && nodes.size() > 0) {
-				for (JsonNode node : nodes) {
-					mozuOrders.add(mapper.readValue(node.toString(), MozuOrderDetail.class));
-				}
-			}
+			nodesCollection = entityHandler.getEntityCollection(tenantId, entityName, 
+					null, orderBy +" desc", startIndex, pageSize);
+			
 		} catch (Exception e) {
-			logger.error("Error saving settings for tenant id: " + tenantId);
+			logger.error("Error getting orders by action for tenant id: " + tenantId);
 			throw e;
 		}
-		return mozuOrders;
+		return nodesCollection;
 		
 	}
 	
