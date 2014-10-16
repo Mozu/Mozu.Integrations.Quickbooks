@@ -35,6 +35,7 @@
 					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Account</a>
 					<a class="button tab" data-toggle="tab"  data-tab-id="orderConfigTab" data-hide-save="false">Order Config</a>
 					<a class="button tab" data-toggle="tab"  data-tab-id="paymentMappingTab" data-hide-save="false" data-bind="click: loadPaymentMapping">Payment</a>
+					<a class="button tab" data-toggle="tab"  data-tab-id="qbDataTab" data-hide-save="false" data-bind="click: loadData">QB Data</a>
 				</div>
 				
 				<div class="tab-view">
@@ -50,6 +51,9 @@
 						</div>
 						<div style="display: none" id="paymentMappingTab">
 							<div th:include="paymentmapping :: content"></div>
+						</div>
+						<div style="display: none" id="qbDataTab">
+							<div th:include="qbdata :: content"></div>
 						</div>
 					</div>
 				</div>
