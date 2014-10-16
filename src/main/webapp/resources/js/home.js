@@ -11,10 +11,9 @@ function funEdit(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.orderConflictDetails.removeAll();
+			viewModel.orderConflictDetails.removeAll();
 			$(data).each(function(index) {				
-				console.log(data[index]);
-				homeViewModel.orderConflictDetails.push(data[index]);
+				viewModel.orderConflictDetails.push(data[index]);
 			});
 			
 			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
@@ -23,16 +22,16 @@ function funEdit(orderNumber) {
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
 			getAllProductsFromEntityList();
 			
-			homeViewModel.loadQBData("taxcode", function(data) {
-				ko.mapping.fromJS(data,{},homeViewModel.availableTaxCodes);
+			viewModel.loadQBData("taxcode", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableTaxCodes);
 			});
 			
-			homeViewModel.loadQBData("vendor", function(data) {
-				ko.mapping.fromJS(data,{},homeViewModel.availableVendors);
+			viewModel.loadQBData("vendor", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableVendors);
 			});
 			
-			homeViewModel.loadQBData("account", function(data) {
-				ko.mapping.fromJS(data,{},homeViewModel.availableAccounts);
+			viewModel.loadQBData("account", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableAccounts);
 			});
 		},
 		error : function() {
@@ -60,10 +59,7 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			ko.mapping.fromJS(data, homeViewModel.compare);
-			//homeViewModel.orderCompareDetails.removeAll();
-			//console.log(data);
-			//saveDataToTable(data);
+			ko.mapping.fromJS(data, viewModel.compare);
 		},
 		error : function() {
 			$("#content").hide();
@@ -74,7 +70,7 @@ function compareDetails(orderNumber) {
 function saveDataToTable(data) {
 	$(data).each(function(index) {				
 		console.log(data[index]);
-		homeViewModel.orderCompareDetails.push(data[index]);
+		viewModel.orderCompareDetails.push(data[index]);
 	});
 	
 	$(data).promise().done(function() {
@@ -87,18 +83,13 @@ function saveDataToTable(data) {
 
 function getAllProductsFromEntityList() {
 	$.ajax({
-		url : "api/qb/getAllPostedProducts",
+		url : "api/qb/getAllPostedProducts?tenantId=" + $("#tenantIdHdn").val(),
 		type : "GET",
-		data : {
-			"tenantId" : $("#tenantIdHdn").val(),
-			"siteId"	: $("#siteIdHdn").val()
-		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.allProductsInQB.removeAll();
-			$(data).each(function(index) {				
-				console.log(data[index]);
-				homeViewModel.allProductsInQB.push(
+			viewModel.allProductsInQB.removeAll();
+			$(data).each(function(index) {	
+				viewModel.allProductsInQB.push(
 						new ProductToMap(data[index].qbProductListID, 
 								data[index].productName));
 			});
@@ -144,6 +135,13 @@ var usState = function(abbreviation, name) {
 	this.stateAbbreviation = abbreviation;
 }
 
+var dataType = function(id,name) {
+	this.id = ko.observable(id);
+	this.name = ko.observable(name);
+}
+
+var pageNumbers = [10, 25, 50, 100];
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -153,6 +151,8 @@ var homeViewModel = function() {
 	self.availableAccounts = ko.observableArray([]);
 	self.availableVendors = ko.observableArray([]);
 	self.compare = ko.mapping.fromJS(compare);
+	self.dataTypes = ko.observableArray([]);
+	self.selectedDataType = ko.observable();
 	
 	self.availableStates = ko.observableArray(
 			[
@@ -247,18 +247,20 @@ var homeViewModel = function() {
     self.enableNewItem = function() {
     	self.showItemCreate(true);
     	self.showItemMap(false);
+    	return true;
     };
     
     self.enableExistingItem = function() {
     	self.showItemCreate(false);
     	self.showItemMap(true);
+    	return true;
     }
     
     self.saveItemToQuickbooks = function() {
     	console.log(ko.mapping.toJSON(self.itemToFix));
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(self.itemToFix),
@@ -278,7 +280,7 @@ var homeViewModel = function() {
     	
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
@@ -293,12 +295,8 @@ var homeViewModel = function() {
     //TO show in the map product dropdown
     self.getAllProductsFromQB = function() {
     	$.ajax({
-    		url : "getAllProductsFromQB",
+    		url : "api/qb/initiateProductRefresh?tenantId=" + $("#tenantIdHdn").val(),
     		type : "GET",
-    		data : {
-    			"tenantId" : $("#tenantIdHdn").val(),
-    			"siteId"	: $("#siteIdHdn").val()
-    		},
     		dataType : "json",		
     		success : function(data) {
     			//console.log(data);
@@ -452,6 +450,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -492,6 +491,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -556,6 +556,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=UPDATED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -615,6 +616,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -689,13 +691,13 @@ var homeViewModel = function() {
 				dataType : "json",
 				success : function(data) {
 					ko.mapping.fromJS(data, self.settings);
-					ko.applyBindings(window.homeViewModel);
+					ko.applyBindings(viewModel);
 
 					
 						if ($("#selectedTab").val() != "") {
 							$("#"+$("#selectedTab").val()+"Tab").click();
 						} else {
-							window.homeViewModel.getVersion();
+							self.getVersion();
 							if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
 								self.showDownload(true);
 						}
@@ -706,6 +708,10 @@ var homeViewModel = function() {
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
+						
+						self.dataTypes.push(new dataType("account", "Accounts"));
+						self.dataTypes.push(new dataType("vendor", "Vendors"));
+						self.dataTypes.push(new dataType("taxcode", "Sales Taxcodes"));
 					}
 				},
 				error : function() {
@@ -714,10 +720,10 @@ var homeViewModel = function() {
 			});		
 	};
 	
-	self.initiateAccountsRefresh = function() {
+	self.initiateRefresh = function(type) {
 		$.ajax({
 				contentType: 'application/json; charset=UTF-8',
-				url : "api/qb/initiateAccountsRefresh?tenantId=" + $("#tenantIdHdn").val(),
+				url : "api/qb/initiateDataRefresh?tenantId=" + $("#tenantIdHdn").val()+"&type="+type,
 				type : "PUT",
 				dataType : "json",
 				success : function(data) {
@@ -729,36 +735,22 @@ var homeViewModel = function() {
 			});		
 	};
 	
-	self.initiateVendorRefresh = function() {
-		$.ajax({
-				contentType: 'application/json; charset=UTF-8',
-				url : "api/qb/initiateVendorRefresh?tenantId=" + $("#tenantIdHdn").val(),
-				type : "PUT",
-				dataType : "json",
-				success : function(data) {
-					//TODO show success msg
-				},
-				error : function() {
-					$("#content").hide();
-				}
-			});		
-	};
 	
-	self.initiateSalesTaxRefresh = function() {
-		$.ajax({
-				contentType: 'application/json; charset=UTF-8',
-				url : "api/qb/initiateSalesTaxRefresh?tenantId=" + $("#tenantIdHdn").val(),
-				type : "PUT",
-				dataType : "json",
-				success : function(data) {
-					//TODO show success msg
-				},
-				error : function() {
-					$("#content").hide();
-				}
-			});		
-	};
-
+	self.selectedDataType.subscribe(function(newValue){
+		self.loadData();
+	}, self);
+	
+	self.qbData = ko.observableArray([]);
+	self.loadData = function() {
+		self.loadQBData(self.selectedDataType().id(), function(data) {
+			ko.mapping.fromJS(data,{},self.qbData);
+		});
+	}
+	
+	self.refreshData = function() {
+		self.initiateRefresh(self.selectedDataType().id());
+	}
+	
 	self.loadQBData = function(type, callback) {
 		$.ajax({
 			contentType: 'application/json; charset=UTF-8',
@@ -871,6 +863,7 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
 	$("#serverError").show();
 });
 
+var viewModel;
 
 $(function() {
 
@@ -900,7 +893,7 @@ $(function() {
 
 		if (activeTabId == newTabId)
 			return;
-		window.homeViewModel.selectedTab(newTabId);
+		viewModel.selectedTab(newTabId);
 		activeTab.removeClass('active');
 		$(newTab).addClass('active');
 
@@ -939,7 +932,7 @@ $(function() {
 
     });
 
-	window.homeViewModel = new homeViewModel();
+	viewModel = new homeViewModel();
 	
 	$("#saveBtn").hide();
 });

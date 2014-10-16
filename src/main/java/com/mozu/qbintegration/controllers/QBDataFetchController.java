@@ -70,7 +70,6 @@ public class QBDataFetchController {
 	public @ResponseBody
 	ObjectNode saveProductToQB(
 			@RequestParam(value = "tenantId", required = false) Integer tenantId,
-			@RequestParam(value = "siteId", required = false) Integer siteId,
 			@RequestBody String productToQuickbooksStr,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
@@ -84,8 +83,7 @@ public class QBDataFetchController {
 	@RequestMapping(value = "getAllPostedProducts", method = RequestMethod.GET)
 	public @ResponseBody
 	String getAllPostedProducts(HttpServletRequest httpRequest, ModelMap model,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) {
+			@RequestParam(value = "tenantId") Integer tenantId) {
 
 		List<MozuProduct> mozuProductDetails = quickbooksService.getMozuProductList(tenantId) ;
 		
@@ -101,8 +99,7 @@ public class QBDataFetchController {
 	@RequestMapping(value = "mapProductToQB", method = RequestMethod.POST)
 	public @ResponseBody
 	ObjectNode mapProductToQB(
-			@RequestParam(value = "tenantId", required = false) Integer tenantId,
-			@RequestParam(value = "siteId", required = false) Integer siteId,
+			@RequestParam(value = "tenantId", required = true) Integer tenantId,
 			@RequestBody ProductToMapToQuickbooks productToMapToEB,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
@@ -115,12 +112,7 @@ public class QBDataFetchController {
 	}
 	
 	@RequestMapping(value = "initiateProductRefresh", method = RequestMethod.GET)
-	public @ResponseBody
-	String getPostedProducts(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) throws Exception {
-
-		//String requestXML = productHandler.getAllQBProductsGetXML(tenantId);
+	public @ResponseBody String getPostedProducts(@RequestParam(value = "tenantId", required = true) Integer tenantId,  HttpServletRequest httpRequest) throws Exception {
 
 		queueManagerService.addTask(tenantId, String.valueOf(tenantId)+"-Product", "Product", "ITEM", "Refresh");
 		
@@ -129,41 +121,19 @@ public class QBDataFetchController {
 		
 	}
 	
-	@RequestMapping(value = "initiateAccountsRefresh", method = RequestMethod.PUT)
+	
+	@RequestMapping(value = "initiateDataRefresh", method = RequestMethod.PUT)
 	public @ResponseBody
-	String initiateAccountsRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+	String initiateDataRefresh(HttpServletRequest httpRequest,
+			@RequestParam(value = "tenantId") Integer tenantId, @RequestParam(value = "type") String type) throws Exception {
 
-		quickbooksService.initiateAccountsRefresh(tenantId);
+		qbDataHandler.refreshData(tenantId, type);
 		
-		logger.debug("Initiated QB account data setup at: " + new Date());
-		return "The request to refresh QB accounts data has been scheduled.";
+		logger.debug("Initiated QB data refresh at: " + new Date() + " for "+ type);
+		return "The request to refresh QB "+type+" has been scheduled.";
 		
 	}
 	
-	@RequestMapping(value = "initiateVendorRefresh", method = RequestMethod.PUT)
-	public @ResponseBody
-	String initiateVendorRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
-
-		quickbooksService.initiateVendorRefresh(tenantId);
-		
-		logger.debug("Initiated QB vendor data setup at: " + new Date());
-		return "The request to refresh QB vendor list has been scheduled.";
-		
-	}
-	
-	@RequestMapping(value = "initiateSalesTaxRefresh", method = RequestMethod.PUT)
-	public @ResponseBody
-	String initiateSalesTaxRefresh(HttpServletRequest httpRequest,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
-
-		quickbooksService.initiateSalesTaxRefresh(tenantId);
-		
-		logger.debug("Initiated QB sales tax codes data setup at: " + new Date());
-		return "The request to refresh QB sales tax codes has been scheduled.";
-		
-	}
 	
 	@RequestMapping(value = "data", method = RequestMethod.GET)
 	public @ResponseBody

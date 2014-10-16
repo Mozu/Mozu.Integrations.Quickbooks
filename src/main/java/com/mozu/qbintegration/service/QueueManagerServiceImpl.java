@@ -37,7 +37,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate desc", 1);
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status ne ERROR", "createDate", 1);
 		
 		if (nodes.size() > 0) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
@@ -81,14 +81,15 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	public void updateTask(Integer tenantId, String id, String currentStep, String status) throws Exception {
 		if(status.equalsIgnoreCase(WorkTaskStatus.COMPLETED)) {
 			entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
-		} else {
-			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
-			
-			WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
-			task.setCurrentStep(currentStep);
-			task.setStatus(status);
-			entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
-		}
+			return;
+		} 
+		
+		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
+		
+		WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
+		task.setCurrentStep(currentStep);
+		task.setStatus(status);
+		entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
 	}
 }
 

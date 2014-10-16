@@ -27,6 +27,11 @@ war {
     }
 }
 
+jettyRun {
+	reload="automatic"
+	scanIntervalSeconds=2
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '1.12'
 }

@@ -17,6 +17,7 @@ import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.customer.CustomerContact;
 import com.mozu.api.resources.commerce.customer.CustomerAccountResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
+import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAdd;
@@ -28,7 +29,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
-import com.mozu.qbintegration.utils.XMLHelper;
+import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 
 @Component
 public class CustomerHandler {
@@ -39,8 +41,11 @@ public class CustomerHandler {
 	EntityHandler entityHandler;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 	
+    @Autowired
+    private QuickbooksService quickbooksService;
+    
 	public CustomerAccount getCustomer(Integer tenantId, Integer customerAccountId) throws Exception {
 		CustomerAccountResource accountResource = new CustomerAccountResource(new MozuApiContext(tenantId));
 		CustomerAccount orderingCust = null;
@@ -209,10 +214,21 @@ public class CustomerHandler {
 			qbXMCustomerAddType.setAltPhone(cust.getContacts().get(0).getPhoneNumbers().getWork());
 		}
 		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();;
-		if (qbXMLShipAddressType.getState().equalsIgnoreCase("va"))
+
+		boolean isTaxState = false;
+		GeneralSettings generalSettings = quickbooksService.getSettingsFromEntityList(tenantId);
+		for (String state: generalSettings.getTaxableStates()) {
+		    if (qbXMLShipAddressType.getState().equalsIgnoreCase(state)) {
+		        isTaxState=true;
+		        break;
+		    }
+		}
+		
+		if (isTaxState) {
 			salesTaxCodeRef.setFullName("Tax");
-		else
+		} else {
 			salesTaxCodeRef.setFullName("Non");
+		}
 		
 		qbXMCustomerAddType.setSalesTaxCodeRef(salesTaxCodeRef);
 		return xmlHelper.getMarshalledValue(qbXML);

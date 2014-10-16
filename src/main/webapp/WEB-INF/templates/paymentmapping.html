@@ -12,12 +12,17 @@
 
 		<div class="row">
 			<div class="tab-full-column">
-				 <select data-bind="options: mozuPayments,optionsText: 'name',
-                       value: selectedMozuPayment"></select>
+				 <select class="dropdown" data-bind="options: mozuPayments,optionsText: 'name', value: selectedMozuPayment" style="float:none;min-width:30px;"></select>
                        
-                  <select data-bind="options: qbPaymentMethods, optionsText: 'fullName',
-                       value: selectedQBPayment"></select>
-				 <button data-bind="click: mapPayment">Add</button>
+                  <select class="dropdown" data-bind="options: qbPaymentMethods, optionsText: 'fullName', value: selectedQBPayment" style="float:none;min-width:30px;"></select>
+				 <button data-bind="click: mapPayment" class="mz-Button secondary">Add</button>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="tab-full-column">
+				<button class="mz-Button secondary" data-bind="click: initiateRefresh.bind($data,'paymentmethod')">Refresh Payment Methods</button>
+				<p class="tab-checkbox-label-p" style="max-width:95%">if Payment method are missing from Quickbooks, refresh this button and run Quickbooks webconnector. Once webconnector is run, refresh this page.</p>
 			</div>
 		</div>
 		

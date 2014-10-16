@@ -20,6 +20,7 @@ import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.commerce.OrderResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.DataMapping;
@@ -55,7 +56,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.XMLHelper;
+import com.mozu.qbintegration.service.XMLService;
 
 @Component
 public class OrderHandler {
@@ -80,7 +81,7 @@ public class OrderHandler {
 	QBDataHandler qbDataHandler;
 	
 	@Autowired
-	XMLHelper xmlHelper;
+	XMLService xmlHelper;
 	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));
@@ -231,7 +232,8 @@ public class OrderHandler {
 	}
 	
 	
-	public List<MozuOrderDetail> getMozuOrderDetails(Integer tenantId, String action, String orderBy) throws Exception {
+	public EntityCollection getMozuOrderDetails(Integer tenantId, String action, String orderBy,
+			Integer startIndex, Integer pageSize, String search) throws Exception {
 
 		String entityName = null;
 		
@@ -252,21 +254,20 @@ public class OrderHandler {
 				throw new Exception("Not implemented");
 		}
 		
-		List<MozuOrderDetail> mozuOrders = new ArrayList<MozuOrderDetail>();
-		
-		
+		EntityCollection nodesCollection = null;
 		try {
-			List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityName, null, orderBy +" desc", null);
-			if (nodes != null && nodes.size() > 0) {
-				for (JsonNode node : nodes) {
-					mozuOrders.add(mapper.readValue(node.toString(), MozuOrderDetail.class));
-				}
+			String filterCriteria = null;
+			if (StringUtils.isNotEmpty(search)) {
+				filterCriteria = "orderNumber eq "+search;
 			}
+			nodesCollection = entityHandler.getEntityCollection(tenantId, entityName, 
+					filterCriteria, orderBy +" desc", startIndex, pageSize);
+			
 		} catch (Exception e) {
-			logger.error("Error saving settings for tenant id: " + tenantId);
+			logger.error("Error getting orders by action for tenant id: " + tenantId);
 			throw e;
 		}
-		return mozuOrders;
+		return nodesCollection;
 		
 	}
 	
@@ -322,7 +323,10 @@ public class OrderHandler {
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
 		if (order.getBillingInfo().getBillingContact().getAddress() != null)
 			salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
-		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
+		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
+			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
 		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
@@ -568,7 +572,7 @@ public class OrderHandler {
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, false);
 		for(MozuOrderItem orderItem : orderItems) {
 			QuickBooksSavedOrderLine savedOrderLine = new QuickBooksSavedOrderLine();
-			if (orderItem.getQty() == null)
+			if (orderItem.getQty() != null)
 				savedOrderLine.setQuantity(orderItem.getQty());
 			savedOrderLine.setAmount(orderItem.getAmount());
 			savedOrderLine.setFullName(orderItem.getProductCode());

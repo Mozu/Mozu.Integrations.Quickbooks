@@ -87,7 +87,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 				settingsNode = entityResource.insertEntity(settingsNode, mapName);
 				
 				//Akshay 11-Oct-2014 added Account, Vendor and sales tax cod setup data fetch tasks to queue.
-				configureInitialSetupData(tenantId);
+				qbDataHandler.refreshAllData(tenantId);
+				//configureInitialSetupData(tenantId);
 			} else {
 				settingsNode = entityResource.updateEntity(settingsNode, mapName,generalSettings.getId());
 			}
@@ -110,7 +111,7 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	 * @param tenantId
 	 * @throws Exception 
 	 */
-	private void configureInitialSetupData(Integer tenantId) throws Exception {
+	/*private void configureInitialSetupData(Integer tenantId) throws Exception {
 		//Account setup
 		initiateAccountsRefresh(tenantId);
 		
@@ -119,26 +120,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 		//Sales Tax 
 		initiateSalesTaxRefresh(tenantId);
-	}
+	}*/
 	
-	@Override
-	public void initiateAccountsRefresh(Integer tenantId) throws Exception {
-		qbDataHandler.initiateAccountDataFetch(tenantId);
-	}
-
-
-	@Override
-	public void initiateVendorRefresh(Integer tenantId) throws Exception {
-		qbDataHandler.initiateVendorDataFetch(tenantId);
-	}
-
-
-	@Override
-	public void initiateSalesTaxRefresh(Integer tenantId) throws Exception {
-		qbDataHandler.initiateSalesTaxDataFetch(tenantId);
-	}
-
-
 	@Override
 	public GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception {
 
