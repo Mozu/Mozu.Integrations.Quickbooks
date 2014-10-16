@@ -388,6 +388,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
+			"aLengthMenu": [[2, 5, 10, 25, 50, -1], [2, 5, 10, 25, 50, "All"]],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),

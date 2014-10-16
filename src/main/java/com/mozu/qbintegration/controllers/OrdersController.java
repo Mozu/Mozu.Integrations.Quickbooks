@@ -152,10 +152,20 @@ public class OrdersController {
 				("UPDATED".equalsIgnoreCase(action) || "CONFLICT".equalsIgnoreCase(action)) ? 
 										"orderNumber" : "enteredTime");
 
+		int dispStartIdx = Integer.parseInt(iDisplayStart);
+		int dispLength = Integer.parseInt(iDisplayLength);
+		int endIndex = dispStartIdx + dispLength;
+		
+		if(endIndex > mozuOrderDetails.size()) {
+			endIndex = mozuOrderDetails.size(); //end of list - match to the size
+		}
+		List<MozuOrderDetail> reqdSliceList = mozuOrderDetails.subList(
+				dispStartIdx, endIndex);
+				
 		OrderJsonObject orderJsonObject = new OrderJsonObject();
-		orderJsonObject.setiTotalDisplayRecords((long)mozuOrderDetails.size());
-		orderJsonObject.setiTotalRecords(Long.parseLong(iDisplayLength));
-		orderJsonObject.setAaData(mozuOrderDetails);
+		orderJsonObject.setiTotalDisplayRecords((long) mozuOrderDetails.size());
+		orderJsonObject.setiTotalRecords((long) mozuOrderDetails.size());
+		orderJsonObject.setAaData(reqdSliceList);
 		
 		String value = null;
 		try {
