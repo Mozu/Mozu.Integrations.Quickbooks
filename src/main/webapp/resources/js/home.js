@@ -135,6 +135,7 @@ var dataType = function(id,name) {
 	this.name = ko.observable(name);
 }
 
+var pageNumbers = [10, 25, 50, 100];
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -388,7 +389,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
-			"aLengthMenu": [[2, 5, 10, 25, 50, 100], [2, 5, 10, 25, 50, 100]],
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -429,7 +430,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
-			"aLengthMenu": [[2, 5, 10, 25, 50, 100], [2, 5, 10, 25, 50, 100]],
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -494,7 +495,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
-			"aLengthMenu": [[2, 5, 10, 25, 50, 100], [2, 5, 10, 25, 50, 100]],
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=UPDATED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
@@ -554,7 +555,7 @@ var homeViewModel = function() {
 			"bProcessing" : true,
 			"bServerSide" : true,
 			"bDestroy"	: true,
-			"aLengthMenu": [[2, 5, 10, 25, 50, 100], [2, 5, 10, 25, 50, 100]],
+			"aLengthMenu": [pageNumbers, pageNumbers],
 			"sort" : "position",
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
