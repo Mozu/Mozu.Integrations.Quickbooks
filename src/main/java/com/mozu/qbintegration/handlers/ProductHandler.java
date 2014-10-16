@@ -151,8 +151,9 @@ public class ProductHandler {
 				productName =  itemInvRet.getName();
 				productQbListID = itemInvRet.getListID();
 			}else {
-				supported = false;
 				logger.info(object.getClass() +" not supported");
+				//throw new Exception("Not supported");
+				supported = false;
 			}
 			if (!supported) {
 				MozuProduct mozuProduct = new MozuProduct();
