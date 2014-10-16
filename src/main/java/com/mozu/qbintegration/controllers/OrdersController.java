@@ -174,7 +174,7 @@ public class OrdersController {
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
 			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
 		
-		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),null, null, 20);
+		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", 20);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		OrderQueueDataTable dataTable = new OrderQueueDataTable();
 		if(nodes != null) {

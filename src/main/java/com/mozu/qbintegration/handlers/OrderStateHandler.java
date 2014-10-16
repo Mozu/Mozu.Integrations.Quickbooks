@@ -32,8 +32,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class OrderStateHandler {
@@ -58,6 +58,9 @@ public class OrderStateHandler {
 	
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	XMLService xmlHelper;
 
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
@@ -162,7 +165,7 @@ public class OrderStateHandler {
 		if (StringUtils.isNotEmpty(qbResponse)) {
 			// Make entry in conflict reason table
 			// Log the not found product in error conflict
-			QBXML qbXml = (QBXML)  XMLHelper.getUnmarshalledValue(qbResponse);
+			QBXML qbXml = (QBXML)  xmlHelper.getUnmarshalledValue(qbResponse);
 			Object object = qbXml.getQBXMLMsgsRs().getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs().get(0);
 			if (object instanceof ItemQueryRsType) {
 				
@@ -241,7 +244,7 @@ public class OrderStateHandler {
 		else if (action.equals(WorkTaskActions.UPDATE) && 
 				this.orderExistsInQB) {
 			return OrderStates.UPDATE;
-		} else if (action.equals(WorkTaskActions.ADD))
+		} else if (action.equals(WorkTaskActions.ADD) || (action.equals(WorkTaskActions.UPDATE) && !this.orderExistsInQB))
 			return OrderStates.ADD;
 		else if (action.equals(WorkTaskActions.DELETE))
 			return OrderStates.DELETE;
@@ -268,7 +271,15 @@ public class OrderStateHandler {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
 		try {
 			JsonNode node = entityResource.getEntity(entityHandler.getTaskqueueEntityName(), orderId);
-			return node != null;
+			if (node != null)
+			{
+				WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
+				
+				if (task.getStatus().equalsIgnoreCase("error")) return false;
+				else return true;
+				
+			} else
+				return false;
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
 				logger.error(e.getMessage(), e);

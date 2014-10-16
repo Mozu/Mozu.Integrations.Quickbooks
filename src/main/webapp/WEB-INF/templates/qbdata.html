@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.qbData}" class="label-bold"></label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="tab-full-column">
+				 <select class="dropdown" data-bind="options: dataTypes, optionsText: 'name', value: selectedDataType" style="float:none;min-width:30px;"></select>
+				 <button data-bind="click: refreshData" class="mz-Button secondary">Refresh From QB</button>
+			</div>
+		</div>
+
+		
+		<div class="tab-divider"></div>
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="comparecontainer-left" style="width:100%">
+				    <div class="compareheading">
+				         <div class="compare-col">Id</div>
+				         <div class="compare-col">Name</div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: qbData">
+					    <div class="compare-table-row">
+						     <div class="compare-col" data-bind="text: id"></div>
+					         <div class="compare-col" data-bind="text: fullName"></div>
+					    </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

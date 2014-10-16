@@ -55,7 +55,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.service.QuickbooksService;
-import com.mozu.qbintegration.utils.XMLHelper;
+import com.mozu.qbintegration.service.XMLService;
 
 @Component
 public class OrderHandler {
@@ -79,6 +79,9 @@ public class OrderHandler {
 	@Autowired
 	QBDataHandler qbDataHandler;
 	
+	@Autowired
+	XMLService xmlHelper;
+	
 	public Order getOrder(String orderId, Integer tenantId) throws Exception {
 		OrderResource orderResource = new OrderResource(new MozuApiContext(tenantId));
 		Order order = null;
@@ -93,7 +96,7 @@ public class OrderHandler {
 
 
 	public QBResponse processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
-		QBXML orderAddResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML orderAddResp = (QBXML)  xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		SalesReceiptAddRsType salesOrderResponse = (SalesReceiptAddRsType) orderAddResp
 				.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -125,7 +128,7 @@ public class OrderHandler {
 	}
 	
 	public QBResponse processOrderUpdate(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
-		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML orderModResp = (QBXML)  xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		SalesReceiptModRsType orderModRsType = (SalesReceiptModRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -156,7 +159,7 @@ public class OrderHandler {
 	
 	public QBResponse processOrderQuery(int tenantId, String orderId, String response) throws Exception {
 		
-		QBXML orderModResp = (QBXML)  XMLHelper.getUnmarshalledValue(response);
+		QBXML orderModResp = (QBXML)  xmlHelper.getUnmarshalledValue(response);
 
 		SalesReceiptQueryRsType  orderQueryRsType = (SalesReceiptQueryRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -283,7 +286,7 @@ public class OrderHandler {
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(salesOrderQueryRqType);
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	public String getQBOrderSaveXML(int tenantId, String orderId) throws Exception {
@@ -319,7 +322,10 @@ public class OrderHandler {
 		salesReceiptAdd.setRefNumber(String.valueOf(order.getOrderNumber()));
 		if (order.getBillingInfo().getBillingContact().getAddress() != null)
 			salesReceiptAdd.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
-		salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
+		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
+			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
+		
 		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
@@ -347,7 +353,7 @@ public class OrderHandler {
 			salesReceiptAdd.getSalesReceiptLineAddOrSalesReceiptLineGroupAdd().add(salesReceiptLineAdd);
 		}
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public String getQBOrderUpdateXML(int tenantId, String orderId) throws Exception {
@@ -430,7 +436,7 @@ public class OrderHandler {
 				salesReceiptLineMod.setSalesTaxCodeRef(getSalesTaxCodeRef(item.getTaxCode()));
 			salesReceiptmod.getSalesReceiptLineModOrSalesReceiptLineGroupMod().add(salesReceiptLineMod);
 		}
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	
@@ -498,7 +504,7 @@ public class OrderHandler {
 		qbxmlMsgsRq.setOnError("stopOnError");
 		qbxml.setQBXMLMsgsRq(qbxmlMsgsRq);
 		qbxmlMsgsRq.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(deleteTx);
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	/*
@@ -507,7 +513,7 @@ public class OrderHandler {
 	 */
 	public QBResponse processOrderDelete(Integer tenantId, String orderId,
 			String responseXml) throws Exception {
-		QBXML deleteTxResp = (QBXML) XMLHelper.getUnmarshalledValue(responseXml);
+		QBXML deleteTxResp = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
 
 		TxnDelRsType deleteTxRespType = (TxnDelRsType) deleteTxResp
 				.getQBXMLMsgsRs()
@@ -565,7 +571,7 @@ public class OrderHandler {
 		List<MozuOrderItem> orderItems = productHandler.getProductCodes(tenantId, order, false);
 		for(MozuOrderItem orderItem : orderItems) {
 			QuickBooksSavedOrderLine savedOrderLine = new QuickBooksSavedOrderLine();
-			if (orderItem.getQty() == null)
+			if (orderItem.getQty() != null)
 				savedOrderLine.setQuantity(orderItem.getQty());
 			savedOrderLine.setAmount(orderItem.getAmount());
 			savedOrderLine.setFullName(orderItem.getProductCode());

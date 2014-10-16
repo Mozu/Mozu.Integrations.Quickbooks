@@ -17,10 +17,26 @@ public class EncryptDecryptHandler {
 		return textEncryptor.encrypt(value);
 	}
 	
+	public String encrypt(String key, String value)  {
+		
+		BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+		textEncryptor.setPassword(AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret()+key);
+		
+		return textEncryptor.encrypt(value);
+	}
+	
 	public String decrypt( String encryptedStr)  {
 	
 		BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
 		textEncryptor.setPassword(AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret());
+		
+		return textEncryptor.decrypt(encryptedStr);
+	}
+	
+	public String decrypt(String key, String encryptedStr)  {
+		
+		BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+		textEncryptor.setPassword(AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret()+key);
 		
 		return textEncryptor.decrypt(encryptedStr);
 	}

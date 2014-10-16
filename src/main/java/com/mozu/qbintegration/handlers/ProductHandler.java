@@ -42,6 +42,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAssemblyRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemNonInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
@@ -52,8 +53,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class ProductHandler {
@@ -71,6 +72,9 @@ public class ProductHandler {
 	@Autowired
 	QuickbooksService quickbooksService;
 
+    @Autowired
+    XMLService xmlHelper;
+    
 	public String getQBId(Integer tenantId, String productCode)
 			throws Exception {
 		
@@ -88,7 +92,6 @@ public class ProductHandler {
 	
 	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse,
 			Integer tenantId) throws Exception {
-		String itemListId = null;
 		List<Object> invObj = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
 
@@ -97,12 +100,11 @@ public class ProductHandler {
 	
 	public void processItemQueryAll(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
 				.getQBXMLMsgsRs()
-																.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																.get(0);
+				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+				.get(0);
 		
 		List<Object> itemServiceRetCollection = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
@@ -114,7 +116,10 @@ public class ProductHandler {
 	
 	private void processItemQueryResult(Integer tenantId, List<Object> objects)
 			throws Exception {
+		
+	
 		for (Object object : objects) {
+			boolean supported = true;
 			String productName = null;
 			String productQbListID = null;
 			if (object instanceof ItemServiceRet) {
@@ -141,21 +146,29 @@ public class ProductHandler {
 				ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
 				productName =  itemInvRet.getName();
 				productQbListID = itemInvRet.getListID();
-			}else
-				throw new Exception(object.getClass() +" not supported");
-			MozuProduct mozuProduct = new MozuProduct();
-			mozuProduct.setProductCode(productName);
-			mozuProduct.setQbProductListID(productQbListID);
-			mozuProduct.setProductName(productName);
-			saveAllProductInEntityList(mozuProduct, tenantId);
-			logger.debug("Saved product through refresh all: "+ productName);
+			} else if (object instanceof ItemNonInventoryRet) {
+				ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
+				productName =  itemInvRet.getName();
+				productQbListID = itemInvRet.getListID();
+			}else {
+				logger.info(object.getClass() +" not supported");
+				//throw new Exception("Not supported");
+				supported = false;
+			}
+			if (supported) {
+				MozuProduct mozuProduct = new MozuProduct();
+				mozuProduct.setProductCode(productName);
+				mozuProduct.setQbProductListID(productQbListID);
+				mozuProduct.setProductName(productName);
+				saveAllProductInEntityList(mozuProduct, tenantId);
+				logger.debug("Saved product through refresh all: "+ productName);
+			}
 		}
 	}
 	
 	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)
 			throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		List<Object> results = itemSearchEle.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
 		//boolean foundAllItems = true;
@@ -184,13 +197,12 @@ public class ProductHandler {
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemAddEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemAddEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		ItemInventoryAddRsType invAddResponse = (ItemInventoryAddRsType) itemAddEle
 				.getQBXMLMsgsRs()
-																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																				.get(0);
+    			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+    			.get(0);
 		
 		JsonNode node = entityHandler.getEntity(tenantId,
 				entityHandler.getProdctAddEntity(), workTask.getId());
@@ -373,7 +385,7 @@ public class ProductHandler {
 		inventoryAdd.setPurchaseCost(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemPurchaseCost())));
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public String getQBProductsGetXML(Integer tenantId, Order order)
@@ -400,7 +412,7 @@ public class ProductHandler {
 				existing.add(orderItem.getProductCode());
 			}
 		}
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	public String getAllQBProductsGetXML(Integer tenantId) throws Exception {
@@ -416,7 +428,7 @@ public class ProductHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						itemQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public void addProductToQB(Integer tenantId,
