@@ -155,7 +155,7 @@ public class OrdersController {
 		//Akshay 16-Oct-2014 - server side pagination by passing pageSize and startIndex to EL.
 		EntityCollection mozuOrderDetailsCollection = orderHandler.getMozuOrderDetails(tenantId, action, 
 				("UPDATED".equalsIgnoreCase(action) || "CONFLICT".equalsIgnoreCase(action)) ? 
-										"orderNumber" : "enteredTime", dispStartIdx, dispLength);
+										"orderNumber" : "enteredTime", dispStartIdx, dispLength, sSearch);
 
 		List<MozuOrderDetail> mozuOrders = new ArrayList<MozuOrderDetail>();
 		List<JsonNode> nodes = mozuOrderDetailsCollection.getItems();
