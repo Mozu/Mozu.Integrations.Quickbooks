@@ -40,8 +40,8 @@ public class OrderStateHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4647;
-		orderId = "05349b2a78bf8a158cf35c3500001227";
+		tenantId = 4519;
+		orderId = "0538672b78bf8a1024c9b878000011a7";
 	}
 
 	@After
