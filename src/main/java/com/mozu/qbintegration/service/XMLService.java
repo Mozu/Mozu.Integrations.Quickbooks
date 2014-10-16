@@ -3,7 +3,6 @@ package com.mozu.qbintegration.service;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
