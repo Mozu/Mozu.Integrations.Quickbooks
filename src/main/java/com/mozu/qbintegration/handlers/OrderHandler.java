@@ -233,7 +233,7 @@ public class OrderHandler {
 	
 	
 	public EntityCollection getMozuOrderDetails(Integer tenantId, String action, String orderBy,
-			Integer startIndex, Integer pageSize) throws Exception {
+			Integer startIndex, Integer pageSize, String search) throws Exception {
 
 		String entityName = null;
 		
@@ -256,8 +256,12 @@ public class OrderHandler {
 		
 		EntityCollection nodesCollection = null;
 		try {
+			String filterCriteria = null;
+			if (StringUtils.isNotEmpty(search)) {
+				filterCriteria = "orderNumber eq "+search;
+			}
 			nodesCollection = entityHandler.getEntityCollection(tenantId, entityName, 
-					null, orderBy +" desc", startIndex, pageSize);
+					filterCriteria, orderBy +" desc", startIndex, pageSize);
 			
 		} catch (Exception e) {
 			logger.error("Error getting orders by action for tenant id: " + tenantId);
