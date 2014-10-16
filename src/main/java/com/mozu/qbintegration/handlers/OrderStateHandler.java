@@ -271,7 +271,15 @@ public class OrderStateHandler {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
 		try {
 			JsonNode node = entityResource.getEntity(entityHandler.getTaskqueueEntityName(), orderId);
-			return node != null;
+			if (node != null)
+			{
+				WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
+				
+				if (task.getStatus().equalsIgnoreCase("error")) return false;
+				else return true;
+				
+			} else
+				return false;
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
 				logger.error(e.getMessage(), e);

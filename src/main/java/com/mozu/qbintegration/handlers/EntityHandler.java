@@ -82,6 +82,7 @@ public class EntityHandler {
 	public String getTaskqueueEntityName() {
 		return TASKQUEUE_ENTITY + "@" + getNamespace();
 	}
+	
 
 	public String getTaskqueueLogEntityName() {
 		return TASKQUEUELOG_ENTITY + "@" + getNamespace();

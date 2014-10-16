@@ -241,7 +241,7 @@ public class QuickbooksServiceEndPoint {
 			
 		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
-			queueManagerService.updateTask(tenantId, workTask.getId(), "ERROR", "COMPLETED");
+			queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "ERROR");
 			//throw ex;
 		}
 
