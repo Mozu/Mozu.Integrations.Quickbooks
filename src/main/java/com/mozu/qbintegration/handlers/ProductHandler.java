@@ -1,5 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDi
 import com.mozu.api.contracts.commerceruntime.discounts.ShippingDiscount;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
+import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.commerceruntime.products.BundledProduct;
 import com.mozu.api.contracts.commerceruntime.products.Product;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
@@ -30,6 +32,7 @@ import com.mozu.qbintegration.model.MozuOrderItem;
 import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
+import com.mozu.qbintegration.model.QBResponse;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.IncomeAccountRef;
@@ -39,7 +42,9 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryAssemblyRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemInventoryRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemNonInventoryRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemOtherChargeRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
@@ -48,8 +53,8 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
-import com.mozu.qbintegration.utils.XMLHelper;
 
 @Component
 public class ProductHandler {
@@ -67,6 +72,9 @@ public class ProductHandler {
 	@Autowired
 	QuickbooksService quickbooksService;
 
+    @Autowired
+    XMLService xmlHelper;
+    
 	public String getQBId(Integer tenantId, String productCode)
 			throws Exception {
 		
@@ -84,7 +92,6 @@ public class ProductHandler {
 	
 	private void saveProductInEntityList(ItemQueryRsType itemSearchResponse,
 			Integer tenantId) throws Exception {
-		String itemListId = null;
 		List<Object> invObj = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
 
@@ -93,12 +100,11 @@ public class ProductHandler {
 	
 	public void processItemQueryAll(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
 				.getQBXMLMsgsRs()
-																.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																.get(0);
+				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+				.get(0);
 		
 		List<Object> itemServiceRetCollection = itemSearchResponse
 				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
@@ -110,7 +116,10 @@ public class ProductHandler {
 	
 	private void processItemQueryResult(Integer tenantId, List<Object> objects)
 			throws Exception {
+		
+	
 		for (Object object : objects) {
+			boolean supported = true;
 			String productName = null;
 			String productQbListID = null;
 			if (object instanceof ItemServiceRet) {
@@ -132,48 +141,68 @@ public class ProductHandler {
 			}else if (object instanceof ItemInventoryAssemblyRet) {
 				ItemInventoryAssemblyRet itemInvRet = (ItemInventoryAssemblyRet) object;
 				productName =  itemInvRet.getFullName();
-				productQbListID = itemInvRet.getName();
-			} else
-				throw new Exception(object.getClass() +" not supported");
-			MozuProduct mozuProduct = new MozuProduct();
-			mozuProduct.setProductCode(productName);
-			mozuProduct.setQbProductListID(productQbListID);
-			mozuProduct.setProductName(productName);
-			saveAllProductInEntityList(mozuProduct, tenantId);
-			logger.debug("Saved product through refresh all: "+ productName);
+				productQbListID = itemInvRet.getListID();
+			} else if (object instanceof ItemPaymentRet) {
+				ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
+				productName =  itemInvRet.getName();
+				productQbListID = itemInvRet.getListID();
+			} else if (object instanceof ItemNonInventoryRet) {
+				ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
+				productName =  itemInvRet.getName();
+				productQbListID = itemInvRet.getListID();
+			}else {
+				logger.info(object.getClass() +" not supported");
+				//throw new Exception("Not supported");
+				supported = false;
+			}
+			if (supported) {
+				MozuProduct mozuProduct = new MozuProduct();
+				mozuProduct.setProductCode(productName);
+				mozuProduct.setQbProductListID(productQbListID);
+				mozuProduct.setProductName(productName);
+				saveAllProductInEntityList(mozuProduct, tenantId);
+				logger.debug("Saved product through refresh all: "+ productName);
+			}
 		}
 	}
 	
-	public boolean processItemQuery(Integer tenantId, String qbTaskResponse)
+	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)
 			throws Exception {
-		QBXML itemSearchEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		List<Object> results = itemSearchEle.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
-		boolean foundAllItems = true;
+		//boolean foundAllItems = true;
+		QBResponse qbResponse = new QBResponse();
 		for(Object obj : results) {
 			ItemQueryRsType itemSearchResponse = (ItemQueryRsType)obj;
 			if (500 == itemSearchResponse.getStatusCode().intValue()
 					&& "warn".equalsIgnoreCase(itemSearchResponse
 							.getStatusSeverity())) {
-				foundAllItems = false;
+				qbResponse.setStatusCode(itemSearchResponse.getStatusCode());
+				qbResponse.setStatusSeverity(itemSearchResponse.getStatusSeverity());
+				qbResponse.setStatusMessage(itemSearchResponse.getStatusMessage());
 			} else {
 				saveProductInEntityList(itemSearchResponse, tenantId);
 			}
 		}
 
-		return foundAllItems;
+		if (StringUtils.isEmpty(qbResponse.getStatusMessage())) {
+			qbResponse.setStatusCode(BigInteger.ZERO);
+			qbResponse.setStatusMessage("Status OK");
+			qbResponse.setStatusSeverity("Info");
+		}
+		
+		return qbResponse;
 	}
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemAddEle = (QBXML) XMLHelper
-				.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemAddEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		ItemInventoryAddRsType invAddResponse = (ItemInventoryAddRsType) itemAddEle
 				.getQBXMLMsgsRs()
-																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-																				.get(0);
+    			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+    			.get(0);
 		
 		JsonNode node = entityHandler.getEntity(tenantId,
 				entityHandler.getProdctAddEntity(), workTask.getId());
@@ -350,8 +379,13 @@ public class ProductHandler {
 		inventoryAdd.setSalesDesc(productToQuickbooks.getItemSalesDesc());
 		inventoryAdd.setSalesPrice(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemSalesPrice())));
+		
+		//Akshay: Set purchase information
+		inventoryAdd.setPurchaseDesc(productToQuickbooks.getItemPurchaseDesc());
+		inventoryAdd.setPurchaseCost(numberFormat.format(Double
+				.valueOf(productToQuickbooks.getItemPurchaseCost())));
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public String getQBProductsGetXML(Integer tenantId, Order order)
@@ -378,7 +412,7 @@ public class ProductHandler {
 				existing.add(orderItem.getProductCode());
 			}
 		}
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 	
 	public String getAllQBProductsGetXML(Integer tenantId) throws Exception {
@@ -394,7 +428,7 @@ public class ProductHandler {
 				.getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq().add(
 						itemQueryRqType);
 
-		return XMLHelper.getMarshalledValue(qbxml);
+		return xmlHelper.getMarshalledValue(qbxml);
 	}
 
 	public void addProductToQB(Integer tenantId,
@@ -423,6 +457,7 @@ public class ProductHandler {
 		
 		String qbDiscProductCode = null;
 		String shippingProductCode = null;
+		String giftCardProductCode = null;
 		
 		GeneralSettings settings = quickbooksService
 				.getSettingsFromEntityList(tenantId);
@@ -433,6 +468,10 @@ public class ProductHandler {
 
 			if (StringUtils.isNotEmpty(settings.getShippingProductCode()))
 				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
+			
+			if (StringUtils.isNotEmpty(settings.getGiftCardProductCode()))
+				giftCardProductCode = getQBId(tenantId,	settings.getGiftCardProductCode());
+			
 		}
 		
 		double qbDiscount = 0.0; // this sums up all item discounts
@@ -458,6 +497,13 @@ public class ProductHandler {
 				mzItem.setAmount(item.getUnitPrice().getListAmount());
 			}
 			
+			String taxCode = null;
+			if (item.getItemTaxTotal() > 0.0) 
+				taxCode = "Tax";
+			else
+				taxCode = "Non";
+			mzItem.setTaxCode(taxCode);
+			
 			mzItem.setQty(item.getQuantity());
 			
 			productCodes.add(mzItem);
@@ -474,34 +520,15 @@ public class ProductHandler {
 						mzItem.setQbItemCode(getQBId(tenantId,bProduct.getProductCode()));
 					mzItem.setDescription(bProduct.getName());
 					mzItem.setAmount(0.0);
+					mzItem.setTaxCode(taxCode);
 					mzItem.setQty(item.getQuantity()*bProduct.getQuantity());
 					productCodes.add(mzItem);
 				}
 			}
-
-			// Add discounts as seperate line item
-			/*if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-				
-			//Add discounts as seperate line item
-			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-				mzItem = new MozuOrderItem();
-				mzItem.setProductCode(settings.getDiscountProductCode());
-				mzItem.setQbItemCode(qbDiscProductCode);
-				mzItem.setAmount(item.getDiscountTotal());
-				mzItem.setMisc(true);
-				productCodes.add(mzItem);
-			}*/
 			
 			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
-					/*mzItem = new MozuOrderItem();
-					mzItem.setProductCode(settings.getDiscountProductCode());
-					mzItem.setQbItemCode(qbDiscProductCode);
-					mzItem.setDescription(discount.getDiscount().getName());
-					mzItem.setAmount(discount.getImpact());*/
 					qbDiscount += discount.getImpact();
-					//mzItem.setMisc(true);
-					//productCodes.add(mzItem);
 				}
 			}
 		}
@@ -512,61 +539,30 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingProductCode);
 			mzItem.setAmount(order.getShippingSubTotal());
 			mzItem.setMisc(true);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
 		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { //Akshay 10-Oct-2014 -- add order level disc
-			
 			for (AppliedDiscount disc: order.getOrderDiscounts()) {
-				/*MozuOrderItem mzItem = new MozuOrderItem();
-				mzItem.setProductCode(settings.getDiscountProductCode());
-				mzItem.setQbItemCode(qbDiscProductCode);
-				
-				mzItem.setDescription(disc.getDiscount().getName());
-				mzItem.setAmount(disc.getImpact());
-				mzItem.setMisc(true);
-				productCodes.add(mzItem);*/
-				
 				qbDiscount += disc.getImpact();
 			}
 		}
 		
 		if (order.getAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			/*MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getDiscountProductCode());
-			mzItem.setQbItemCode(qbDiscProductCode);
-			mzItem.setAmount(order.getAdjustment().getAmount());
-			mzItem.setMisc(true);
-			productCodes.add(mzItem);*/
-			
-			
 			qbDiscount += -(order.getAdjustment().getAmount());
 			
 		}
 		
 		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && order.getShippingDiscounts() != null) {
 			for(ShippingDiscount discount : order.getShippingDiscounts()) {
-				/*MozuOrderItem mzItem = new MozuOrderItem();
-				mzItem.setProductCode(settings.getDiscountProductCode());
-				mzItem.setQbItemCode(qbDiscProductCode);
-				mzItem.setDescription(discount.getDiscount().getDiscount().getName());
-				mzItem.setAmount(discount.getDiscount().getImpact());
-				mzItem.setMisc(true);
-				productCodes.add(mzItem);*/
 				qbDiscount += discount.getDiscount().getImpact();
 			}
 		}
 
 		if (order.getShippingAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			/*MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getDiscountProductCode());
-			mzItem.setQbItemCode(qbDiscProductCode);
-			mzItem.setAmount(order.getShippingAdjustment().getAmount());
-			mzItem.setMisc(true);
-			productCodes.add(mzItem);*/
-			
 			qbDiscount += -(order.getShippingAdjustment().getAmount());
 		}
 		
@@ -576,7 +572,24 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
+		}
+		
+		//Get store credit product
+		if (StringUtils.isNoneEmpty(settings.getGiftCardProductCode())) {
+			for(Payment payment : order.getPayments()) {
+				if (payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit") && payment.getStatus().equalsIgnoreCase("collected")) {
+					MozuOrderItem mzItem = new MozuOrderItem();
+					mzItem.setProductCode(settings.getGiftCardProductCode());
+					mzItem.setQbItemCode(giftCardProductCode);
+					mzItem.setAmount(payment.getAmountCollected());
+					mzItem.setMisc(true);
+					mzItem.setDescription(payment.getBillingInfo().getStoreCreditCode());
+					//mzItem.setTaxCode("Non");
+					productCodes.add(mzItem);
+				}
+			}
 		}
 		
 		return productCodes;

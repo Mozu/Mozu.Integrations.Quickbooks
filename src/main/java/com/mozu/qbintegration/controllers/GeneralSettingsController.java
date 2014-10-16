@@ -48,6 +48,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	@Autowired
 	private EncryptDecryptHandler encryptDecryptHandler;
 	
+
+	
 	@Value("${webserviceName}")
 	private String webserviceName;
 	
@@ -57,7 +59,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	@Value("${wsdlFileName}")
 	private String wsdlFileName;
 
-	 private ServletContext context;
+	
+	private ServletContext context;
 	    
     @Override
     public void setServletContext(ServletContext servletContext) {
@@ -131,7 +134,7 @@ public class GeneralSettingsController implements ServletContextAware {
 		return node;
 	}
 	
-	@RequestMapping(value = "generatePwd", method = RequestMethod.POST)
+	/*@RequestMapping(value = "generatePwd", method = RequestMethod.POST)
 	public @ResponseBody ObjectNode generatePwd(@RequestParam(value = "tenantId", required = false) Integer tenantId,@RequestBody String name, final HttpServletRequest request) throws Exception {
 		String password = encryptDecryptHandler.encrypt(tenantId+"~"+name);
 		
@@ -140,7 +143,9 @@ public class GeneralSettingsController implements ServletContextAware {
 		node.put("pwd", password);
 		
 		return node;
-	}
+	}*/
+	
+	
 	
 	@RequestMapping(value = "download", method = RequestMethod.POST)
 	public void download(@RequestParam(value="qwcfilestr", required=false) String fileContent,

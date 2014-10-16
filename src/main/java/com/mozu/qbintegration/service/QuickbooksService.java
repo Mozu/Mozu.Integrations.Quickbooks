@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
+import com.mozu.qbintegration.model.QBSession;
 
 /**
  * @author Akshay
@@ -50,6 +50,10 @@ public interface QuickbooksService {
 	 * @return
 	 */
 	public List<MozuProduct> getMozuProductList(Integer tenantId);
+
 	
 
+	QBSession addSession(Integer tenantId) throws Exception;
+	void deleteSession(Integer tenantId) throws Exception;
+	QBSession getSession(Integer tenantId) throws Exception;
 }

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.handlers.EntityHandler;
+import com.mozu.qbintegration.model.WorkTaskStatus;
 import com.mozu.qbintegration.tasks.WorkTask;
 
 
@@ -30,24 +31,24 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Autowired
 	EntityHandler entityHandler;
 	
-	public final String PROCESSING = "Processing";
+	/*public final String PROCESSING = "Processing";
 	public final String PENDING = "Pending";
-	public final String COMPLETED = "Completed";
+	public final String COMPLETED = "Completed";*/
 	
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate desc", 1);
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status ne ERROR", "createDate", 1);
 		
 		if (nodes.size() > 0) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 			
-			task.setStatus(PROCESSING);
+			task.setStatus(WorkTaskStatus.PROCESSING);
 			
 			entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
 
 			return task;
 		}
-		
+		logger.debug("No WorkTask to return from QueueManagerServiceImpl for tenantId: " + tenantId);
 		return null;
 	}
 	
@@ -58,7 +59,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		workTask.setId(id);
 		workTask.setCreateDate(DateTime.now());
 		workTask.setType(type);
-		workTask.setStatus(PENDING);
+		workTask.setStatus(WorkTaskStatus.PENDING);
 		workTask.setAction(action);
 		workTask.setCurrentStep(currentStep);
 		
@@ -69,7 +70,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getActiveTask(Integer tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status eq " +PROCESSING, null, 1);
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status eq " +WorkTaskStatus.PROCESSING, null, 1);
 		if (nodes.size() > 0) 
 			return mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 		
@@ -78,16 +79,17 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 
 	@Override
 	public void updateTask(Integer tenantId, String id, String currentStep, String status) throws Exception {
-		if(status.equalsIgnoreCase(COMPLETED)) {
+		if(status.equalsIgnoreCase(WorkTaskStatus.COMPLETED)) {
 			entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
-		} else {
-			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
-			
-			WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
-			task.setCurrentStep(currentStep);
-			task.setStatus(status);
-			entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
-		}
+			return;
+		} 
+		
+		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
+		
+		WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
+		task.setCurrentStep(currentStep);
+		task.setStatus(status);
+		entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
 	}
 }
 

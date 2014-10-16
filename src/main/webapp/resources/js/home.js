@@ -11,10 +11,9 @@ function funEdit(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.orderConflictDetails.removeAll();
+			viewModel.orderConflictDetails.removeAll();
 			$(data).each(function(index) {				
-				console.log(data[index]);
-				homeViewModel.orderConflictDetails.push(data[index]);
+				viewModel.orderConflictDetails.push(data[index]);
 			});
 			
 			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
@@ -22,6 +21,18 @@ function funEdit(orderNumber) {
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
 			getAllProductsFromEntityList();
+			
+			viewModel.loadQBData("taxcode", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableTaxCodes);
+			});
+			
+			viewModel.loadQBData("vendor", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableVendors);
+			});
+			
+			viewModel.loadQBData("account", function(data) {
+				ko.mapping.fromJS(data,{},viewModel.availableAccounts);
+			});
 		},
 		error : function() {
 			$("#content").hide();
@@ -48,10 +59,7 @@ function compareDetails(orderNumber) {
 		},
 		dataType : "json",		
 		success : function(data) {
-			ko.mapping.fromJS(data, homeViewModel.compare);
-			//homeViewModel.orderCompareDetails.removeAll();
-			//console.log(data);
-			//saveDataToTable(data);
+			ko.mapping.fromJS(data, viewModel.compare);
 		},
 		error : function() {
 			$("#content").hide();
@@ -62,7 +70,7 @@ function compareDetails(orderNumber) {
 function saveDataToTable(data) {
 	$(data).each(function(index) {				
 		console.log(data[index]);
-		homeViewModel.orderCompareDetails.push(data[index]);
+		viewModel.orderCompareDetails.push(data[index]);
 	});
 	
 	$(data).promise().done(function() {
@@ -75,18 +83,13 @@ function saveDataToTable(data) {
 
 function getAllProductsFromEntityList() {
 	$.ajax({
-		url : "getAllPostedProducts",
+		url : "api/qb/getAllPostedProducts?tenantId=" + $("#tenantIdHdn").val(),
 		type : "GET",
-		data : {
-			"tenantId" : $("#tenantIdHdn").val(),
-			"siteId"	: $("#siteIdHdn").val()
-		},
 		dataType : "json",		
 		success : function(data) {
-			homeViewModel.allProductsInQB.removeAll();
-			$(data).each(function(index) {				
-				console.log(data[index]);
-				homeViewModel.allProductsInQB.push(
+			viewModel.allProductsInQB.removeAll();
+			$(data).each(function(index) {	
+				viewModel.allProductsInQB.push(
 						new ProductToMap(data[index].qbProductListID, 
 								data[index].productName));
 			});
@@ -111,14 +114,15 @@ var qbItem = function(itemNumber) {
 	var self = this;
     self.itemNameNumber = ko.observable(itemNumber);
     self.itemPurchaseDesc = ko.observable("");
+    self.itemPurchaseCost = ko.observable("");
     self.itemSalesDesc = ko.observable("");
     self.itemSalesPrice = ko.observable("");
     self.itemManuPartNum = ko.observable("");
-    self.itemTaxCode = ko.observable("");
-    self.itemExpenseAccount = ko.observable("");
-    self.itemAssetAccount = ko.observable("");
-    self.itemIncomeAccount = ko.observable("");
     self.selectedChoice = ko.observable();
+    self.itemTaxCode = ko.observable();
+    self.itemExpenseAccount = ko.observable();
+    self.itemIncomeAccount = ko.observable();
+    self.selectedVendor = ko.observable();
 }
 
 var compare = {
@@ -126,12 +130,22 @@ var compare = {
 	updatedOrder : ""
 }
 
+var dataType = function(id,name) {
+	this.id = ko.observable(id);
+	this.name = ko.observable(name);
+}
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
 	self.settings = ko.mapping.fromJS(new Object());
-	
+	self.selectedTab = ko.observable();
+	self.availableTaxCodes = ko.observableArray([]);
+	self.availableAccounts = ko.observableArray([]);
+	self.availableVendors = ko.observableArray([]);
 	self.compare = ko.mapping.fromJS(compare);
+	self.dataTypes = ko.observableArray([]);
+	self.selectedDataType = ko.observable();
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -171,17 +185,20 @@ var homeViewModel = function() {
     self.enableNewItem = function() {
     	self.showItemCreate(true);
     	self.showItemMap(false);
+    	return true;
     };
     
     self.enableExistingItem = function() {
     	self.showItemCreate(false);
     	self.showItemMap(true);
+    	return true;
     }
     
     self.saveItemToQuickbooks = function() {
+    	console.log(ko.mapping.toJSON(self.itemToFix));
      	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "saveProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(self.itemToFix),
@@ -201,7 +218,7 @@ var homeViewModel = function() {
     	
     	$.ajax({
 			contentType: 'application/json; charset=UTF-8',
-			url : "mapProductToQB?tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
+			url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val(),
 			type : "POST",
 			dataType : "json",
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
@@ -216,12 +233,8 @@ var homeViewModel = function() {
     //TO show in the map product dropdown
     self.getAllProductsFromQB = function() {
     	$.ajax({
-    		url : "getAllProductsFromQB",
+    		url : "api/qb/initiateProductRefresh?tenantId=" + $("#tenantIdHdn").val(),
     		type : "GET",
-    		data : {
-    			"tenantId" : $("#tenantIdHdn").val(),
-    			"siteId"	: $("#siteIdHdn").val()
-    		},
     		dataType : "json",		
     		success : function(data) {
     			//console.log(data);
@@ -306,20 +319,34 @@ var homeViewModel = function() {
     
     
 	self.save = function() {
-		$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  ko.mapping.toJSON(self.settings),
-			success : function(data) {
-				self.showDownload(true)
-				ko.mapping.fromJS(data, self.settings);
-			},
-			error : function() {
-			}
-		});
-		
+		if (self.selectedTab() == "paymentMappingTab") {
+			$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/qb/data?tenantId=" + $("#tenantIdHdn").val(),
+				type : "POST",
+				dataType : "json",
+				data:  ko.mapping.toJSON(self.paymentMappings),
+				success : function(data) {
+					console.log(data);
+				},
+				error : function() {
+				}
+			});	
+		} else {
+			$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/config/settings?tenantId=" + $("#tenantIdHdn").val(),
+				type : "POST",
+				dataType : "json",
+				data:  ko.mapping.toJSON(self.settings),
+				success : function(data) {
+					self.showDownload(true)
+					ko.mapping.fromJS(data, self.settings);
+				},
+				error : function() {
+				}
+			});			
+		}
 	};
 
 	self.qwcFileContent = ko.observable();
@@ -598,17 +625,27 @@ var homeViewModel = function() {
 				dataType : "json",
 				success : function(data) {
 					ko.mapping.fromJS(data, self.settings);
-					ko.applyBindings(window.homeViewModel);
+					ko.applyBindings(viewModel);
 
 					
-					if ($("#selectedTab").val() != "") {
-						$("#"+$("#selectedTab").val()+"Tab").click();
-					} else {
-						window.homeViewModel.getVersion();
-						if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
-							self.showDownload(true);
-					}
-							
+						if ($("#selectedTab").val() != "") {
+							$("#"+$("#selectedTab").val()+"Tab").click();
+						} else {
+							self.getVersion();
+							if (self.settings.qbAccount() != null && self.settings.qbPassword() != null) {
+								self.showDownload(true);
+						}
+								
+						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );
+						self.mozuPayments.push(new mozuPayment("Amex", "American Express") );
+						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
+						self.mozuPayments.push(new mozuPayment("Check", "Check"));
+						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
+						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
+						
+						self.dataTypes.push(new dataType("account", "Accounts"));
+						self.dataTypes.push(new dataType("vendor", "Vendors"));
+						self.dataTypes.push(new dataType("taxcode", "Sales Taxcodes"));
 					}
 				},
 				error : function() {
@@ -616,10 +653,124 @@ var homeViewModel = function() {
 				}
 			});		
 	};
-
-
+	
+	self.initiateRefresh = function(type) {
+		$.ajax({
+				contentType: 'application/json; charset=UTF-8',
+				url : "api/qb/initiateDataRefresh?tenantId=" + $("#tenantIdHdn").val()+"&type="+type,
+				type : "PUT",
+				dataType : "json",
+				success : function(data) {
+					//TODO show success msg
+				},
+				error : function() {
+					$("#content").hide();
+				}
+			});		
+	};
+	
+	
+	self.selectedDataType.subscribe(function(newValue){
+		self.loadData();
+	}, self);
+	
+	self.qbData = ko.observableArray([]);
+	self.loadData = function() {
+		self.loadQBData(self.selectedDataType().id(), function(data) {
+			ko.mapping.fromJS(data,{},self.qbData);
+		});
+	}
+	
+	self.refreshData = function() {
+		self.initiateRefresh(self.selectedDataType().id());
+	}
+	
+	self.loadQBData = function(type, callback) {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/data?tenantId=" + $("#tenantIdHdn").val()+"&type="+type,
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				callback(data);
+			},
+			error : function() {
+				$("#content").hide();
+			}
+		});		
+	}
+	
+	self.qbPaymentMethods =  ko.observableArray([]);
+	self.loadPaymentMapping = function() {
+		
+		//Clear the existing mapping table
+		self.paymentMappings.removeAll();
+		
+		self.loadQBData("paymentmethod", function(data) {
+			console.log(data);
+			ko.mapping.fromJS(data,{},self.qbPaymentMethods);
+		});
+		
+		//Load any mappings already done
+		self.getPaymentMappings(function(data) {
+			
+			$(data).each(function(index) {
+				self.paymentMappings.push(
+						new paymentMapping(data[index].mzData.id,
+								data[index].mzData, data[index].qbData));
+			});
+			//ko.mapping.fromJS(data,{},self.paymentMappings);
+		});
+	};
+	
+	self.getPaymentMappings = function(callback) {
+		$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/getPaymentMappings?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				callback(data);
+			},
+			error : function() {
+				$("#content").hide();
+			}
+		});		
+	}
+	
+	self.mapPayment = function() {
+		var exists = false;
+		for(var i=0;i<self.paymentMappings().length;i++) {
+			if (self.selectedMozuPayment().id() == self.paymentMappings()[i].mozuId()) {
+				exists = true;
+			}	
+		}
+		
+		if (!exists)
+			self.paymentMappings.push(new paymentMapping(self.selectedMozuPayment().id(),self.selectedMozuPayment(), self.selectedQBPayment()));
+	}
+	
+	self.mozuPayments = ko.observableArray([]);
+	self.selectedMozuPayment = ko.observable();
+	self.selectedQBPayment = ko.observable();
+	self.paymentMappings = ko.observableArray([]);
+	
 	self.getSettings();
 }
+
+
+var mozuPayment = function(id, name) {
+	this.id = ko.observable(id);
+	this.name = ko.observable(name);
+}
+
+var paymentMapping = function(mozuId, mozuPayment, qbPayment) {
+	this.type = ko.observable("payment");
+	this.mozuId = ko.observable(mozuId);
+	this.mzData = ko.observable(mozuPayment);
+	this.qbData = ko.observable(qbPayment);
+}
+
 
 function unixToHumanTime(data) {
 	return moment.unix(data/1000).format("YYYY-MM-DD HH:mm:ss")
@@ -646,6 +797,7 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
 	$("#serverError").show();
 });
 
+var viewModel;
 
 $(function() {
 
@@ -675,7 +827,7 @@ $(function() {
 
 		if (activeTabId == newTabId)
 			return;
-
+		viewModel.selectedTab(newTabId);
 		activeTab.removeClass('active');
 		$(newTab).addClass('active');
 
@@ -714,7 +866,7 @@ $(function() {
 
     });
 
-	window.homeViewModel = new homeViewModel();
+	viewModel = new homeViewModel();
 	
 	$("#saveBtn").hide();
 });

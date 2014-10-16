@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
-import com.mozu.api.contracts.commerceruntime.orders.Order;
-import com.mozu.api.contracts.commerceruntime.orders.OrderItem;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.contracts.mzdb.EntityContainer;
 import com.mozu.api.contracts.mzdb.EntityContainerCollection;
@@ -28,14 +26,13 @@ import com.mozu.api.resources.platform.entitylists.EntityContainerResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.base.utils.ApplicationUtils;
+import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.handlers.EntityHandler;
-import com.mozu.qbintegration.handlers.OrderHandler;
+import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
-import com.mozu.qbintegration.model.MozuOrderDetail;
 import com.mozu.qbintegration.model.MozuProduct;
-import com.mozu.qbintegration.model.OrderCompareDetail;
 import com.mozu.qbintegration.model.OrderConflictDetail;
-import com.mozu.qbintegration.model.QuickBooksOrder;
+import com.mozu.qbintegration.model.QBSession;
 import com.mozu.qbintegration.model.SubnavLink;
 
 /**
@@ -49,13 +46,14 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
 
-
-
-	@Autowired 
-	OrderHandler orderHandler;
-	
 	@Autowired
 	EntityHandler entityHandler;
+	
+	@Autowired
+	private QBDataHandler qbDataHandler;
+	
+	@Autowired
+	private EncryptDecryptHandler encryptDecryptHandler;
 	
 	public QuickbooksServiceImpl() {
 
@@ -83,12 +81,16 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 			}
 		}
 
-		JsonNode custNode = mapper.valueToTree(generalSettings);
+		JsonNode settingsNode = mapper.valueToTree(generalSettings);
 		try {
 			if (!isUpdate) { // insert scenario.
-				custNode = entityResource.insertEntity(custNode, mapName);
+				settingsNode = entityResource.insertEntity(settingsNode, mapName);
+				
+				//Akshay 11-Oct-2014 added Account, Vendor and sales tax cod setup data fetch tasks to queue.
+				qbDataHandler.refreshAllData(tenantId);
+				//configureInitialSetupData(tenantId);
 			} else {
-				custNode = entityResource.updateEntity(custNode, mapName,generalSettings.getId());
+				settingsNode = entityResource.updateEntity(settingsNode, mapName,generalSettings.getId());
 			}
 
 			Application application = ApplicationUtils.setApplicationToInitialized(context);
@@ -101,6 +103,25 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		return generalSettings;
 	}
 
+	/**
+	 * Pull all available Accounts, Vendors and Sales Tax codes from QB and save
+	 * while saving for the first time. Subsequent updates happen with the help
+	 * of on demand buttons.
+	 * 
+	 * @param tenantId
+	 * @throws Exception 
+	 */
+	/*private void configureInitialSetupData(Integer tenantId) throws Exception {
+		//Account setup
+		initiateAccountsRefresh(tenantId);
+		
+		//Vendor setup
+		initiateVendorRefresh(tenantId);
+		
+		//Sales Tax 
+		initiateSalesTaxRefresh(tenantId);
+	}*/
+	
 	@Override
 	public GeneralSettings getSettingsFromEntityList(Integer tenantId) throws Exception {
 
@@ -152,8 +173,6 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		
 		return conflictDetails;
 	}
-
-
 	
 	
 	private void addUpdateExtensionLinks(Integer tenantId, Application application, String serverUrl) throws Exception {
@@ -172,40 +191,17 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		link.setHref(serverUrl+"/Orders?tab=posted");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink conflictOrdersLink = new SubnavLink();
-		conflictOrdersLink.setParentId("orders");
-		conflictOrdersLink.setAppId(application.getAppId());
-		conflictOrdersLink.setWindowTitle(title);*/
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Conflicts"});
 		link.setHref(serverUrl+"/Orders?tab=conflicts");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink updatedOrdersLink = new SubnavLink();
-		updatedOrdersLink.setParentId("orders");
-		updatedOrdersLink.setAppId(application.getAppId());
-		updatedOrdersLink.setWindowTitle(title);*/
-		
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Updates"});
-
 		link.setHref(serverUrl+"/Orders?tab=updates");
 		addUpdateSubNavLink(link, collection, entityResource);
 		
-		/*SubnavLink cancelledOrdersLink = new SubnavLink();
-		cancelledOrdersLink.setParentId("orders");
-		cancelledOrdersLink.setAppId(application.getAppId());
-		cancelledOrdersLink.setWindowTitle(title);*/
-		
 		link.setPath(new String[] {"Quickbooks","Orders","Cancelled"});
-		
 		link.setHref(serverUrl+"/Orders?tab=cancels");
 		addUpdateSubNavLink(link, collection, entityResource);
-		
-		/*SubnavLink cancelledOrdersLink = new SubnavLink();
-		cancelledOrdersLink.setParentId("orders");
-		cancelledOrdersLink.setAppId(application.getAppId());
-		cancelledOrdersLink.setWindowTitle(title);*/
 		
 		link.setPath(new String[] {"Quickbooks","Orders","Pending"});
 		link.setHref(serverUrl+"/Orders?tab=queue");
@@ -270,4 +266,38 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 	}
 
 
+	@Override
+	public QBSession addSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		session.setKey(String.valueOf(System.currentTimeMillis()));
+		
+		String pwd = encryptDecryptHandler.encrypt(session.getKey(),tenantId+"~"+session.getKey());
+		session.setPwd(pwd);
+		
+		entityHandler.addUpdateEntity(tenantId, entityHandler.getSettingEntityName(), session.getId(), session);
+		return session;
+	}
+
+
+	@Override
+	public void deleteSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		entityHandler.deleteEntity(tenantId, entityHandler.getSettingEntityName(), session.getId());
+		
+	}
+
+
+	@Override
+	public QBSession getSession(Integer tenantId) throws Exception {
+		QBSession session = new QBSession();
+		JsonNode node = entityHandler.getEntity(tenantId,  entityHandler.getSettingEntityName(), session.getId());
+		if (node != null) {
+			return mapper.readValue(node.toString(), QBSession.class);
+		} else {
+			throw new Exception("Session not found");
+		}
+	}
+
+	
+	
 }

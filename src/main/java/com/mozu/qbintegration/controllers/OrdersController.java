@@ -174,16 +174,19 @@ public class OrdersController {
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
 			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
 		
-		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),null, null, 20);
+		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", 20);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
-		for(JsonNode node : nodes) {
-			workTasks.add(mapper.readValue(node.toString(),WorkTask.class));
+		OrderQueueDataTable dataTable = new OrderQueueDataTable();
+		if(nodes != null) {
+			for(JsonNode node : nodes) {
+				workTasks.add(mapper.readValue(node.toString(),WorkTask.class));
+			}
 		}
 		
-		OrderQueueDataTable dataTable = new OrderQueueDataTable();
-		dataTable.setiTotalDisplayRecords((long)nodes.size());
+		dataTable.setiTotalDisplayRecords(nodes == null ? 0 : (long) nodes.size());
 		dataTable.setiTotalRecords(Long.parseLong(iDisplayLength));
 		dataTable.setAaData(workTasks);
+		
 		
 		String value = null;
 		try {

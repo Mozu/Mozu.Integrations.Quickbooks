@@ -24,82 +24,86 @@ import com.mozu.api.utils.JsonUtils;
 @Component
 public class EntityHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(EntityHandler.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(EntityHandler.class);
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
 
-	private  final String CUST_ENTITY = "QB_CUSTOMER";
-	private  final String PRODUCT_ENTITY = "QB_PRODUCT";
-	private  final String PRODUCT_ADD_ENTITY = "QB_PRODUCT_ADD";
-	private  final String SETTINGS_ENTITY = "QB_SETTINGS";
-	private  final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
-	private  final String TASKQUEUELOG_ENTITY = "QB_TASKQUEUELOG";
-	private  final String ORDER_CONFLICT_DETAIL_ENTITY = "QB_CONFLICT_DETAIL";
-	private  final String ORDERS_UPDATED_ENTITY = "QB_UPDATED";
-	private  final String ORDER_CONFLICT_ENTITY = "QB_CONFLICT";
-	private  final String ORDER_POSTED_ENTITY = "QB_POSTED";
-	private  final String ORDER_CANCELLED_ENTITY = "QB_CANCELLED";
-	private  final String ORDERS_ENTITY = "QB_ORDERS";	
+	private final String CUST_ENTITY = "QB_CUSTOMER";
+	private final String PRODUCT_ENTITY = "QB_PRODUCT";
+	private final String PRODUCT_ADD_ENTITY = "QB_PRODUCT_ADD";
+	private final String SETTINGS_ENTITY = "QB_SETTINGS";
+	private final String TASKQUEUE_ENTITY = "QB_TASKQUEUE";
+	private final String TASKQUEUELOG_ENTITY = "QB_TASKQUEUELOG";
+	private final String ORDER_CONFLICT_DETAIL_ENTITY = "QB_CONFLICT_DETAIL";
+	private final String ORDERS_UPDATED_ENTITY = "QB_UPDATED";
+	private final String ORDER_CONFLICT_ENTITY = "QB_CONFLICT";
+	private final String ORDER_POSTED_ENTITY = "QB_POSTED";
+	private final String ORDER_CANCELLED_ENTITY = "QB_CANCELLED";
+	private final String ORDERS_ENTITY = "QB_ORDERS";
+	private final String LOOKUP_ENTITY = "QB_LOOKUPDATA";
+	private final String MAPPING_ENTITY = "QB_MAPPING";
 
+	private String nameSpace = "";
 
-
-	private  String nameSpace = "";
-	
 	public EntityHandler() {
 		mapper.registerModule(new JodaModule());
-	    mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS , false);
+		mapper.configure(
+				com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
+				false);
 
-	    
 	}
-	
+
 	private String getNamespace() {
 		if (StringUtils.isEmpty(nameSpace)) {
-			String appId = AppAuthenticator.getInstance().getAppAuthInfo().getApplicationId();
+			String appId = AppAuthenticator.getInstance().getAppAuthInfo()
+					.getApplicationId();
 			nameSpace = appId.substring(0, appId.indexOf('.'));
 		}
-		
+
 		return nameSpace;
 	}
-	
-	public  String getCustomerEntityName() {
+
+	public String getCustomerEntityName() {
 		return CUST_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getProductEntityName() {
+
+	public String getProductEntityName() {
 		return PRODUCT_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getOrderEntityName() {
+
+	public String getOrderEntityName() {
 		return ORDERS_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getSettingEntityName() {
+
+	public String getSettingEntityName() {
 		return SETTINGS_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getTaskqueueEntityName() {
+
+	public String getTaskqueueEntityName() {
 		return TASKQUEUE_ENTITY + "@" + getNamespace();
 	}
 	
-	public  String getTaskqueueLogEntityName() {
+
+	public String getTaskqueueLogEntityName() {
 		return TASKQUEUELOG_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getOrderConflictEntityName() {
+
+	public String getOrderConflictEntityName() {
 		return ORDER_CONFLICT_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getOrderConflictDetailEntityName() {
+
+	public String getOrderConflictDetailEntityName() {
 		return ORDER_CONFLICT_DETAIL_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getOrderUpdatedEntityName() {
+
+	public String getOrderUpdatedEntityName() {
 		return ORDERS_UPDATED_ENTITY + "@" + getNamespace();
 	}
-	
+
 	public String getOrderPostedEntityName() {
 		return ORDER_POSTED_ENTITY + "@" + getNamespace();
 	}
-	
+
 	public String getOrderCancelledEntityName() {
 		return ORDER_CANCELLED_ENTITY + "@" + getNamespace();
 	}
@@ -107,17 +111,28 @@ public class EntityHandler {
 	public String getProdctAddEntity() {
 		return PRODUCT_ADD_ENTITY + "@" + getNamespace();
 	}
-	
-	public  String getSubnavLinksEntityName() {
+
+	public String getLookupEntity() {
+		return LOOKUP_ENTITY + "@" + getNamespace();
+	}
+
+	public String getMappingEntity() {
+		return MAPPING_ENTITY + "@" + getNamespace();
+	}
+
+	public String getSubnavLinksEntityName() {
 		return "subnavlinks@mozu";
 	}
-	
-	public  List<JsonNode> searchEntity(Integer tenantId, String entityName, String filter) throws Exception {
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
-		EntityCollection collection = entityResource.getEntities(entityName, 200, 0, filter, null, null);
+
+	public List<JsonNode> searchEntity(Integer tenantId, String entityName,
+			String filter) throws Exception {
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
+		EntityCollection collection = entityResource.getEntities(entityName,
+				200, 0, filter, null, null);
 		return collection.getItems();
 	}
-	
+
 	public void addSchemas(int tenantId) throws Exception {
 		getNamespace();
 		installGenSettingsSchema(tenantId);
@@ -132,8 +147,10 @@ public class EntityHandler {
 		installOrderPostedSchema(tenantId);
 		installOrderConflictDetailsSchema(tenantId);
 		installOrderCancelledSchema(tenantId);
+		installLookupSchema(tenantId);
+		installMappingSchema(tenantId);
 	}
-	
+
 	/**
 	 * Install the customer schema in entity list
 	 * 
@@ -202,9 +219,9 @@ public class EntityHandler {
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("refNumber", "string"));
-		entityList.setIndexA(getIndexedProperty("timeCreated", "date")); 
+		entityList.setIndexA(getIndexedProperty("timeCreated", "date"));
 		entityList.setIndexB(getIndexedProperty("timeModified", "date"));
-		
+
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -232,7 +249,7 @@ public class EntityHandler {
 		entityList.setIndexB(getIndexedProperty("status", "string"));
 		entityList.setIndexC(getIndexedProperty("currentStep", "string"));
 		entityList.setIndexD(getIndexedProperty("type", "string"));
-		
+
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -242,19 +259,18 @@ public class EntityHandler {
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
 
-
 	private void installQBTaskQueueLogSchema(Integer tenantId) throws Exception {
 
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(TASKQUEUELOG_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("enteredTime","string"));
+		entityList.setIdProperty(getIndexedProperty("enteredTime", "string"));
 		entityList.setIndexA(getIndexedProperty("createDate", "date"));
 		entityList.setIndexB(getIndexedProperty("status", "string"));
 		entityList.setIndexC(getIndexedProperty("type", "string"));
 		entityList.setIndexC(getIndexedProperty("id", "string"));
-		
+
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -282,7 +298,7 @@ public class EntityHandler {
 		String mapName = getOrderConflictDetailEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-	
+
 	private void installOrderCancelledSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
@@ -302,7 +318,7 @@ public class EntityHandler {
 		String mapName = getOrderCancelledEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-	
+
 	private void installOrderConflictSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
@@ -319,8 +335,9 @@ public class EntityHandler {
 		String mapName = getOrderConflictEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-	
-	private void installOrderConflictDetailsSchema(Integer tenantId) throws Exception {
+
+	private void installOrderConflictDetailsSchema(Integer tenantId)
+			throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
@@ -336,14 +353,17 @@ public class EntityHandler {
 		String mapName = getOrderConflictDetailEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-	
+
 	private void installOrdersUpdatedSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(ORDERS_UPDATED_ENTITY);
 		entityList.setIdProperty(getIndexedProperty("id", "string"));
-		entityList.setIndexB(getIndexedProperty("orderNumber", "string")); // RECEIVED, POSTED, ERRORED, UPDATED
+		entityList.setIndexB(getIndexedProperty("orderNumber", "string")); // RECEIVED,
+																			// POSTED,
+																			// ERRORED,
+																			// UPDATED
 		entityList.setIndexC(getIndexedProperty("updatedDate", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
@@ -352,15 +372,16 @@ public class EntityHandler {
 
 		String mapName = getOrderUpdatedEntityName();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
-		
+
 	}
-	
+
 	private void installProductAddSchema(Integer tenantId) throws Exception {
 		EntityList entityList = new EntityList();
 		entityList.setNameSpace(nameSpace);
 		entityList.setContextLevel("tenant");
 		entityList.setName(PRODUCT_ADD_ENTITY);
-		entityList.setIdProperty(getIndexedProperty("itemNameNumber", "string"));
+		entityList
+				.setIdProperty(getIndexedProperty("itemNameNumber", "string"));
 		entityList.setIsVisibleInStorefront(Boolean.FALSE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
@@ -369,7 +390,47 @@ public class EntityHandler {
 		String mapName = this.getProdctAddEntity();
 		createOrUpdateEntityList(tenantId, entityList, mapName);
 	}
-	
+
+	private void installLookupSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(LOOKUP_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("id", "string"));
+		entityList.setIndexA(getIndexedProperty("dataType", "string")); // ACCOUNT,
+																		// VENDOR,
+																		// TAXCODE
+																		// for
+																		// now
+		entityList.setIndexB(getIndexedProperty("fullname", "string"));
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = this.getLookupEntity();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+
+	private void installMappingSchema(Integer tenantId) throws Exception {
+		EntityList entityList = new EntityList();
+		entityList.setNameSpace(nameSpace);
+		entityList.setContextLevel("tenant");
+		entityList.setName(this.MAPPING_ENTITY);
+		entityList.setIdProperty(getIndexedProperty("mozuId", "string"));
+		entityList.setIndexA(getIndexedProperty("type", "string")); // ACCOUNT,
+																	// VENDOR,
+																	// TAXCODE
+																	// for now
+		entityList.setIsVisibleInStorefront(Boolean.FALSE);
+		entityList.setIsLocaleSpecific(false);
+		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);
+		entityList.setIsShopperSpecific(false);
+
+		String mapName = this.getMappingEntity();
+		createOrUpdateEntityList(tenantId, entityList, mapName);
+	}
+
 	/*
 	 * Create or update entity list
 	 */
@@ -381,7 +442,8 @@ public class EntityHandler {
 		try {
 			existing = entityListResource.getEntityList(mapName);
 		} catch (ApiException ae) {
-			if (!StringUtils.equals(ae.getApiError().getErrorCode(),"ITEM_NOT_FOUND"))
+			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
+					"ITEM_NOT_FOUND"))
 				throw ae;
 		}
 		try {
@@ -391,7 +453,7 @@ public class EntityHandler {
 				entityListResource.updateEntityList(entityList, mapName);
 			}
 		} catch (ApiException ae) {
-			//TODO: log error and throw
+			// TODO: log error and throw
 			ae.printStackTrace();
 		}
 	}
@@ -403,90 +465,108 @@ public class EntityHandler {
 
 		return property;
 	}
-	
-	public void addEntity(Integer tenantId, String entityName, Object value) throws Exception {
+
+	public void addEntity(Integer tenantId, String entityName, Object value)
+			throws Exception {
 		ObjectNode taskNode = mapper.valueToTree(value);
 
 		// Add the mapping entry
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		try {
-				entityResource.insertEntity(taskNode, entityName);
+			entityResource.insertEntity(taskNode, entityName);
 		} catch (Exception e) {
-			logger.error("Error saving or updating  entity : "+ e.getMessage());
+			logger.error("Error saving or updating  entity : " + e.getMessage());
 			throw e;
 		}
 	}
-	
-	public void addUpdateEntity(Integer tenantId, String entityName, String id, Object value) throws Exception {
+
+	public void addUpdateEntity(Integer tenantId, String entityName, String id,
+			Object value) throws Exception {
 		ObjectNode taskNode = mapper.valueToTree(value);
 
 		// Add the mapping entry
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		try {
 			JsonNode existing = getEntity(tenantId, entityName, id);
-			
-			if(existing == null) {
+
+			if (existing == null) {
 				entityResource.insertEntity(taskNode, entityName);
 			} else {
 				entityResource.updateEntity(taskNode, entityName, id);
 			}
 		} catch (Exception e) {
-			logger.error("Error saving or updating  entity : "+ id);
+			logger.error("Error saving or updating  entity : " + id);
 			throw e;
 		}
 	}
-	
-	public void updateEntity(Integer tenantId, String entityName, String id, Object value) throws Exception {
+
+	public void updateEntity(Integer tenantId, String entityName, String id,
+			Object value) throws Exception {
 		ObjectNode taskNode = mapper.valueToTree(value);
 
 		// Add the mapping entry
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		try {
 			entityResource.updateEntity(taskNode, entityName, id);
 		} catch (Exception e) {
-			logger.error("Error saving or updating  entity : "+ id);
+			logger.error("Error saving or updating  entity : " + id);
 			throw e;
 		}
 	}
-	
-	public void deleteEntity(Integer tenantId, String entityName, String id) throws Exception {
+
+	public void deleteEntity(Integer tenantId, String entityName, String id)
+			throws Exception {
 		// Add the mapping entry
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId)); 
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		try {
 			entityResource.deleteEntity(entityName, id);
 		} catch (Exception e) {
-			logger.error("Error saving or updating  entity : "+ id);
+			logger.error("Error saving or updating  entity : " + id);
 			throw e;
 		}
 	}
-	
-	public JsonNode getEntity(Integer tenantId, String entityName, String id) throws Exception {
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+
+	public JsonNode getEntity(Integer tenantId, String entityName, String id)
+			throws Exception {
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		JsonNode entity = null;
 		try {
 			entity = entityResource.getEntity(entityName, id);
 		} catch (ApiException e) {
-			if (!StringUtils.equals(e.getApiError().getErrorCode(),	"ITEM_NOT_FOUND")) {
-				logger.error("Error retrieving entity for email id: "+ entity);
+			if (!StringUtils.equals(e.getApiError().getErrorCode(),
+					"ITEM_NOT_FOUND")) {
+				logger.error("Error retrieving entity for email id: " + entity);
 				throw e;
 			}
 		}
 		return entity;
 	}
-	
-	public List<JsonNode> getEntityCollection(Integer tenantId, String entityName, String filterCriteria) throws Exception {
-		return getEntityCollection(tenantId,entityName, filterCriteria, null, 1);
+
+	public List<JsonNode> getEntityCollection(Integer tenantId,
+			String entityName, String filterCriteria) throws Exception {
+		return getEntityCollection(tenantId, entityName, filterCriteria, null,
+				1);
 	}
-	
-	public List<JsonNode> getEntityCollection(Integer tenantId, String entityName, String filterCriteria, String sortBy, Integer pageSize) throws Exception {
-		
+
+	public List<JsonNode> getEntityCollection(Integer tenantId,
+			String entityName, String filterCriteria, String sortBy,
+			Integer pageSize) throws Exception {
+
 		List<JsonNode> nodes = null;
-		EntityResource entityResource = new EntityResource(new MozuApiContext(tenantId));
+		EntityResource entityResource = new EntityResource(new MozuApiContext(
+				tenantId));
 		try {
-			EntityCollection collection = entityResource.getEntities(entityName, pageSize, 0, filterCriteria, sortBy, null);
+			EntityCollection collection = entityResource.getEntities(
+					entityName, pageSize, 0, filterCriteria, sortBy, null);
 			nodes = collection.getItems();
 		} catch (ApiException e) {
-			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
+			if (!StringUtils.equals(e.getApiError().getErrorCode(),
+					"ITEM_NOT_FOUND")) {
 				logger.error(e.getMessage(), e);
 				throw e;
 			}
@@ -495,4 +575,3 @@ public class EntityHandler {
 		return nodes;
 	}
 }
-
