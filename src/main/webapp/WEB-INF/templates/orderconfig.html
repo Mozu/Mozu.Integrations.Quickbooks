@@ -92,6 +92,16 @@
 					<input type="text" id="wsUrl" class="tab-field" data-bind="value : settings.orderSalesTaxCode"  ></input>
 					<label class="tab-field-label" th:text="#{label.nonTaxable}"></label>
 					<input type="text"  class="tab-field" data-bind="value : settings.orderNonSalesTaxCode"></input>
+                </div>  
+                <div class="tab-full-column">
+                    <label class="tab-field-label" th:text="#{label.taxableStates}"></label>
+					<select class="tab-field" name="State" multiple="true"
+					        data-bind="options: availableStates,
+					                   optionsText: 'stateName',
+					                   optionsValue: 'stateAbbreviation',
+					                   selectedOptions: settings.taxableStates"> 
+                    </select>
+                    <br/>
 				</div>	
 			</div>
 		</div>
