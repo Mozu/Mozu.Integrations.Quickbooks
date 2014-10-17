@@ -390,7 +390,7 @@ var homeViewModel = function() {
 			"bServerSide" : true,
 			"bDestroy"	: true,
 			"aLengthMenu": [pageNumbers, pageNumbers],
-			"sort" : "position",
+			"bSort": false,
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
@@ -431,7 +431,7 @@ var homeViewModel = function() {
 			"bServerSide" : true,
 			"bDestroy"	: true,
 			"aLengthMenu": [pageNumbers, pageNumbers],
-			"sort" : "position",
+			"bSort": false,
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
@@ -496,7 +496,7 @@ var homeViewModel = function() {
 			"bServerSide" : true,
 			"bDestroy"	: true,
 			"aLengthMenu": [pageNumbers, pageNumbers],
-			"sort" : "position",
+			"bSort": false,
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=UPDATED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
@@ -556,7 +556,7 @@ var homeViewModel = function() {
 			"bServerSide" : true,
 			"bDestroy"	: true,
 			"aLengthMenu": [pageNumbers, pageNumbers],
-			"sort" : "position",
+			"bSort": false,
 			"sSearch":true,
 			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 			"aoColumns" : [
