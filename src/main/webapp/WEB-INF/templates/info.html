@@ -4,19 +4,21 @@
 <body>
 	<div th:fragment="content">
 		<div class="row">
-			<div class="tab-first-column">
+			<div class="tab-full-column">
 				<div style="margin-left: 10px;">
 					<p th:text="#{label.appdescription}"></p>
 				</div>
 			</div>
-
-			<div class="tab-second-column">
+		</div>
+		<div class="row">
+			<div style="margin-top:10%"></div>
+		</div>
+		
+		<div class="row">
+			<div class="tab-first-column">
 				<div class="well-info text-center">
-					<!-- 
-					<div>
-						<img src="images/logo.png" height="33" width="136"></img>
-					</div>
-                -->
+					
+					<img src="images/qblogo.jpg" ></img>
 					<div
 						style="font-size: 15px; font-weight: bold; color: #333333; line-height: 17px;"
 						class="mozulogo"><label th:text="#{label.appname}"></label> by</div>
