@@ -7,6 +7,7 @@
 <body>
 	<div class="app-container">
 		<div class="app-ext">
+			
 			<div class="tab-container-ext">
 				<div
 					style="position: absolute; z-index: 10; width: 98%; height: 92%; background-color: rgba(255, 255, 255, .5);"
@@ -21,8 +22,7 @@
 						<div class="col-md-12">
 							<div class="notification error">
 								<div class="icon" onclick="closeError()"></div>
-								<div id="serverErrorMessage" class="message">An error
-									occurred on the server.</div>
+								<div id="serverErrorMessage" class="message">An error occurred on the server.</div>
 							</div>
 						</div>
 					</div>
@@ -42,7 +42,9 @@
 			                 <span class="link" id="cancelsTab" data-bind="click: getOrdersCancelled" data-toggle="tab" data-tab-id="cancelledDivTab">Cancels</span>
 			                  &nbsp;|&nbsp;
 			                 <span class="link" id="queueTab" data-bind="click: getOrdersQueue" data-toggle="tab" data-tab-id="orderQueueDivTab">Pending</span>
-			                 
+							<a class="help-icon-link" style="margin-top:0px;" href="http://mozu.github.io/IntegrationDocuments/QuickBooks/Mozu-QuickBooks-App.htm" target="_helpTab"> 
+							    <img class="help-icon" src="images/help-icon.png" alt="Help"></img>
+							</a>
 	                 	</span>
 	                 	<div class="tab-divider" style="margin-top:5px;margin-bottom:0px;"></div>	
 					</div>
