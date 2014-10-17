@@ -1,5 +1,6 @@
 package com.mozu.qbintegration.handlers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -557,7 +558,11 @@ public class EntityHandler {
 			String entityName, String filterCriteria, String sortBy,
 			Integer pageSize) throws Exception {
 		EntityCollection nodesCollection = getEntityCollection(tenantId, entityName, filterCriteria, sortBy, null, pageSize);
-		return nodesCollection.getItems();
+		if (nodesCollection!=null) {
+		    return nodesCollection.getItems();
+		} else {
+		    return new ArrayList<JsonNode>();
+		}
 	}
 	
 	/**
