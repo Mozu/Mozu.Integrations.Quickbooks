@@ -437,8 +437,9 @@ p {
 }
 .row {
 	width: 100%;
-	min-width: 625px;
+	min-width: 580px;
 	float: left;
+	margin-left:5px;
 }
 .tab-full-column {
   width: 100%;

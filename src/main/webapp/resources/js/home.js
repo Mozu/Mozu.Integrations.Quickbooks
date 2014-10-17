@@ -130,12 +130,18 @@ var compare = {
 	updatedOrder : ""
 }
 
+var usState = function(abbreviation, name) {
+	this.stateName = name;
+	this.stateAbbreviation = abbreviation;
+}
+
 var dataType = function(id,name) {
 	this.id = ko.observable(id);
 	this.name = ko.observable(name);
 }
 
 var pageNumbers = [10, 25, 50, 100];
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -147,6 +153,61 @@ var homeViewModel = function() {
 	self.compare = ko.mapping.fromJS(compare);
 	self.dataTypes = ko.observableArray([]);
 	self.selectedDataType = ko.observable();
+	
+	self.availableStates = ko.observableArray(
+			[
+			new usState("AL","Alabama"), 
+			new usState("AK","Alaska"), 
+			new usState("AZ","Arizona"), 
+			new usState("AR","Arkansas"), 
+			new usState("CA","California"), 
+			new usState("CO","Colorado"), 
+			new usState("CT","Connecticut"), 
+			new usState("DE","Delaware"), 
+			new usState("DC","District Of Columbia"), 
+			new usState("FL","Florida"),
+			new usState("GA","Georgia"), 
+			new usState("HI","Hawaii"), 
+			new usState("ID","Idaho"), 
+			new usState("IL","Illinois"), 
+			new usState("IN","Indiana"), 
+			new usState("IA","Iowa"), 
+			new usState("KS","Kansas"), 
+			new usState("KY","Kentucky"), 
+			new usState("LA","Louisiana"), 
+			new usState("ME","Maine"), 
+			new usState("MD","Maryland"), 
+			new usState("MA","Massachusetts"), 
+			new usState("MI","Michigan"), 
+			new usState("MN","Minnesota"), 
+			new usState("MS","Mississippi"), 
+			new usState("MO","Missouri"), 
+			new usState("MT","Montana"), 
+			new usState("NE","Nebraska"), 
+			new usState("NV","Nevada"), 
+			new usState("NH","New Hampshire"), 
+			new usState("NJ","New Jersey"), 
+			new usState("NM","New Mexico"), 
+			new usState("NY","New York"), 
+			new usState("NC","North Carolina"), 
+			new usState("ND","North Dakota"), 
+			new usState("OH","Ohio"), 
+			new usState("OK","Oklahoma"), 
+			new usState("OR","Oregon"), 
+			new usState("PA","Pennsylvania"), 
+			new usState("RI","Rhode Island"), 
+			new usState("SC","South Carolina"), 
+			new usState("SD","South Dakota"), 
+			new usState("TN","Tennessee"), 
+			new usState("TX","Texas"), 
+			new usState("UT","Utah"), 
+			new usState("VT","Vermont"), 
+			new usState("VA","Virginia"), 
+			new usState("WA","Washington"), 
+			new usState("WV","West Virginia"), 
+			new usState("WI","Wisconsin"), 
+			new usState("WY","Wyoming")
+			]);
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
