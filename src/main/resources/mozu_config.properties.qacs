@@ -1,3 +1,5 @@
+# qacs
 ApplicationId={{QB_QACS_APP_ID}}
 SharedSecret={{QB_QACS_SHARED_SECRET}}
 BaseAuthAppUrl=https://home.mozu.com
+
