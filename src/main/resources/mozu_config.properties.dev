@@ -1,0 +1,13 @@
+proxy.host=
+proxy.port=
+
+# For Jenkins deploy job testing purposes only
+# dev
+ApplicationId={{QB_QA_APP_ID}}
+SharedSecret={{QB_QA_SHARED_SECRET}}
+BaseAuthAppUrl=https://home.mozu.com
+
+#Mongo connection
+mongo.localhost=localhost
+mongo.port=27017
+mongo.db=quickbooksdb
