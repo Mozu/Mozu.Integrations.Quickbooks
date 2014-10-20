@@ -39,12 +39,14 @@
 				<div class="comparecontainer-left" style="width:100%">
 				    <div class="compareheading">
 				         <div class="compare-col">Mozu Payment Method</div>
-				         <div class="compare-col">Quickbooks Payment Method</div>
+                         <div class="compare-col">Quickbooks Payment Method</div>
+                         <div class="compare-col">Remove</div>
 				    </div>
 				    <div style="display:table-row-group;" data-bind="foreach: paymentMappings">
 					    <div class="compare-table-row">
 					         <div class="compare-col" data-bind="text: mzData().name"></div>
 					         <div class="compare-col" data-bind="text: qbData().fullName"></div>
+                             <div class="compare-col"><button data-bind="click: $parent.unmapPayment" class="mz-button.secondary">X</button></div>
 					    </div>
 				    </div>
 				</div>

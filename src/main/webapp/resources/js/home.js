@@ -379,7 +379,6 @@ var homeViewModel = function() {
     	
     };
     
-    
 	self.save = function() {
 		if (self.selectedTab() == "paymentMappingTab") {
 			$.ajax({
@@ -410,6 +409,7 @@ var homeViewModel = function() {
 			});			
 		}
 	};
+
 
 	self.qwcFileContent = ko.observable();
 	
@@ -814,6 +814,15 @@ var homeViewModel = function() {
 		
 		if (!exists)
 			self.paymentMappings.push(new paymentMapping(self.selectedMozuPayment().id(),self.selectedMozuPayment(), self.selectedQBPayment()));
+	}
+	
+	self.unmapPayment = function(data) {
+		for(var i=0;i<self.paymentMappings().length;i++) {
+			if (self.paymentMappings()[i].mozuId() == data.mozuId()) {
+				self.paymentMappings.remove(self.paymentMappings()[i]);
+				break;
+			}	
+		}
 	}
 	
 	self.mozuPayments = ko.observableArray([]);
