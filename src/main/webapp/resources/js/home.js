@@ -266,8 +266,6 @@ var homeViewModel = function() {
 			data:  ko.mapping.toJSON(self.itemToFix),
 			success : function(data) {
 				console.log(data);
-			},
-			error : function() {
 			}
     	});
     };
@@ -286,8 +284,6 @@ var homeViewModel = function() {
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 			success : function(data) {
 				//console.log(data);
-			},
-			error : function() {
 			}
     	});
     };
@@ -301,8 +297,6 @@ var homeViewModel = function() {
     		success : function(data) {
     			//console.log(data);
     			getAllProductsFromEntityList();
-    		},error : function() {
-    			$("#content").hide();
     		}
     	});
     	
@@ -318,29 +312,19 @@ var homeViewModel = function() {
     	//Clear the checkboxes array
 		self.selectedConflictOrders.removeAll();
 		
-    	console.log($('input:checkbox[name=allOrderConflictCheckbox]:checked').length);
     	var $allCheckedConflictBoxes = $('input:checkbox[name=allOrderConflictCheckbox]:checked');
     	$allCheckedConflictBoxes.each(function(index) {
     		self.selectedConflictOrders.push($(this).val());
     	});
     	
-    	$allCheckedConflictBoxes.promise().done(function() {
-    		console.log(ko.mapping.toJSON(self.selectedConflictOrders()));
-    		$.ajax({
-        		url : "Orders/postConflictOrderToQB",
-        		type : "POST",
-        		data : {
-        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedConflictOrders()),
-        			"tenantId" : $("#tenantIdHdn").val(),
-        			"siteId"	: $("#siteIdHdn").val()
-        		},
-        		dataType : "json",		
-        		success : function(data) {
-        			$("#"+$("#selectedTab").val()+"Tab").click();
-        		},error : function() {
-        			//$("#content").hide();
-        		}
-        	});
+		$.ajax({
+    		url : "Orders/postConflictOrderToQB?tenantId="+$("#tenantIdHdn").val(),
+    		type : "POST",
+    		data : ko.mapping.toJSON(self.selectedConflictOrders()),
+    		contentType: "application/json; charset=utf-8",
+    		success : function(data) {
+    			viewModel.getOrderConflicts();
+    		}
     	});
     };
     
@@ -350,32 +334,22 @@ var homeViewModel = function() {
     	//Clear the checkboxes array
 		self.selectedOrdersToUpdate.removeAll();
 		
-    	console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length);
-    	
     	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
     	$allCheckedUpdateBoxes.each(function(index) {
     		self.selectedOrdersToUpdate.push($(this).val());
     	});
     	
-    	$allCheckedUpdateBoxes.promise().done(function() {
-    		//console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
-        	$.ajax({
-        		url : "Orders/postUpdatedOrderToQB",
-        		type : "POST",
-        		data : {
-        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedOrdersToUpdate()),
-        			"tenantId" : $("#tenantIdHdn").val(),
-        			"siteId"	: $("#siteIdHdn").val()
-        		},
-        		dataType : "json",		
-        		success : function(data) {
-        			$("#"+$("#selectedTab").val()+"Tab").click();
-        		},error : function() {
-        			//$("#content").hide();
-        		}
-        	});
-    		
+	
+    	$.ajax({
+    		url : "Orders/postUpdatedOrderToQB?tenantId="+$("#tenantIdHdn").val(),
+    		type : "POST",
+    		data :  ko.mapping.toJSON(self.selectedOrdersToUpdate()),
+    		contentType: "application/json; charset=utf-8",
+    		success : function(data) {
+    			viewModel.getOrdersUpdated();
+    		}
     	});
+    		
     	
     };
     
@@ -390,8 +364,6 @@ var homeViewModel = function() {
 				data:  ko.mapping.toJSON(self.paymentMappings),
 				success : function(data) {
 					console.log(data);
-				},
-				error : function() {
 				}
 			});	
 		} else {
@@ -404,8 +376,6 @@ var homeViewModel = function() {
 				success : function(data) {
 					self.showDownload(true)
 					ko.mapping.fromJS(data, self.settings);
-				},
-				error : function() {
 				}
 			});			
 		}
@@ -425,8 +395,6 @@ var homeViewModel = function() {
 				self.qwcFileContent(data.qbxml);
 				$("#downloadForm").submit();
 
-				},
-				error : function() {
 				}
 			});
 		}
@@ -438,9 +406,6 @@ var homeViewModel = function() {
 			dataType : "text",
 			success : function(data) {
 				self.buildVersion(data)
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});
 	};
@@ -728,9 +693,6 @@ var homeViewModel = function() {
 				dataType : "json",
 				success : function(data) {
 					//TODO show success msg
-				},
-				error : function() {
-					$("#content").hide();
 				}
 			});		
 	};
@@ -759,9 +721,6 @@ var homeViewModel = function() {
 			dataType : "json",
 			success : function(data) {
 				callback(data);
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});		
 	}
@@ -797,9 +756,6 @@ var homeViewModel = function() {
 			dataType : "json",
 			success : function(data) {
 				callback(data);
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});		
 	}
@@ -847,10 +803,6 @@ function closeError() {
 }
 
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
-	console.log(exception);
-	console.log(event);
-	console.log(settings);
-	console.log(jqxhr);
 	if (jqxhr.status >= 200 && jqxhr.status <= 300)
 		return;
 	if (jqxhr.responseJSON != null)
