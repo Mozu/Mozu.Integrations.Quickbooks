@@ -146,20 +146,29 @@ public class QBDataFetchController {
 		return qbData;
 	}
 	
-	@RequestMapping(value = "data", method = RequestMethod.POST)
-	public @ResponseBody String mapQbData(
-			@RequestParam(value = "tenantId", required = true) Integer tenantId,
-			@RequestBody List<DataMapping> dataMapping,
-			final HttpServletRequest request) throws Exception {
-		for (DataMapping mapping : dataMapping) {
-			entityHandler.addUpdateEntity(tenantId,
-					entityHandler.getMappingEntity(), mapping.getMozuId(),
-					mapping);
-		}
+    @RequestMapping(value = "data", method = RequestMethod.POST)
+    public @ResponseBody String mapQbData(
+            @RequestParam(value = "tenantId", required = true) Integer tenantId,
+            @RequestBody List<DataMapping> dataMapping,
+            final HttpServletRequest request) throws Exception {
 
-		return "Mozu to Quickbooks Payment mapping is successful.";
-	}
-	
+        // Delete existing
+        List<DataMapping> paymentData = getDataMappings(
+                entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 100));
+        for (DataMapping payment: paymentData) {
+            entityHandler.deleteEntity(tenantId, entityHandler.getMappingEntity(), payment.getMozuId());
+        }
+
+        // Add back
+        for (DataMapping mapping : dataMapping) {
+            entityHandler.addUpdateEntity(tenantId,
+                    entityHandler.getMappingEntity(), mapping.getMozuId(),
+                    mapping);
+        }
+
+        return "Mozu to Quickbooks Payment mapping is successful.";
+    }
+    
 	@RequestMapping(value = "getPaymentMappings", method = RequestMethod.GET)
 	public @ResponseBody
 	List<DataMapping> getExistingPaymentMappings(
