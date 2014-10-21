@@ -95,14 +95,16 @@ public class OrdersController {
 		List<NameValuePair> paramsList = URLEncodedUtils.parse(params, "UTF-8");
 
 		Integer tenantId = Integer.parseInt(getValue(paramsList, Headers.X_VOL_TENANT));
-		Integer siteId = Integer.parseInt(getValue(paramsList,Headers.X_VOL_SITE));
+
+		/*String siteId = getValue(paramsList,Headers.X_VOL_SITE);
+		Integer siteId = Integer.parseInt();
 		Integer masterCatalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_MASTER_CATALOG));
-		Integer catalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_CATALOG));
+		Integer catalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_CATALOG));*/
 		String msgHash = httpRequest.getParameter("messageHash");
 		String dateKey = httpRequest.getParameter("dt");
 		String tab = httpRequest.getParameter("tab");
 		
-		ApiContext apiContext = new MozuApiContext(tenantId, siteId, masterCatalog, catalog);
+		ApiContext apiContext = new MozuApiContext(tenantId);
 		apiContext.setHeaderDate(dateKey);
 		apiContext.setHmacSha256(msgHash);
 		if (!Crypto.isRequestValid(apiContext, decodedBody)) {
@@ -113,7 +115,6 @@ public class OrdersController {
               ConfigurationSecurityInterceptor.encrypt(DateTime.now().toString(), 
                       AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret())));
 		modelMap.addAttribute("tenantId", apiContext.getTenantId());
-		modelMap.addAttribute("siteId", apiContext.getSiteId());
 		modelMap.addAttribute("selectedTab", tab);
 		return "orders";
 	}
