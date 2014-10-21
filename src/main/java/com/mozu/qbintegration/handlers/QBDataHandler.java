@@ -51,7 +51,7 @@ public class QBDataHandler {
 	public void refreshAllData(Integer tenantId) throws Exception {
 		refreshData(tenantId, "account");
 		refreshData(tenantId, "vendor");
-		refreshData(tenantId, "salestaxcode");
+		refreshData(tenantId, "taxcode");
 		refreshData(tenantId, "paymentmethod");
 	}
 	
@@ -66,7 +66,7 @@ public class QBDataHandler {
 			case "vendor":
 				action =  DataActions.GETVENDORS;
 				break;
-			case "salestaxcode":
+			case "taxcode":
 				action = DataActions.GETSALESTAXCODES;
 				break;
 			case "paymentmethod":
