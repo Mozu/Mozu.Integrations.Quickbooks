@@ -536,6 +536,7 @@ public class EntityHandler {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
 		JsonNode entity = null;
+		
 		try {
 			entity = entityResource.getEntity(entityName, id);
 		} catch (ApiException e) {

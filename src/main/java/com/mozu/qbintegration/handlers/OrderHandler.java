@@ -5,23 +5,34 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.tz.NameProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.cache.CacheManager;
+import com.mozu.api.cache.CacheManagerFactory;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.commerceruntime.payments.Payment;
 import com.mozu.api.contracts.core.Address;
 import com.mozu.api.contracts.customer.CustomerAccount;
 import com.mozu.api.contracts.mzdb.EntityCollection;
+import com.mozu.api.contracts.reference.TimeZone;
+import com.mozu.api.contracts.reference.TimeZoneCollection;
 import com.mozu.api.resources.commerce.OrderResource;
+import com.mozu.api.resources.commerce.settings.GeneralSettingsResource;
+import com.mozu.api.resources.platform.ReferenceDataResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.DataMapping;
 import com.mozu.qbintegration.model.GeneralSettings;
@@ -310,6 +321,14 @@ public class OrderHandler {
 		salesReceiptAddRqType.setRequestID(order.getId());
 		
 		salesReceiptAddRqType.setSalesReceiptAdd(salesReceiptAdd);
+		
+		DateTimeFormatter datefmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+		
+		DateTimeZone zone = getTimezoneOffset(tenantId, order.getSiteId());
+		String orderDate = order.getAcceptedDate().withZone(zone).toString(datefmt);
+		salesReceiptAdd.setTxnDate(orderDate);
+		
+		
 		CustomerRef customerRef = new CustomerRef();
 		customerRef.setListID(customerQBListID);
 
@@ -630,5 +649,35 @@ public class OrderHandler {
 		orderDetail.setUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().toDate().getTime()));
 		orderDetail.setAmount(order.getTotal());
 		return orderDetail;
+	}
+	
+	private DateTimeZone getTimezoneOffset(Integer tenantId, Integer siteId) throws Exception {
+		GeneralSettingsResource settingResource = new GeneralSettingsResource(new MozuApiContext(tenantId, siteId, 0,0));
+		com.mozu.api.contracts.sitesettings.general.GeneralSettings setting = settingResource.getGeneralSettings();
+		String offSetStr = "";
+		CacheManager<TimeZoneCollection> cache =(CacheManager<TimeZoneCollection>)CacheManagerFactory.getCacheManager();
+		String cacheKey = "timezones";
+		TimeZoneCollection timeZones = cache.get(cacheKey);
+		if (timeZones == null ) {
+			ReferenceDataResource reference = new ReferenceDataResource();
+			timeZones = reference.getTimeZones();
+			cache.put(cacheKey, timeZones);
+		} 
+		for(TimeZone zone : timeZones.getItems()) {
+			if (zone.getId().equals(setting.getSiteTimeZone())) {
+				offSetStr = String.valueOf(zone.getOffset());
+				break;
+			}
+		}
+		
+		
+		String[] offSet = offSetStr.split("\\.");
+		Integer hours = Integer.parseInt(offSet[0]);
+		Integer minutes = 0;
+		if (offSet.length == 2) {
+			minutes = Integer.parseInt(offSet[1])*60*60;
+		}
+		DateTimeZone zone = DateTimeZone.forOffsetHoursMinutes(hours, minutes  );
+		return zone;
 	}
 }
