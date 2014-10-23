@@ -137,7 +137,7 @@ public class OrderStateHandler {
 			
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderId);
 			if (node == null) continue;
-			if (action == "retry") {
+			if (action.equalsIgnoreCase("retry")) {
 				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
 				transitionState(orderId, tenantId, null, (orderDetail.isExistsInQb() ? "Update" : "Add") );
 				logger.debug("Slotted conflicted order for retry with order number: " + orderId + " for tenant: " + tenantId);
@@ -152,7 +152,7 @@ public class OrderStateHandler {
 		for(String orderId: orderNumberList) {
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
 			if (node == null) continue;
-			if (action == "update") {
+			if (action.equalsIgnoreCase("update")) {
 				transitionState(orderId, tenantId, null, "Update");
 				logger.debug("Slotted an order update task for mozu order number: " + orderId);
 			}
