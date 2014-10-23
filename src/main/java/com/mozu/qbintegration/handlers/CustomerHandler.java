@@ -25,10 +25,12 @@ import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.CustomerQueryRsType;
+import com.mozu.qbintegration.model.qbmodel.allgen.ItemSalesTaxRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
+import com.mozu.qbintegration.model.qbmodel.allgen.TermsRef;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
 
@@ -228,6 +230,10 @@ public class CustomerHandler {
 			salesTaxCodeRef.setFullName("Tax");
 		} else {
 			salesTaxCodeRef.setFullName("Non");
+			
+			ItemSalesTaxRef itemSalesTaxRef = new ItemSalesTaxRef();
+			itemSalesTaxRef.setFullName("No Sales Tax");
+			qbXMCustomerAddType.setItemSalesTaxRef(itemSalesTaxRef);
 		}
 		
 		qbXMCustomerAddType.setSalesTaxCodeRef(salesTaxCodeRef);
