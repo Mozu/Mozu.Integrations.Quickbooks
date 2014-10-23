@@ -10,7 +10,8 @@
 			<div class="row">
 				<div class="tab-full-column">
 					<div style="width:300px; text-align:left;margin:auto; margin-bottom:-25px;">
-						<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB" style="float:none;">Post Selected to Quickbooks</button>
+						<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB.bind($data,'update')" style="float:none;">Post</button>
+						<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB.bind($data,'archive')" style="float:none;">Archive</button>
 					</div>
 					<table width="100%">
 						<tr>
@@ -90,13 +91,13 @@
 								    <div class="compare-table-row">
 								    	<div class="compare-col" data-bind="text: fullName"></div>
 								    	<div class="compare-col" data-bind="text: quantity"></div>
-								    	<div class="compare-col" data-bind="text: amount"></div>
+								    	<div class="compare-col" data-bind="money: amount"></div>
 								    </div>
 							    </div>
 							    <div class="compare-table-row">
 								    	<div class="compare-col" ></div>
 								    	<div class="compare-col" ></div>
-								    	<div class="compare-col" data-bind="text: subTotal"></div>
+								    	<div class="compare-col" data-bind="money: totalAmount"></div>
 								    </div>
 							</div>		 
 						</div>	
@@ -144,13 +145,13 @@
 								    <div class="compare-table-row">
 								    	<div class="compare-col" data-bind="text: fullName"></div>
 								    	<div class="compare-col" data-bind="text: quantity"></div>
-								    	<div class="compare-col" data-bind="text: amount"></div>
+								    	<div class="compare-col" data-bind="money: amount"></div>
 								    </div>
 							    </div>
 							    <div class="compare-table-row">
 								    	<div class="compare-col" ></div>
 								    	<div class="compare-col" ></div>
-								    	<div class="compare-col" data-bind="text: subTotal"></div>
+								    	<div class="compare-col" data-bind="money: totalAmount"></div>
 								    </div>
 							</div>		 
 						</div>
