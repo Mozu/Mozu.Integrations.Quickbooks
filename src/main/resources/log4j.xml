@@ -19,7 +19,7 @@
 
 	<!-- Application Loggers -->
 	<logger name="com.mozu.qbintegration">
-		<level value="debug" />
+		<level value="trace" />
 	</logger>
 	
 
