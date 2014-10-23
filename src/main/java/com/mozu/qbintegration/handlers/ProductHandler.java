@@ -399,8 +399,8 @@ public class ProductHandler {
 		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order,true);
 		List<String> existing = new ArrayList<String>();
 		for(MozuOrderItem orderItem : productCodes) {
-			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
-				continue;
+			//if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
+			//	continue;
 			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate query
 				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
 				itemQueryRqType.getFullName().add(orderItem.getProductCode());	

@@ -191,17 +191,19 @@ public class OrdersController {
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
 			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
 		
-		List<JsonNode> nodes =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", 20);
+		int dispStartIdx = Integer.parseInt(iDisplayStart);
+		int dispLength = Integer.parseInt(iDisplayLength);
+		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", dispStartIdx, dispLength);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		OrderQueueDataTable dataTable = new OrderQueueDataTable();
-		if(nodes != null) {
-			for(JsonNode node : nodes) {
+		if(collection.getItems().size() > 0) {
+			for(JsonNode node : collection.getItems()) {
 				workTasks.add(mapper.readValue(node.toString(),WorkTask.class));
 			}
 		}
 		
-		dataTable.setiTotalDisplayRecords(nodes == null ? 0 : (long) nodes.size());
-		dataTable.setiTotalRecords(Long.parseLong(iDisplayLength));
+		dataTable.setiTotalDisplayRecords((long)collection.getTotalCount());
+		dataTable.setiTotalRecords((long)collection.getTotalCount());
 		dataTable.setAaData(workTasks);
 		
 		
@@ -247,14 +249,7 @@ public class OrdersController {
 				orderHandler.getOrderCompareDetails(tenantId, mozuOrderNumber);
 
 		return compareDetails;
-		//String value = null;
-		/*try {
-			value = mapper.writeValueAsString(compareDetails);
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw e;
-		}
-		return value;*/
+		
 	}
 	
 	@RequestMapping(value = "/postUpdatedOrderToQB", method = RequestMethod.POST)
@@ -263,11 +258,8 @@ public class OrdersController {
 			@RequestBody List<String> mozuOrderNumbers,
 			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
 
-		//List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
-		//logger.debug("" + orderNumberList.size());
 		
 		orderStateHandler.addUpdatesToQueue(mozuOrderNumbers, tenantId);
-		//quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId);
 		
 		return new ResponseEntity<String>("Selected orders have been successfully updated in Quickbooks.",HttpStatus.OK);
 	}
@@ -277,10 +269,7 @@ public class OrdersController {
 			@RequestBody List<String> mozuOrderNumbers,
 			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
 		
-		//List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
-		//logger.debug("" + orderNumberList.size());
 		orderStateHandler.retryConflicOrders(tenantId, mozuOrderNumbers);
-		//return "";
 		return new ResponseEntity<String>("OK",HttpStatus.OK);
 		
 	}
