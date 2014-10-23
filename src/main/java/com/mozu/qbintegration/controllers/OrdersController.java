@@ -256,10 +256,11 @@ public class OrdersController {
 	public @ResponseBody
 	ResponseEntity<String> postUpdatedOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestBody List<String> mozuOrderNumbers,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "action") String action) throws Exception {	
 
 		
-		orderStateHandler.addUpdatesToQueue(mozuOrderNumbers, tenantId);
+		orderStateHandler.addUpdatesToQueue(mozuOrderNumbers, tenantId, action);
 		
 		return new ResponseEntity<String>("Selected orders have been successfully updated in Quickbooks.",HttpStatus.OK);
 	}
@@ -267,9 +268,10 @@ public class OrdersController {
 	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
 	public @ResponseBody ResponseEntity<String> postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
 			@RequestBody List<String> mozuOrderNumbers,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "action") String action) throws Exception {
 		
-		orderStateHandler.retryConflicOrders(tenantId, mozuOrderNumbers);
+		orderStateHandler.retryConflicOrders(tenantId, mozuOrderNumbers, action);
 		return new ResponseEntity<String>("OK",HttpStatus.OK);
 		
 	}

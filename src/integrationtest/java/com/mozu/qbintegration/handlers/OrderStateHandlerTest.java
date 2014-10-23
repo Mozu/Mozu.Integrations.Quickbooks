@@ -66,7 +66,7 @@ public class OrderStateHandlerTest {
 		try {
 			List<String> orders = new ArrayList<String>();
 			orders.add(orderId);
-			orderStateHandler.retryConflicOrders(tenantId, orders);
+			orderStateHandler.retryConflicOrders(tenantId, orders,"retry");
 		} catch(Exception ex) {
 			fail(ex.getMessage());
 		}
