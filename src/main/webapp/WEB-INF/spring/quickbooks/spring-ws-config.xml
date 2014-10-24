@@ -9,10 +9,6 @@
 
 	<sws:annotation-driven />
 
-	<sws:interceptors>
-		<bean class="org.springframework.ws.server.endpoint.interceptor.PayloadLoggingInterceptor"/>
-	</sws:interceptors>
-
 	<context:component-scan base-package="com.mozu.qbintegration.endpoints" />
 	
 	<beans:bean id="messageFactory"
@@ -22,26 +18,13 @@
 		class="org.springframework.ws.soap.server.SoapMessageDispatcher">
 		<beans:property name="endpointAdapters">
 			<beans:bean
-				class="org.springframework.ws.server.endpoint.adapter.DefaultMethodEndpointAdapter">
-				<property name="methodArgumentResolvers">
-				   <list>
-				    <ref bean="marshallingPayloadMethodProcessor"/>
-				   </list> 
-				  </property>
-				  <property name="methodReturnValueHandlers">
-				   <list>
-				    <ref bean="marshallingPayloadMethodProcessor"/>
-				   </list>
-				  </property>
+				class="org.springframework.ws.server.endpoint.adapter.GenericMarshallingMethodEndpointAdapter">
+				<beans:property name="marshaller" ref="marshaller" />
+				<beans:property name="unmarshaller" ref="marshaller" />
 			</beans:bean>
 		</beans:property>
 	</beans:bean>
 
-	<bean id="marshallingPayloadMethodProcessor"
-        class="org.springframework.ws.server.endpoint.adapter.method.MarshallingPayloadMethodProcessor">
-        <constructor-arg ref="marshaller" />
-        <constructor-arg ref="marshaller" />
-    </bean>
 
 	<beans:bean id="marshaller"
 		class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
@@ -51,7 +34,6 @@
 			</beans:list>
 		</beans:property>
 	</beans:bean>
-  
 
 	<sws:static-wsdl id="quickbooks" location="classpath:qb-web-connector.wsdl" />
 
