@@ -244,6 +244,20 @@ var homeViewModel = function() {
         return self.itemToFix.itemNameNumber() != "" ;
     }, self);
     
+    self.productCodeAutoComplete = function() {
+    	$( "#qbproductsearch" ).autocomplete({
+    	      source: function (request, response) {
+    	          $.get("api/qb/getProductCodes", {
+    	        	  productCodeTerm: request.term, 
+    	        	  tenantId: $("#tenantIdHdn").val()
+    	          }, function (data) {
+    	              response(data);
+    	          });
+    	      },
+    	});
+    	return true;
+    };
+    
     self.enableNewItem = function() {
     	self.showItemCreate(true);
     	self.showItemMap(false);
@@ -787,6 +801,9 @@ var homeViewModel = function() {
 	self.paymentMappings = ko.observableArray([]);
 	
 	self.getSettings();
+	
+	//initialize the product code autocomplete
+	self.productCodeAutoComplete();
 }
 
 
