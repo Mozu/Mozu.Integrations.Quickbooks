@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.ProductHandler;
@@ -190,6 +191,22 @@ public class QBDataFetchController {
 		return paymentData;
 	}
 	
-	
+	@RequestMapping(value = "getProductCodes", method = RequestMethod.GET)
+	public @ResponseBody
+	JsonNode getProductCodes(@RequestParam(value = "tenantId", required = true) Integer tenantId,
+			@RequestParam(value = "productCodeTerm", required = true) String productCodeTerm) throws Exception {
+		
+		List<JsonNode> productData = entityHandler.getEntityCollection(
+				tenantId, entityHandler.getProductEntityName(), "productCode cont " + productCodeTerm, null, 2000);
+		
+		ArrayNode productCodes = mapper.createArrayNode();
+		if(!productData.isEmpty()) {
+			for(JsonNode singleProduct: productData) {
+				productCodes.add(singleProduct.get("productCode").asText());
+			}
+		}
+		
+		return productCodes;
+	}
 	
 }

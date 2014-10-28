@@ -304,7 +304,7 @@ public class ProductHandler {
 	}
 	
 	public void mapProductToQBInEL(ProductToMapToQuickbooks productToMapToEB,
-			Integer tenantId) {
+			Integer tenantId) throws Exception {
 		
 		//Just save it in entity list. User is going to retry the order anyway
 		OrderItem orderItem = new OrderItem();
@@ -313,16 +313,24 @@ public class ProductHandler {
 		product.setProductCode(productToMapToEB.getToBeMappedItemNumber());
 		product.setName(productToMapToEB.getToBeMappedItemNumber());
 		
-		saveProductInEntityList(orderItem,
-				productToMapToEB.getSelectedProductToMap(), tenantId);
+		//Get the qbListId since the field on the UI is textbox, not dropdown anymore.
+		List<JsonNode> items = entityHandler.getEntityCollection(tenantId, entityHandler.getProductEntityName(), 
+				"productCode eq " + productToMapToEB.getToBeMappedItemNumber());
 		
-		logger.debug((new StringBuilder())
-				.append("Saved mapping of a not found item ")
-				.append(productToMapToEB.getToBeMappedItemNumber())
-				.append(" to an existing qb list id ")
-				.append(productToMapToEB.getSelectedProductToMap())
-				.append(" in entity list").toString());
-		
+		if(!items.isEmpty()) {
+			String qbProdustListID = ((JsonNode) items.get(0)).get("qbProdustListID").asText();
+			saveProductInEntityList(orderItem, qbProdustListID, tenantId);
+			
+			logger.debug((new StringBuilder())
+					.append("Saved mapping of a not found item ")
+					.append(productToMapToEB.getToBeMappedItemNumber())
+					.append(" to an existing qb list id ")
+					.append(qbProdustListID)
+					.append(" in entity list").toString());
+		} else {
+			throw new Exception("Did not find product code " + productToMapToEB.getToBeMappedItemNumber() + " in " + 
+					" tenant id: " + tenantId + ". This is strange since it was found during autocomplete.");
+		}
 	}
 	
 	public String getQBProductSaveXML(Integer tenantId, String productCode)
