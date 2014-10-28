@@ -1,6 +1,8 @@
 
 package com.mozu.qbintegration.model;
 
+import java.util.List;
+
 public class GeneralSettings {
 	
 	private String id;
@@ -34,6 +36,9 @@ public class GeneralSettings {
 	private String orderNonSalesTaxCode;
 	
 	private String qbwFile;
+	
+	private List<String> taxableStates;
+	
 	/**
 	 * @return the wsURL
 	 */
@@ -204,8 +209,13 @@ public class GeneralSettings {
 	public void setOrderNonSalesTaxCode(String orderNonSalesTaxCode) {
 		this.orderNonSalesTaxCode = orderNonSalesTaxCode;
 	}
-	
-	
-	
+
+    public List<String> getTaxableStates() {
+        return taxableStates;
+    }
+
+    public void setTaxableStates(List<String> taxableStates) {
+        this.taxableStates = taxableStates;
+    }
 }
 

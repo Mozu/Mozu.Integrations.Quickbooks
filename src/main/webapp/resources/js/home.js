@@ -130,12 +130,18 @@ var compare = {
 	updatedOrder : ""
 }
 
+var usState = function(abbreviation, name) {
+	this.stateName = name;
+	this.stateAbbreviation = abbreviation;
+}
+
 var dataType = function(id,name) {
 	this.id = ko.observable(id);
 	this.name = ko.observable(name);
 }
 
 var pageNumbers = [10, 25, 50, 100];
+
 var homeViewModel = function() {
 	var self = this;
 	self.buildVersion = ko.observable();
@@ -147,6 +153,61 @@ var homeViewModel = function() {
 	self.compare = ko.mapping.fromJS(compare);
 	self.dataTypes = ko.observableArray([]);
 	self.selectedDataType = ko.observable();
+	
+	self.availableStates = ko.observableArray(
+			[
+			new usState("AL","Alabama"), 
+			new usState("AK","Alaska"), 
+			new usState("AZ","Arizona"), 
+			new usState("AR","Arkansas"), 
+			new usState("CA","California"), 
+			new usState("CO","Colorado"), 
+			new usState("CT","Connecticut"), 
+			new usState("DE","Delaware"), 
+			new usState("DC","District Of Columbia"), 
+			new usState("FL","Florida"),
+			new usState("GA","Georgia"), 
+			new usState("HI","Hawaii"), 
+			new usState("ID","Idaho"), 
+			new usState("IL","Illinois"), 
+			new usState("IN","Indiana"), 
+			new usState("IA","Iowa"), 
+			new usState("KS","Kansas"), 
+			new usState("KY","Kentucky"), 
+			new usState("LA","Louisiana"), 
+			new usState("ME","Maine"), 
+			new usState("MD","Maryland"), 
+			new usState("MA","Massachusetts"), 
+			new usState("MI","Michigan"), 
+			new usState("MN","Minnesota"), 
+			new usState("MS","Mississippi"), 
+			new usState("MO","Missouri"), 
+			new usState("MT","Montana"), 
+			new usState("NE","Nebraska"), 
+			new usState("NV","Nevada"), 
+			new usState("NH","New Hampshire"), 
+			new usState("NJ","New Jersey"), 
+			new usState("NM","New Mexico"), 
+			new usState("NY","New York"), 
+			new usState("NC","North Carolina"), 
+			new usState("ND","North Dakota"), 
+			new usState("OH","Ohio"), 
+			new usState("OK","Oklahoma"), 
+			new usState("OR","Oregon"), 
+			new usState("PA","Pennsylvania"), 
+			new usState("RI","Rhode Island"), 
+			new usState("SC","South Carolina"), 
+			new usState("SD","South Dakota"), 
+			new usState("TN","Tennessee"), 
+			new usState("TX","Texas"), 
+			new usState("UT","Utah"), 
+			new usState("VT","Vermont"), 
+			new usState("VA","Virginia"), 
+			new usState("WA","Washington"), 
+			new usState("WV","West Virginia"), 
+			new usState("WI","Wisconsin"), 
+			new usState("WY","Wyoming")
+			]);
 	
 	//For the detail section
 	self.orderConflictDetails = ko.observableArray([]);
@@ -205,8 +266,6 @@ var homeViewModel = function() {
 			data:  ko.mapping.toJSON(self.itemToFix),
 			success : function(data) {
 				console.log(data);
-			},
-			error : function() {
 			}
     	});
     };
@@ -225,8 +284,6 @@ var homeViewModel = function() {
 			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 			success : function(data) {
 				//console.log(data);
-			},
-			error : function() {
 			}
     	});
     };
@@ -240,8 +297,6 @@ var homeViewModel = function() {
     		success : function(data) {
     			//console.log(data);
     			getAllProductsFromEntityList();
-    		},error : function() {
-    			$("#content").hide();
     		}
     	});
     	
@@ -257,29 +312,19 @@ var homeViewModel = function() {
     	//Clear the checkboxes array
 		self.selectedConflictOrders.removeAll();
 		
-    	console.log($('input:checkbox[name=allOrderConflictCheckbox]:checked').length);
     	var $allCheckedConflictBoxes = $('input:checkbox[name=allOrderConflictCheckbox]:checked');
     	$allCheckedConflictBoxes.each(function(index) {
     		self.selectedConflictOrders.push($(this).val());
     	});
     	
-    	$allCheckedConflictBoxes.promise().done(function() {
-    		console.log(ko.mapping.toJSON(self.selectedConflictOrders()));
-    		$.ajax({
-        		url : "Orders/postConflictOrderToQB",
-        		type : "POST",
-        		data : {
-        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedConflictOrders()),
-        			"tenantId" : $("#tenantIdHdn").val(),
-        			"siteId"	: $("#siteIdHdn").val()
-        		},
-        		dataType : "json",		
-        		success : function(data) {
-        			$("#"+$("#selectedTab").val()+"Tab").click();
-        		},error : function() {
-        			//$("#content").hide();
-        		}
-        	});
+		$.ajax({
+    		url : "Orders/postConflictOrderToQB?tenantId="+$("#tenantIdHdn").val(),
+    		type : "POST",
+    		data : ko.mapping.toJSON(self.selectedConflictOrders()),
+    		contentType: "application/json; charset=utf-8",
+    		success : function(data) {
+    			viewModel.getOrderConflicts();
+    		}
     	});
     };
     
@@ -289,35 +334,24 @@ var homeViewModel = function() {
     	//Clear the checkboxes array
 		self.selectedOrdersToUpdate.removeAll();
 		
-    	console.log($('input:checkbox[name=allOrdersCheckbox]:checked').length);
-    	
     	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
     	$allCheckedUpdateBoxes.each(function(index) {
     		self.selectedOrdersToUpdate.push($(this).val());
     	});
     	
-    	$allCheckedUpdateBoxes.promise().done(function() {
-    		//console.log(ko.mapping.toJSON(self.selectedOrdersToUpdate()));
-        	$.ajax({
-        		url : "Orders/postUpdatedOrderToQB",
-        		type : "POST",
-        		data : {
-        			"mozuOrderNumbers": ko.mapping.toJSON(self.selectedOrdersToUpdate()),
-        			"tenantId" : $("#tenantIdHdn").val(),
-        			"siteId"	: $("#siteIdHdn").val()
-        		},
-        		dataType : "json",		
-        		success : function(data) {
-        			$("#"+$("#selectedTab").val()+"Tab").click();
-        		},error : function() {
-        			//$("#content").hide();
-        		}
-        	});
-    		
+	
+    	$.ajax({
+    		url : "Orders/postUpdatedOrderToQB?tenantId="+$("#tenantIdHdn").val(),
+    		type : "POST",
+    		data :  ko.mapping.toJSON(self.selectedOrdersToUpdate()),
+    		contentType: "application/json; charset=utf-8",
+    		success : function(data) {
+    			viewModel.getOrdersUpdated();
+    		}
     	});
+    		
     	
     };
-    
     
 	self.save = function() {
 		if (self.selectedTab() == "paymentMappingTab") {
@@ -329,8 +363,6 @@ var homeViewModel = function() {
 				data:  ko.mapping.toJSON(self.paymentMappings),
 				success : function(data) {
 					console.log(data);
-				},
-				error : function() {
 				}
 			});	
 		} else {
@@ -343,12 +375,11 @@ var homeViewModel = function() {
 				success : function(data) {
 					self.showDownload(true)
 					ko.mapping.fromJS(data, self.settings);
-				},
-				error : function() {
 				}
 			});			
 		}
 	};
+
 
 	self.qwcFileContent = ko.observable();
 	
@@ -364,8 +395,6 @@ var homeViewModel = function() {
 				self.qwcFileContent(data.qbxml);
 				$("#downloadForm").submit();
 
-				},
-				error : function() {
 				}
 			});
 		}
@@ -377,9 +406,6 @@ var homeViewModel = function() {
 			dataType : "text",
 			success : function(data) {
 				self.buildVersion(data)
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});
 	};
@@ -667,9 +693,6 @@ var homeViewModel = function() {
 				dataType : "json",
 				success : function(data) {
 					//TODO show success msg
-				},
-				error : function() {
-					$("#content").hide();
 				}
 			});		
 	};
@@ -698,9 +721,6 @@ var homeViewModel = function() {
 			dataType : "json",
 			success : function(data) {
 				callback(data);
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});		
 	}
@@ -736,9 +756,6 @@ var homeViewModel = function() {
 			dataType : "json",
 			success : function(data) {
 				callback(data);
-			},
-			error : function() {
-				$("#content").hide();
 			}
 		});		
 	}
@@ -753,6 +770,15 @@ var homeViewModel = function() {
 		
 		if (!exists)
 			self.paymentMappings.push(new paymentMapping(self.selectedMozuPayment().id(),self.selectedMozuPayment(), self.selectedQBPayment()));
+	}
+	
+	self.unmapPayment = function(data) {
+		for(var i=0;i<self.paymentMappings().length;i++) {
+			if (self.paymentMappings()[i].mozuId() == data.mozuId()) {
+				self.paymentMappings.remove(self.paymentMappings()[i]);
+				break;
+			}	
+		}
 	}
 	
 	self.mozuPayments = ko.observableArray([]);
@@ -786,10 +812,6 @@ function closeError() {
 }
 
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
-	console.log(exception);
-	console.log(event);
-	console.log(settings);
-	console.log(jqxhr);
 	if (jqxhr.status >= 200 && jqxhr.status <= 300)
 		return;
 	if (jqxhr.responseJSON != null)

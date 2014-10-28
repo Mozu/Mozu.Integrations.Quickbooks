@@ -21,8 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -92,14 +95,16 @@ public class OrdersController {
 		List<NameValuePair> paramsList = URLEncodedUtils.parse(params, "UTF-8");
 
 		Integer tenantId = Integer.parseInt(getValue(paramsList, Headers.X_VOL_TENANT));
-		Integer siteId = Integer.parseInt(getValue(paramsList,Headers.X_VOL_SITE));
+
+		/*String siteId = getValue(paramsList,Headers.X_VOL_SITE);
+		Integer siteId = Integer.parseInt();
 		Integer masterCatalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_MASTER_CATALOG));
-		Integer catalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_CATALOG));
+		Integer catalog = Integer.parseInt(getValue(paramsList,Headers.X_VOL_CATALOG));*/
 		String msgHash = httpRequest.getParameter("messageHash");
 		String dateKey = httpRequest.getParameter("dt");
 		String tab = httpRequest.getParameter("tab");
 		
-		ApiContext apiContext = new MozuApiContext(tenantId, siteId, masterCatalog, catalog);
+		ApiContext apiContext = new MozuApiContext(tenantId);
 		apiContext.setHeaderDate(dateKey);
 		apiContext.setHmacSha256(msgHash);
 		if (!Crypto.isRequestValid(apiContext, decodedBody)) {
@@ -110,7 +115,6 @@ public class OrdersController {
               ConfigurationSecurityInterceptor.encrypt(DateTime.now().toString(), 
                       AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret())));
 		modelMap.addAttribute("tenantId", apiContext.getTenantId());
-		modelMap.addAttribute("siteId", apiContext.getSiteId());
 		modelMap.addAttribute("selectedTab", tab);
 		return "orders";
 	}
@@ -255,50 +259,31 @@ public class OrdersController {
 	
 	@RequestMapping(value = "/postUpdatedOrderToQB", method = RequestMethod.POST)
 	public @ResponseBody
-	String postUpdatedOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
-			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) throws Exception {	
+	ResponseEntity<String> postUpdatedOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestBody List<String> mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
 
-		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
-		logger.debug("" + orderNumberList.size());
+		//List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		//logger.debug("" + orderNumberList.size());
 		
-		orderStateHandler.addUpdatesToQueue(orderNumberList, tenantId);
+		orderStateHandler.addUpdatesToQueue(mozuOrderNumbers, tenantId);
 		//quickbooksService.updateOrdersInQuickbooks(orderNumberList, tenantId);
 		
-		return "Selected orders have been successfully updated in Quickbooks.";
+		return new ResponseEntity<String>("Selected orders have been successfully updated in Quickbooks.",HttpStatus.OK);
 	}
 	
 	@RequestMapping(value = "/postConflictOrderToQB", method = RequestMethod.POST)
-	public @ResponseBody String postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
-			@RequestParam(value = "mozuOrderNumbers") String mozuOrderNumbers,
-			@RequestParam(value = "tenantId") Integer tenantId,
-			@RequestParam(value = "siteId") Integer siteId) throws Exception {
+	public @ResponseBody ResponseEntity<String> postConflictOrderToQB(HttpServletRequest httpRequest, ModelMap model, 
+			@RequestBody List<String> mozuOrderNumbers,
+			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {
 		
-		List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
-		logger.debug("" + orderNumberList.size());
-		orderStateHandler.retryConflicOrders(tenantId, orderNumberList);
-		return "Selected conflicted orders have been successfully slotted for entry in Quickbooks.";
+		//List<String> orderNumberList = getMozuOrderNumbers(mozuOrderNumbers);
+		//logger.debug("" + orderNumberList.size());
+		orderStateHandler.retryConflicOrders(tenantId, mozuOrderNumbers);
+		//return "";
+		return new ResponseEntity<String>("OK",HttpStatus.OK);
 		
 	}
 	
-	private List<String> getMozuOrderNumbers(String mozuOrderNumbers) throws Exception {
-		ArrayNode ordersNode = null;
-		List<String> orderNumberList = new ArrayList<String>();
-		try {
-			ordersNode = (ArrayNode) mapper.readTree(mozuOrderNumbers);
-			Iterator<JsonNode> orderNums = ordersNode.elements();
-			
-			while (orderNums.hasNext()) {
-				JsonNode numNode = orderNums.next();
-				orderNumberList.add(numNode.asText());
-			}
-			
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw e;
-		} 
-		return orderNumberList; 
-	}
 	
 }

@@ -9,7 +9,7 @@
 		<div class="app">
 			<div class="header-actions">
 				<h2><label th:text="#{label.appname}"></label></h2>
-				<a class="help-icon-link" href="#" target="_helpTab"> 
+				<a class="help-icon-link" href="http://mozu.github.io/IntegrationDocuments/QuickBooks/Mozu-QuickBooks-App.htm" target="_helpTab"> 
 				    <img class="help-icon" src="images/help-icon.png" alt="Help"></img>
 				</a>
 			</div>
@@ -33,8 +33,9 @@
 				<div class="tabs">
 					<a class="button tab active" data-toggle="tab" data-tab-id="aboutTab" data-hide-save="true">Info</a> 
 					<a class="button tab" data-toggle="tab"  data-tab-id="generalTab" data-hide-save="false">Account</a>
-					<a class="button tab" data-toggle="tab"  data-tab-id="orderConfigTab" data-hide-save="false">Order Config</a>
+					<a class="button tab" data-toggle="tab"  data-tab-id="orderConfigTab" data-hide-save="false">Order</a>
 					<a class="button tab" data-toggle="tab"  data-tab-id="paymentMappingTab" data-hide-save="false" data-bind="click: loadPaymentMapping">Payment</a>
+					<a class="button tab" data-toggle="tab"  data-tab-id="taxTab" data-hide-save="false">Tax</a>
 					<a class="button tab" data-toggle="tab"  data-tab-id="qbDataTab" data-hide-save="false" data-bind="click: loadData">QB Data</a>
 				</div>
 				
@@ -51,6 +52,9 @@
 						</div>
 						<div style="display: none" id="paymentMappingTab">
 							<div th:include="paymentmapping :: content"></div>
+						</div>
+						<div style="display: none" id="taxTab">
+							<div th:include="tax :: content"></div>
 						</div>
 						<div style="display: none" id="qbDataTab">
 							<div th:include="qbdata :: content"></div>
