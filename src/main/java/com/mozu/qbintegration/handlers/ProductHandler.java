@@ -407,8 +407,8 @@ public class ProductHandler {
 		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order,true);
 		List<String> existing = new ArrayList<String>();
 		for(MozuOrderItem orderItem : productCodes) {
-			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
-				continue;
+			//if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
+			//	continue;
 			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate query
 				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
 				itemQueryRqType.getFullName().add(orderItem.getProductCode());	
@@ -541,6 +541,10 @@ public class ProductHandler {
 			}
 		}
 		
+		String taxCode = "Non";
+		if (order.getTaxTotal() > 0.0)
+			taxCode = "Tax";
+		
 		if (order.getShippingTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
@@ -580,7 +584,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
+			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
 		

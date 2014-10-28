@@ -131,30 +131,33 @@ public class OrderStateHandler {
 		}
 	}
 	
-	public void retryConflicOrders(Integer tenantId,List<String> orderNumberList) throws Exception {
+	public void retryConflicOrders(Integer tenantId,List<String> orderNumberList, String action) throws Exception {
 		
 		for(String orderId: orderNumberList) {
 			
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderId);
 			if (node == null) continue;
-			MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
-			transitionState(orderId, tenantId, null, (orderDetail.isExistsInQb() ? "Update" : "Add") );
+			if (action.equalsIgnoreCase("retry")) {
+				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
+				transitionState(orderId, tenantId, null, (orderDetail.isExistsInQb() ? "Update" : "Add") );
+				logger.debug("Slotted conflicted order for retry with order number: " + orderId + " for tenant: " + tenantId);
+			}
 			deleteConfictEntities(tenantId,orderId);
 			entityHandler.deleteEntity(tenantId, entityHandler.getOrderConflictEntityName(), orderId);
-			logger.debug("Slotted conflicted order for retry with order number: " + orderId + " for tenant: " + tenantId);
 		}
-
-		logger.debug("Slotted all conflicted orders for retry for tenant: " + tenantId);
 	}
 		
-	public void addUpdatesToQueue(List<String> orderNumberList,Integer tenantId) throws Exception {
+	public void addUpdatesToQueue(List<String> orderNumberList,Integer tenantId, String action) throws Exception {
 		
 		for(String orderId: orderNumberList) {
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
 			if (node == null) continue;
-			transitionState(orderId, tenantId, null, "Update");		
+			if (action.equalsIgnoreCase("update")) {
+				transitionState(orderId, tenantId, null, "Update");
+				logger.debug("Slotted an order update task for mozu order number: " + orderId);
+			}
 			entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
-			logger.debug("Slotted an order update task for mozu order number: " + orderId);
+			
 		}
 		
 	}

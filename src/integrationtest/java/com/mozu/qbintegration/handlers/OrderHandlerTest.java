@@ -19,6 +19,7 @@ public class OrderHandlerTest {
 	@Autowired
 	OrderHandler orderHandler;
 	
+	
 	Integer tenantId;
 	String orderId;
 	
@@ -32,13 +33,15 @@ public class OrderHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4519;
-		orderId = "0538672b78bf8a1024c9b878000011a7";
+		tenantId = 4647;
+		orderId = "0545d5b378bf8a23740d26d300001227";
 	}
 
 	@After
 	public void tearDown() throws Exception {
 	}
+	
+	
 
 	@Test
 	public void getQBOrderSaveXMLTest() throws InterruptedException {

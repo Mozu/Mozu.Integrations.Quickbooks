@@ -443,7 +443,7 @@ public class EntityHandler {
 		try {
 			existing = entityListResource.getEntityList(mapName);
 		} catch (ApiException ae) {
-			if (!StringUtils.equals(ae.getApiError().getErrorCode(),
+			if (ae.getApiError() == null || !StringUtils.equals(ae.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND"))
 				throw ae;
 		}
@@ -536,10 +536,11 @@ public class EntityHandler {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
 		JsonNode entity = null;
+		
 		try {
 			entity = entityResource.getEntity(entityName, id);
 		} catch (ApiException e) {
-			if (!StringUtils.equals(e.getApiError().getErrorCode(),
+			if (e.getApiError() == null || !StringUtils.equals(e.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND")) {
 				logger.error("Error retrieving entity for email id: " + entity);
 				throw e;
@@ -590,7 +591,7 @@ public class EntityHandler {
 			collection = entityResource.getEntities(
 					entityName, pageSize, startIndex, filterCriteria, sortBy, null);
 		} catch (ApiException e) {
-			if (!StringUtils.equals(e.getApiError().getErrorCode(),
+			if (e.getApiError() == null || !StringUtils.equals(e.getApiError().getErrorCode(),
 					"ITEM_NOT_FOUND")) {
 				logger.error(e.getMessage(), e);
 				throw e;

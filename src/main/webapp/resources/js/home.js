@@ -16,8 +16,12 @@ function funEdit(orderNumber) {
 				viewModel.orderConflictDetails.push(data[index]);
 			});
 			
-			var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
-			$table.fnDraw();
+			//viewModel.itemToFix( new qbItem(""));
+			viewModel.showItemCreate(false);
+			viewModel.showItemMap(false);
+			//$("#singleErrorDisplay").dataTable().fnDestroy();
+			//var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
+			//$table.fnDraw();
 			
 			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
 			getAllProductsFromEntityList();
@@ -140,7 +144,7 @@ var dataType = function(id,name) {
 	this.name = ko.observable(name);
 }
 
-var pageNumbers = [10, 25, 50, 100];
+
 
 var homeViewModel = function() {
 	var self = this;
@@ -270,102 +274,6 @@ var homeViewModel = function() {
     	return true;
     }
     
-    self.saveItemToQuickbooks = function() {
-    	console.log(ko.mapping.toJSON(self.itemToFix));
-     	$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/qb/saveProductToQB?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  ko.mapping.toJSON(self.itemToFix),
-			success : function(data) {
-				console.log(data);
-			}
-    	});
-    };
-    
-    //Map existing product to QB
-    self.mapItemToQuickbooks = function() {
-    	var productToMap = {};
-    	productToMap.selectedProductToMap = self.selectedProductToMap();
-    	productToMap.toBeMappedItemNumber = self.itemToFix.itemNameNumber();
-    	
-    	$.ajax({
-			contentType: 'application/json; charset=UTF-8',
-			url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val(),
-			type : "POST",
-			dataType : "json",
-			data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
-			success : function(data) {
-				//console.log(data);
-			}
-    	});
-    };
-    
-    //TO show in the map product dropdown
-    self.getAllProductsFromQB = function() {
-    	$.ajax({
-    		url : "api/qb/initiateProductRefresh?tenantId=" + $("#tenantIdHdn").val(),
-    		type : "GET",
-    		dataType : "json",		
-    		success : function(data) {
-    			//console.log(data);
-    			getAllProductsFromEntityList();
-    		}
-    	});
-    	
-    };
-    
-    self.maintainCBStateInArray = function() {
-    	
-    };
-    
-    // To Post a Retry for an Order in CONFLICT status
-    self.postRetryOrderToQB = function() {
-    	
-    	//Clear the checkboxes array
-		self.selectedConflictOrders.removeAll();
-		
-    	var $allCheckedConflictBoxes = $('input:checkbox[name=allOrderConflictCheckbox]:checked');
-    	$allCheckedConflictBoxes.each(function(index) {
-    		self.selectedConflictOrders.push($(this).val());
-    	});
-    	
-		$.ajax({
-    		url : "Orders/postConflictOrderToQB?tenantId="+$("#tenantIdHdn").val(),
-    		type : "POST",
-    		data : ko.mapping.toJSON(self.selectedConflictOrders()),
-    		contentType: "application/json; charset=utf-8",
-    		success : function(data) {
-    			viewModel.getOrderConflicts();
-    		}
-    	});
-    };
-    
-    //To post an updated order to quickbooks
-    self.postUpdatedOrderToQB = function() {
-    	
-    	//Clear the checkboxes array
-		self.selectedOrdersToUpdate.removeAll();
-		
-    	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
-    	$allCheckedUpdateBoxes.each(function(index) {
-    		self.selectedOrdersToUpdate.push($(this).val());
-    	});
-    	
-	
-    	$.ajax({
-    		url : "Orders/postUpdatedOrderToQB?tenantId="+$("#tenantIdHdn").val(),
-    		type : "POST",
-    		data :  ko.mapping.toJSON(self.selectedOrdersToUpdate()),
-    		contentType: "application/json; charset=utf-8",
-    		success : function(data) {
-    			viewModel.getOrdersUpdated();
-    		}
-    	});
-    		
-    	
-    };
     
 	self.save = function() {
 		if (self.selectedTab() == "paymentMappingTab") {
@@ -424,243 +332,8 @@ var homeViewModel = function() {
 		});
 	};
 
-	self.getOrders = function() {
-		var $table = $('#orderTable').dataTable({
-			"bProcessing" : true,
-			"bServerSide" : true,
-			"bDestroy"	: true,
-			"aLengthMenu": [pageNumbers, pageNumbers],
-			"bSort": false,
-			"sSearch":true,
-			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
-			"aoColumns" : [
-
-			{
-				"mData" : "orderNumber"
-			}, {
-				"mData" : "customerEmail"
-			}, {
-				"mData" : "createDate",
-				 "mRender": function (data, type, row) {
-					 return unixToHumanTime(data);
-				   }
-			}, 
-			{
-				"mData" : "updatedDate",
-				"mRender": function (data, type, row) {
-					return unixToHumanTime(data);
-				}
-			},
-			{
-				"mData" : "amount"
-			},
-
-			]
-		});
-		
 	
-		$table.fnDraw();
-
-	};
 	
-	//Display orders in conflict
-	self.getOrderConflicts = function() {
-
-		var $table = $('#orderConflictsTable').dataTable({
-			"bProcessing" : true,
-			"bServerSide" : true,
-			"bDestroy"	: true,
-			"aLengthMenu": [pageNumbers, pageNumbers],
-			"bSort": false,
-			"sSearch":true,
-			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CONFLICT&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
-			"aoColumns" : [
-	            {    
-            	   "mData": "id",
-            	   "bSearchable": false,
-            	   "bSortable": false,
-            	   "mRender": function (data, type, full) {			
-            		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" />';
-            	   }
-			    },
-			    {
-			    	"mData" : "orderNumber"
-			    }, 
-				{
-					"mData" : "customerEmail"
-				}, 
-				{
-					"mData" : "createDate",
-						"mRender": function (data, type, row) {
-					   
-							return unixToHumanTime(data);
-						}
-				}, 
-				{
-					"mData" : "updatedDate",
-					"mRender": function (data, type, row) {
-					    	
-						return unixToHumanTime(data);
-					}
-				},
-				{
-					"mData" : "amount"
-				},
-				{    
-				   "mData": "conflictReason"
-				   /*"mRender": function (data, type, row) {
-				    	var dataId = data ;
-				    	return "<span title='"+data+""'>"+data.substring(0,10)+"...</span>";
-				   }*/
-				},
-				{    
-				   //"mData": "conflictReason",
-				    "mData": "id",
-				    "bSearchable": false,
-				    "bSortable": false,
-				    "mRender": function (data, type, row) {
-				    	var dataId = data ;
-				    	return "<a href='javascript:funEdit(\"" + row.id + "\")'>Edit</a>";
-				   }
-				 }
-			]
-		});
-		$table.fnDraw();
-	};
-	
-	//Save orders updated in mozu, yet to go to QB
-	self.getOrdersUpdated = function() {
-
-		var $table = $('#orderUpdatedTable').dataTable({
-			"bProcessing" : true,
-			"bServerSide" : true,
-			"bDestroy"	: true,
-			"aLengthMenu": [pageNumbers, pageNumbers],
-			"bSort": false,
-			"sSearch":true,
-			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=UPDATED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
-			"aoColumns" : [
-
-			            {    
-		            	   "mData": "id",
-		            	   "bSearchable": false,
-		            	   "bSortable": false,
-		            	   "mRender": function (data, type, full) {			
-		            		   return '<input type="checkbox" id="allOrdersCheckbox' + data 
-		            		   		+ '" name="allOrdersCheckbox" value ="'+ data +'"' + 
-		            		   		' data-bind="click: maintainCBStateInArray"/>';
-		            	   }
-			            },
-			            {
-			            	"mData" : "orderNumber"
-			            }, 
-						{
-							"mData" : "customerEmail"
-						}, 
-						{
-							"mData" : "createDate",
-								"mRender": function (data, type, row) {
-							   
-									return unixToHumanTime(data);
-								}
-						}, 
-						{
-							"mData" : "updatedDate",
-							"mRender": function (data, type, row) {
-							    	
-								return unixToHumanTime(data);
-							}
-						},
-						{
-							"mData" : "amount"
-						},
-						{    
-						   //"mData": "conflictReason",
-						    "mData": "id",
-						    "bSearchable": false,
-						    "bSortable": false,
-						    "mRender": function (data, type, row) {
-						    	var dataId = data ;
-						    	return "<a href='javascript:compareDetails(\"" + row.id + "\")'>Review</a>";
-						   }
-						}
-			]
-		});
-		$table.fnDraw();
-	};
-	
-	self.getOrdersCancelled = function() {
-
-		var $table = $('#orderCancelledTable').dataTable({
-			"bProcessing" : true,
-			"bServerSide" : true,
-			"bDestroy"	: true,
-			"aLengthMenu": [pageNumbers, pageNumbers],
-			"bSort": false,
-			"sSearch":true,
-			"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=CANCELLED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
-			"aoColumns" : [
-				            {    
-			            	   "mData": "orderNumber",
-				            },
-				            {
-								"mData" : "customerEmail"
-							}, 
-							{
-								"mData" : "createDate",
-									"mRender": function (data, type, row) {
-								   
-										return unixToHumanTime(data);
-									}
-							}, 
-							{
-								"mData" : "updatedDate",
-								"mRender": function (data, type, row) {
-								    	
-									return unixToHumanTime(data);
-								}
-							},
-							{
-								"mData" : "amount"
-							}
-			            ]
-			});
-		$table.fnDraw();
-	};
-	
-	self.getOrdersQueue = function() {
-
-		var $table = $('#orderQueueTable').dataTable({
-			"bProcessing" : true,
-			"bServerSide" : true,
-			"bDestroy"	: true,
-			"bFilter" : false,
-			"bSort" : false,
-			"bInfo" : false,
-			"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val(),
-			"aoColumns" : [
-				            {    
-			            	   "mData": "createDate",
-				            },
-				            {
-								"mData" : "status"
-							}, 
-							{
-								"mData" : "type"
-							}, 
-							{
-								"mData" : "action"
-							},
-							{
-								"mData" : "currentStep"
-							},
-							{
-								"mData" : "id"
-							}
-			            ]
-			});
-		$table.fnDraw();
-	};
 	
 	self.getSettings = function() {
 		$.ajax({
@@ -807,6 +480,8 @@ var homeViewModel = function() {
 }
 
 
+
+
 var mozuPayment = function(id, name) {
 	this.id = ko.observable(id);
 	this.name = ko.observable(name);
@@ -840,6 +515,20 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
 	}
 	$("#serverError").show();
 });
+
+
+ko.bindingHandlers.money = { 
+	    update: function(element, valueAccessor, allBindingsAccessor) { 
+	        var value = valueAccessor(), allBindings = allBindingsAccessor(); 
+	        var valueUnwrapped = ko.utils.unwrapObservable(value); 
+	        
+	        var m = ""; 
+	        if (valueUnwrapped) {        
+            	 m = numeral(valueUnwrapped).format('$0,0.00'); 
+	        }        
+	        $(element).text(m);    
+	    } 
+	}; 
 
 var viewModel;
 

@@ -17,10 +17,6 @@
       </layout>
 	</appender>
 
-	<!-- Application Loggers -->
-	<logger name="com.mozu.qbintegration">
-		<level value="debug" />
-	</logger>
 	
 
 	<!-- Root Logger -->
