@@ -82,26 +82,39 @@
 						</div>
 					</div>
 				</div>
+				<div class="row">
+					<div class="tab-full-column">
+						<div class="notification error" id="conflictErrorDiv" style="display:none;">
+							<div class="icon" onclick="closeError()"></div>
+							<div id="conflictErrorMessage" class="message"></div>
+						</div>
+						<div class="notification success" id="conflictSuccessDiv" style="display: none;">
+						    <div class="icon"></div>
+						    <div class="conflictSuccessMessage" id="conflictSuccessMessage"></div>
+						</div>
+					</div>
+					
+				</div>
 				<div data-bind="visible: showItemCreate">
 					<div class="row">
 					    <div class="tab-first-column">
 						    <label class="tab-field-label" for="enableCB">Item type</label>
 							<select data-bind="options: availableItemTypes, value: itemToFix.selectedChoice"  class="dropdown"></select>
 							<label class="tab-field-label" for="field">Item Name/Number</label>
-							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field" />
+							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field"></input>
 							<label class="tab-field-label" for="field">Description on Purchase Transactions:</label>
-							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" />
+							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" ></input>
 							<label class="tab-field-label" for="field">Cost:</label>
-							<input type="text" data-bind="value: itemToFix.itemPurchaseCost" class="tab-field" />
+							<input type="text" data-bind="value: itemToFix.itemPurchaseCost" class="tab-field" ></input>
 							<label class="tab-field-label" for="field">Sales Information:</label>
-							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" />
+							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" ></input>
 							<label class="tab-field-label" for="field">Sales Price:</label>
-							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"/>
+							<input type="text" data-bind="value: itemToFix.itemSalesPrice" class="tab-field"></input>
 							
 						</div>
 						<div class="tab-second-column">
 							<label class="tab-field-label" for="field">Manufacturer's Part Number</label>
-							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"/>
+							<input type="text" data-bind="value: itemToFix.itemManuPartNum" class="tab-field"></input>
 							<label class="tab-field-label" for="field">Tax Code:</label>
 							<select data-bind="options: availableTaxCodes, value: itemToFix.itemTaxCode, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
 							<label class="tab-field-label" for="field">COGS Account:</label>
@@ -119,16 +132,18 @@
 				
 				<div data-bind="visible: showItemMap">
 					<div class="row">
-					    <div class="tab-full-column">
-						    <label class="tab-field-label left-align" for="enableCB">Choose from below list to map:</label>
-							<select data-bind="options: allProductsInQB, optionsText: 'productName', optionsValue: 'qbProductListID', value: selectedProductToMap" class="dropdown" style="float: none; margin-left: 10px;"></select>
-							
+					   <div class="tab-full-column">
+						  <label for="qbproductsearch">Map Product <span data-bind="text: itemToFix.itemNameNumber" ></span> to </label>
+						  <input id="qbproductsearch" class="tab-field" data-bind="value: selectedProductToMap, valueUpdate:'blur'" style="float:none;"></input>
+						  <a class="button primary-action" data-bind="click: mapItemToQuickbooks" style="float:none;">Map Item</a>
 						</div>
+						
 					</div>
+					<div class="row" style="margin-bottom:20px;"></div>
 					<div class="row">
 						<div class="tab-first-column">
-							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB">Refresh Products</a>
-							<a class="button primary-action" data-bind="click: mapItemToQuickbooks" style="float:none;">Map Item</a>
+							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB">Refresh Products From QB</a>
+							
 						</div>	
 					</div>
 				</div>
