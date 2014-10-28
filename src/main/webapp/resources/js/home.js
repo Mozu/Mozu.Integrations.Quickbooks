@@ -1,6 +1,7 @@
 function funEdit(orderNumber) {
 	$('#ordConflict').hide().fadeOut(800);
 	$('#ordConflictError').show().fadeIn(800);
+	$("#conflictSuccessDiv").hide();
 	$.ajax({
 		url : "Orders/getOrderConflictsDetails",
 		type : "GET",
@@ -23,8 +24,6 @@ function funEdit(orderNumber) {
 			//var $table = $('#singleErrorDisplay').dataTable({ retrieve: true,bDestroy:true, bFilter: false, bInfo: false, bPaginate:false, bDestroy	: true});
 			//$table.fnDraw();
 			
-			//Now get the list of all products from EL - TODO - get only if user selects map to existing products
-			getAllProductsFromEntityList();
 			
 			viewModel.loadQBData("taxcode", function(data) {
 				ko.mapping.fromJS(data,{},viewModel.availableTaxCodes);
@@ -85,24 +84,6 @@ function saveDataToTable(data) {
 	
 }
 
-function getAllProductsFromEntityList() {
-	$.ajax({
-		url : "api/qb/getAllPostedProducts?tenantId=" + $("#tenantIdHdn").val(),
-		type : "GET",
-		dataType : "json",		
-		success : function(data) {
-			viewModel.allProductsInQB.removeAll();
-			$(data).each(function(index) {	
-				viewModel.allProductsInQB.push(
-						new ProductToMap(data[index].qbProductListID, 
-								data[index].productName));
-			});
-		},error : function() {
-			$("#content").hide();
-		}
-	});
-		
-}
 
 function showOrderCompare() {
 	$('#ordUpdateDetails').hide().fadeOut(800);
@@ -248,15 +229,34 @@ var homeViewModel = function() {
         return self.itemToFix.itemNameNumber() != "" ;
     }, self);
     
+    self.productCodeAutoComplete = function() {
+    	$( "#qbproductsearch" ).autocomplete({
+    	      source: function (request, response) {
+    	    	  
+    	    	  displaySpinner = false;
+    	          $.get("api/qb/getProductCodes", {
+    	        	  productCodeTerm: request.term, 
+    	        	  tenantId: $("#tenantIdHdn").val()
+    	          }, function (data) {
+    	              response(data);
+    	          });
+    	      },
+    	      minLength: 2
+    	});
+    	return true;
+    };
+    
     self.enableNewItem = function() {
     	self.showItemCreate(true);
     	self.showItemMap(false);
+    	$("#conflictSuccessDiv").hide();
     	return true;
     };
     
     self.enableExistingItem = function() {
     	self.showItemCreate(false);
     	self.showItemMap(true);
+    	$("#conflictSuccessDiv").hide();
     	return true;
     }
     
@@ -460,6 +460,9 @@ var homeViewModel = function() {
 	self.paymentMappings = ko.observableArray([]);
 	
 	self.getSettings();
+	
+	//initialize the product code autocomplete
+	self.productCodeAutoComplete();
 }
 
 
@@ -486,20 +489,6 @@ function closeError() {
 	$("#serverError").hide();
 }
 
-$(document).ajaxError(function(event, jqxhr, settings, exception) {
-	if (jqxhr.status >= 200 && jqxhr.status <= 300)
-		return;
-	if (jqxhr.responseJSON != null)
-		$("#serverErrorMessage").html(jqxhr.responseJSON.message);
-	else if (jqxhr.responseText != null)
-		$("#serverErrorMessage").html(jqxhr.responseText);
-	else {
-		$("#serverErrorMessage").html(jqxhr.statusText);
-	}
-	$("#serverError").show();
-});
-
-
 ko.bindingHandlers.money = { 
 	    update: function(element, valueAccessor, allBindingsAccessor) { 
 	        var value = valueAccessor(), allBindings = allBindingsAccessor(); 
@@ -513,6 +502,28 @@ ko.bindingHandlers.money = {
 	    } 
 	}; 
 
+
+var displaySpinner = true;
+var displayError = true;
+
+$(document).ajaxError(function(event, jqxhr, settings, exception) {
+	if (jqxhr.status >= 200 && jqxhr.status <= 300)
+		return;
+	
+	if (displayError) {
+		if (jqxhr.responseJSON != null)
+			$("#serverErrorMessage").html(jqxhr.responseJSON.message);
+		else if (jqxhr.responseText != null)
+			$("#serverErrorMessage").html(jqxhr.responseText);
+		else {
+			$("#serverErrorMessage").html(jqxhr.statusText);
+		}
+		$("#serverError").show();
+	}
+});
+
+
+
 var viewModel;
 
 $(function() {
@@ -524,9 +535,12 @@ $(function() {
 
 	$.ajaxPrefilter(function(options, originalOptions, jqXHR) {
 		$("#serverError").hide();
-		$("#progressIndicator").show();
+		if (displaySpinner)
+			$("#progressIndicator").show();
 		jqXHR.complete(function() {
-			$("#progressIndicator").hide();
+			if (displaySpinner)
+				$("#progressIndicator").hide();
+			displaySpinner = true;
 		});
 
 	});

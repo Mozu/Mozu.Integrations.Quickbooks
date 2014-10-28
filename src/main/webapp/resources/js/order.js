@@ -319,16 +319,25 @@ homeViewModel.prototype.mapItemToQuickbooks = function() {
 	var productToMap = {};
 	productToMap.selectedProductToMap = self.selectedProductToMap();
 	productToMap.toBeMappedItemNumber = self.itemToFix.itemNameNumber();
-	
+	displayError = false;
 	$.ajax({
 		contentType: 'application/json; charset=UTF-8',
 		url : "api/qb/mapProductToQB?tenantId=" + $("#tenantIdHdn").val(),
 		type : "POST",
-		dataType : "json",
+		//dataType : "json",
 		data:  ko.mapping.toJSON(productToMap), //ko.mapping.toJSON(self.selectedProductToMap()),
 		success : function(data) {
-			//console.log(data);
-		}
+			$("#conflictSuccessDiv").show();
+			$("#conflictErrorDiv").hide();
+			$("#conflictSuccessMessage").text(data.success);
+		}, error : function(data) {
+			$("#conflictSuccessDiv").hide();
+			$("#conflictErrorDiv").show();
+			if (data.responseJSON != null)
+				$("#conflictErrorMessage").text(data.responseJSON.error);
+			else
+				$("#conflictErrorMessage").text(data.responseText);
+		}	
 	});
 };
 
