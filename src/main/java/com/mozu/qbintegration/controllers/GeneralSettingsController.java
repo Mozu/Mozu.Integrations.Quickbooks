@@ -105,7 +105,7 @@ public class GeneralSettingsController implements ServletContextAware {
 			String wsdlUrl = generalSettings.getWsURL();
 			
 			QuickWebConnector quickWebCon = new QuickWebConnector();
-			quickWebCon.setId(100);
+			quickWebCon.setId(tenantId);
 			quickWebCon.setName(webserviceName);
 			quickWebCon.setUrl(wsdlUrl);
 			quickWebCon.setDescription(webserviceDesc);

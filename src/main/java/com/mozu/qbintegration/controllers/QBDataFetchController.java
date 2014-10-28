@@ -11,9 +11,12 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -99,16 +102,25 @@ public class QBDataFetchController {
 	
 	@RequestMapping(value = "mapProductToQB", method = RequestMethod.POST)
 	public @ResponseBody
-	ObjectNode mapProductToQB(
+	ResponseEntity<JsonNode> mapProductToQB(
 			@RequestParam(value = "tenantId", required = true) Integer tenantId,
 			@RequestBody ProductToMapToQuickbooks productToMapToEB,
 			HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
 		//User wants us to make the product code to an existing quickbooks product list id
 		// SO do that mapping in EL.
-		productHandler.mapProductToQBInEL(productToMapToEB, tenantId);
+		
+		
+		try{
+			productHandler.mapProductToQBInEL(productToMapToEB, tenantId);
+			JsonNode status = (mapper.createObjectNode()).put("success", "Product "+productToMapToEB.getToBeMappedItemNumber()+" Mapped to "+productToMapToEB.getSelectedProductToMap());
+			return new ResponseEntity<JsonNode>(status, HttpStatus.OK);
+		} catch(Exception exc) {
+			JsonNode status = (mapper.createObjectNode()).put("error", exc.getMessage());
+			return new ResponseEntity<JsonNode>(status, HttpStatus.BAD_REQUEST);
+		}
 				
-		return (mapper.createObjectNode()).put("savedProduct", mapper.writeValueAsString(productToMapToEB));
+		//return (mapper.createObjectNode()).put("savedProduct", mapper.writeValueAsString(productToMapToEB));
 		
 	}
 	
@@ -155,7 +167,7 @@ public class QBDataFetchController {
 
         // Delete existing
         List<DataMapping> paymentData = getDataMappings(
-                entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 100));
+                entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 200));
         for (DataMapping payment: paymentData) {
             entityHandler.deleteEntity(tenantId, entityHandler.getMappingEntity(), payment.getMozuId());
         }
@@ -177,7 +189,7 @@ public class QBDataFetchController {
 			final HttpServletRequest request) throws Exception {
 		
 		List<DataMapping> paymentData = getDataMappings(
-				entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 100)); //TODO 100 is placeholder
+				entityHandler.getEntityCollection(tenantId, entityHandler.getMappingEntity(), null, null, 200)); //TODO 100 is placeholder
 		
 		return paymentData;
 	}
@@ -197,7 +209,7 @@ public class QBDataFetchController {
 			@RequestParam(value = "productCodeTerm", required = true) String productCodeTerm) throws Exception {
 		
 		List<JsonNode> productData = entityHandler.getEntityCollection(
-				tenantId, entityHandler.getProductEntityName(), "productCode cont " + productCodeTerm, null, 2000);
+				tenantId, entityHandler.getProductEntityName(), "productCode cont " + productCodeTerm, "productCode", 200);
 		
 		ArrayNode productCodes = mapper.createArrayNode();
 		if(!productData.isEmpty()) {

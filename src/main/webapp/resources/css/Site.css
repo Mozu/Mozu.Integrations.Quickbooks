@@ -162,11 +162,11 @@ table.dataTable p {
 }
 
 .success .icon {
-    background:transparent url(images/icon-success.png) no-repeat center center;
+    background:transparent url("../images/icon-success.png") no-repeat center center;
 }
 
 .icon_remove {
-    content: url("images/icon_remove.png");
+    content: url("../images/icon_remove.png");
 }
 
 
@@ -653,4 +653,9 @@ label {
 .compare-col {
     display:table-cell;
     border: 1px solid #CCC;
+}
+
+
+.ui-autocomplete-loading {
+    background: white url("../images/ajax-loader.gif") right center no-repeat;
 }

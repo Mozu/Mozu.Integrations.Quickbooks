@@ -315,7 +315,7 @@ public class ProductHandler {
 		
 		//Get the qbListId since the field on the UI is textbox, not dropdown anymore.
 		List<JsonNode> items = entityHandler.getEntityCollection(tenantId, entityHandler.getProductEntityName(), 
-				"productCode eq " + productToMapToEB.getToBeMappedItemNumber());
+				"productCode eq " + productToMapToEB.getSelectedProductToMap());
 		
 		if(!items.isEmpty()) {
 			String qbProdustListID = ((JsonNode) items.get(0)).get("qbProdustListID").asText();
@@ -328,8 +328,7 @@ public class ProductHandler {
 					.append(qbProdustListID)
 					.append(" in entity list").toString());
 		} else {
-			throw new Exception("Did not find product code " + productToMapToEB.getToBeMappedItemNumber() + " in " + 
-					" tenant id: " + tenantId + ". This is strange since it was found during autocomplete.");
+			throw new Exception("Did not find product code " + productToMapToEB.getSelectedProductToMap());
 		}
 	}
 	
