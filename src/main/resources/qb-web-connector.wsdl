@@ -367,10 +367,10 @@
   <wsdl:service name="TroubleshootWebServiceFS">
     <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">WebService for QBFS created using ASP.NET to troubleshoot QuickBooks WebConnector</wsdl:documentation>
     <wsdl:port name="TroubleshootWebServiceFSSoap" binding="tns:TroubleshootWebServiceFSSoap">
-      <soap:address location="https://3361814ace2a9f20.a.passageway.io/MozuIntegrationTemplate-0.0.1-LocalBuild/soap/QuickBooksService" />
+      <soap:address location="http://localhost/Quickbooks/soap/QuickBooksService" />
     </wsdl:port>
     <wsdl:port name="TroubleshootWebServiceFSSoap12" binding="tns:TroubleshootWebServiceFSSoap12">
-      <soap12:address location="https://3361814ace2a9f20.a.passageway.io/MozuIntegrationTemplate-0.0.1-LocalBuild/soap/QuickBooksService" />
+      <soap12:address location="http://localhost/Quickbooks/soap/QuickBooksService" />
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

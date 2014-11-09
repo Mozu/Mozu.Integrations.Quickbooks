@@ -315,7 +315,7 @@ public class ProductHandler {
 		
 		//Get the qbListId since the field on the UI is textbox, not dropdown anymore.
 		List<JsonNode> items = entityHandler.getEntityCollection(tenantId, entityHandler.getProductEntityName(), 
-				"productCode eq " + productToMapToEB.getToBeMappedItemNumber());
+				"productCode eq " + productToMapToEB.getSelectedProductToMap());
 		
 		if(!items.isEmpty()) {
 			String qbProdustListID = ((JsonNode) items.get(0)).get("qbProdustListID").asText();
@@ -328,8 +328,7 @@ public class ProductHandler {
 					.append(qbProdustListID)
 					.append(" in entity list").toString());
 		} else {
-			throw new Exception("Did not find product code " + productToMapToEB.getToBeMappedItemNumber() + " in " + 
-					" tenant id: " + tenantId + ". This is strange since it was found during autocomplete.");
+			throw new Exception("Did not find product code " + productToMapToEB.getSelectedProductToMap());
 		}
 	}
 	
@@ -407,8 +406,8 @@ public class ProductHandler {
 		List<MozuOrderItem> productCodes = getProductCodes(tenantId, order,true);
 		List<String> existing = new ArrayList<String>();
 		for(MozuOrderItem orderItem : productCodes) {
-			if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
-				continue;
+			//if (!StringUtils.isEmpty(orderItem.getQbItemCode()))
+			//	continue;
 			if (!existing.contains(orderItem.getProductCode())) { //eliminate duplicate query
 				ItemQueryRqType itemQueryRqType = new ItemQueryRqType();
 				itemQueryRqType.getFullName().add(orderItem.getProductCode());	
@@ -541,6 +540,10 @@ public class ProductHandler {
 			}
 		}
 		
+		String taxCode = "Non";
+		if (order.getTaxTotal() > 0.0)
+			taxCode = "Tax";
+		
 		if (order.getShippingTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
@@ -580,7 +583,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
+			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
 		

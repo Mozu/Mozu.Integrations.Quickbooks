@@ -96,8 +96,6 @@ dependencies {
     compile ('commons-logging:commons-logging:1.2')
     compile ('org.springframework.ws:spring-ws:2.1.4.RELEASE')
     compile ('org.springframework.ws:spring-ws-core:2.2.0.RELEASE')
-    compile ('org.mongodb:mongo-java-driver:2.12.3')
-    compile ('org.springframework.data:spring-data-mongodb:1.5.4.RELEASE')
     compile ('org.jasypt:jasypt:1.9.2')
     
     

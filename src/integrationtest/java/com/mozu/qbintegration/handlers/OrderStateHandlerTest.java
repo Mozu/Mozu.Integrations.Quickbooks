@@ -3,6 +3,9 @@ package com.mozu.qbintegration.handlers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,8 +43,8 @@ public class OrderStateHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4519;
-		orderId = "0538672b78bf8a1024c9b878000011a7";
+		tenantId = 4647;
+		orderId = "053bb36078bf8a0ba49bca0600001227";
 	}
 
 	@After
@@ -58,6 +61,18 @@ public class OrderStateHandlerTest {
 		}
 	}
 
+	@Test
+	public void retryConflictOrderTest() {
+		try {
+			List<String> orders = new ArrayList<String>();
+			orders.add(orderId);
+			orderStateHandler.retryConflicOrders(tenantId, orders,"retry");
+		} catch(Exception ex) {
+			fail(ex.getMessage());
+		}
+	}
+	
+	
 	@Test
 	public void allItemsFoundTest() {
 		try {
