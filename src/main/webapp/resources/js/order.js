@@ -344,6 +344,7 @@ homeViewModel.prototype.mapItemToQuickbooks = function() {
 //TO show in the map product dropdown
 homeViewModel.prototype.getAllProductsFromQB = function() {
 	var self = this;
+	self.isJobCurrentlyRunning(true);
 	$.ajax({
 		url : "api/qb/initiateProductRefresh?tenantId=" + $("#tenantIdHdn").val(),
 		type : "GET",

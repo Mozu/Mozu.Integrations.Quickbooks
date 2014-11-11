@@ -225,6 +225,9 @@ var homeViewModel = function() {
     
     self.showDownload = ko.observable(false);
     
+    //Check if a product job is currently running
+    self.isJobCurrentlyRunning = ko.observable(false);
+    
     self.showItemOptions = ko.computed(function() {
         return self.itemToFix.itemNameNumber() != "" ;
     }, self);
@@ -257,9 +260,31 @@ var homeViewModel = function() {
     	self.showItemCreate(false);
     	self.showItemMap(true);
     	$("#conflictSuccessDiv").hide();
+    	
+    	//Also get the status of any existing Product job in running status for display.
+    	self.getProductRefreshStatus();
     	return true;
     }
     
+    self.getProductRefreshStatus = function() {
+    	$.ajax({
+			contentType: 'application/json; charset=UTF-8',
+			url : "api/qb/getProductRefreshStatus?tenantId=" + $("#tenantIdHdn").val(),
+			type : "GET",
+			dataType : "json",
+			success : function(data) {
+				console.log(data.jobStatus);
+				if(data.jobStatus) {
+					self.isJobCurrentlyRunning(true);
+				} else {
+					self.isJobCurrentlyRunning(false);
+				}
+			},
+			error : function () {
+				
+			}
+		});
+    }
     
 	self.save = function() {
 		if (self.selectedTab() == "paymentMappingTab") {

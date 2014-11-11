@@ -141,12 +141,16 @@
 					</div>
 					<div class="row" style="margin-bottom:20px;"></div>
 					<div class="row">
-						<div class="tab-first-column">
-							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB">Refresh Products From QB</a>
-							
+						<div class="tab-first-column" data-bind="visible: !isJobCurrentlyRunning()">
+							<a class="mz-button secondary" data-bind="click: getAllProductsFromQB, enable: isJobCurrentlyRunning">Refresh Products From QB</a>
+						</div>	
+						<div class="tab-first-column" data-bind="visible: isJobCurrentlyRunning">
+							<span style="color:red;">A product refresh job is currently running.</span>
+							<a class="mz-button secondary" data-bind="click: getProductRefreshStatus">Refresh status</a>
 						</div>	
 					</div>
 				</div>
+				
 			</div>
 		</div>
 </body>
