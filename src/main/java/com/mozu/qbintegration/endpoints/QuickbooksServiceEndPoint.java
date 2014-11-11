@@ -339,11 +339,11 @@ public class QuickbooksServiceEndPoint {
 		Integer tenantId = Integer.parseInt(tokens[0]);
 		QBSession session = quickbooksService.getSession(tenantId);
 		if (!tokens[1].equals(session.getPwd()))
-			throw new Exception("Unaithorized");
+			throw new Exception("Unauthorized");
 		String decryptedValue = encryptDecryptHandler.decrypt(session.getKey(), session.getPwd());
 		
 		if (!tenantId.equals(Integer.parseInt(decryptedValue.split("~")[0])))
-			throw new Exception("Unaithorized");
+			throw new Exception("Unauthorized");
 		return tenantId;
 	}
 }

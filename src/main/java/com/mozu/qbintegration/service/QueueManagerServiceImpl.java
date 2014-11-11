@@ -37,7 +37,9 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status ne ERROR", "createDate", 1);
+		//Akshay - added PROCESS_IN_MEM as another status to ignore since processing is still going in memory on those tasks. 
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
+				"status ne ERROR and status ne PROCESS_IN_MEM", "createDate", 1);
 		
 		if (nodes.size() > 0) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
@@ -70,11 +72,23 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getActiveTask(Integer tenantId) throws Exception {
-		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status eq " +WorkTaskStatus.PROCESSING, null, 1);
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
+				"status eq " +WorkTaskStatus.PROCESSING, null, 1);
 		if (nodes.size() > 0) 
 			return mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 		
 		return null;
+	}
+	
+	@Override
+	public boolean getInMemProcessingTask(Integer tenantId, String taskType) throws Exception {
+		boolean isInMemTaskRunning = false;
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
+				"status eq " + WorkTaskStatus.PROCESS_IN_MEM + " and " + "type eq " + taskType, null, 1);
+		if (nodes.size() > 0) {
+			isInMemTaskRunning = true;
+		}
+		return isInMemTaskRunning;
 	}
 
 	@Override
@@ -90,6 +104,13 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		task.setCurrentStep(currentStep);
 		task.setStatus(status);
 		entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
+	}
+
+	@Override
+	public void deleteTask(Integer tenantId, String workTaskId) throws Exception {
+		
+		entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), workTaskId);
+		logger.debug("Deleted task form queue with ID: " + workTaskId + ", for tenant " + tenantId);
 	}
 }
 
