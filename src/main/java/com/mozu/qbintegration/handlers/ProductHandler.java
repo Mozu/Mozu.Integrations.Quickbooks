@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +35,7 @@ import com.mozu.qbintegration.model.MozuProduct;
 import com.mozu.qbintegration.model.ProductToMapToQuickbooks;
 import com.mozu.qbintegration.model.ProductToQuickbooks;
 import com.mozu.qbintegration.model.QBResponse;
+import com.mozu.qbintegration.model.WorkTaskStatus;
 import com.mozu.qbintegration.model.qbmodel.allgen.AssetAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.COGSAccountRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.IncomeAccountRef;
@@ -98,72 +101,103 @@ public class ProductHandler {
 		processItemQueryResult(tenantId, invObj);
 	}
 	
-	public void processItemQueryAll(Integer tenantId, WorkTask workTask,
-			String qbTaskResponse) throws Exception {
-		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
-		ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
-				.getQBXMLMsgsRs()
-				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
-				.get(0);
+	public void processItemQueryAll(final Integer tenantId, final WorkTask workTask,
+			final String qbTaskResponse) throws Exception {
 		
-		List<Object> itemServiceRetCollection = itemSearchResponse
-				.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
-		processItemQueryResult(tenantId, itemServiceRetCollection);
+		Thread itemQueryAllTask = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
+					ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
+							.getQBXMLMsgsRs()
+							.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
+							.get(0);
+					
+					List<Object> itemServiceRetCollection = itemSearchResponse
+							.getItemServiceRetOrItemNonInventoryRetOrItemOtherChargeRet();
+					processItemQueryResult(tenantId, itemServiceRetCollection);
+					
+					//Delete the refresh task when successfully completed. Below call takes care of it.
+					queueManagerService.updateTask(tenantId, workTask.getId(), "Refresh",
+							"COMPLETED");
+				} catch (Exception ex) {
+					logger.error("Could not complete product refresh from QB to entitylist for tenant: " + tenantId);
+					try {
+						queueManagerService.updateTask(tenantId, workTask.getId(), "Refresh",
+								"COMPLETED");
+					} catch (Exception e) {
+						logger.error("Could not update queue task to status Pending for tenant id: " + tenantId);
+					}
+				}
+				logger.debug("Completed syncing all products from QB to EL for tenantid: " + tenantId);
+			}
+		});
 		
 		queueManagerService.updateTask(tenantId, workTask.getId(), "Refresh",
-				"COMPLETED");
+				WorkTaskStatus.PROCESS_IN_MEM);
+		itemQueryAllTask.start();
+		
 	}
 	
 	private void processItemQueryResult(Integer tenantId, List<Object> objects)
 			throws Exception {
 		
-	
-		for (Object object : objects) {
-			boolean supported = true;
-			String productName = null;
-			String productQbListID = null;
-			if (object instanceof ItemServiceRet) {
-				ItemServiceRet itemServiceRet = (ItemServiceRet) object;
-				productName = itemServiceRet.getFullName();
-				productQbListID = itemServiceRet.getListID();
-			} else if (object instanceof ItemInventoryRet) {
-				ItemInventoryRet itemInventoryRet = (ItemInventoryRet) object;
-				productName = itemInventoryRet.getFullName();
-				productQbListID = itemInventoryRet.getListID();
-			} else if (object instanceof ItemOtherChargeRet) {
-				ItemOtherChargeRet itemInvRet = (ItemOtherChargeRet) object;
-				productName = itemInvRet.getFullName();
-				productQbListID = itemInvRet.getName();
-			} else if (object instanceof ItemDiscountRet) {
-				ItemDiscountRet itemInvRet = (ItemDiscountRet) object;
-				productName =  itemInvRet.getFullName();
-				productQbListID = itemInvRet.getName();
-			}else if (object instanceof ItemInventoryAssemblyRet) {
-				ItemInventoryAssemblyRet itemInvRet = (ItemInventoryAssemblyRet) object;
-				productName =  itemInvRet.getFullName();
-				productQbListID = itemInvRet.getListID();
-			} else if (object instanceof ItemPaymentRet) {
-				ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
-				productName =  itemInvRet.getName();
-				productQbListID = itemInvRet.getListID();
-			} else if (object instanceof ItemNonInventoryRet) {
-				ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
-				productName =  itemInvRet.getName();
-				productQbListID = itemInvRet.getListID();
-			}else {
-				logger.info(object.getClass() +" not supported");
-				//throw new Exception("Not supported");
-				supported = false;
+			for (Object object : objects) {
+				try{
+					boolean supported = true;
+					String productName = null;
+					String productQbListID = null;
+					if (object instanceof ItemServiceRet) {
+						ItemServiceRet itemServiceRet = (ItemServiceRet) object;
+						productName = itemServiceRet.getFullName();
+						productQbListID = itemServiceRet.getListID();
+					} else if (object instanceof ItemInventoryRet) {
+						ItemInventoryRet itemInventoryRet = (ItemInventoryRet) object;
+						productName = itemInventoryRet.getFullName();
+						productQbListID = itemInventoryRet.getListID();
+					} else if (object instanceof ItemOtherChargeRet) {
+						ItemOtherChargeRet itemInvRet = (ItemOtherChargeRet) object;
+						productName = itemInvRet.getFullName();
+						productQbListID = itemInvRet.getName();
+					} else if (object instanceof ItemDiscountRet) {
+						ItemDiscountRet itemInvRet = (ItemDiscountRet) object;
+						productName =  itemInvRet.getFullName();
+						productQbListID = itemInvRet.getName();
+					}else if (object instanceof ItemInventoryAssemblyRet) {
+						ItemInventoryAssemblyRet itemInvRet = (ItemInventoryAssemblyRet) object;
+						productName =  itemInvRet.getFullName();
+						productQbListID = itemInvRet.getListID();
+					} else if (object instanceof ItemPaymentRet) {
+						ItemPaymentRet itemInvRet = (ItemPaymentRet) object;
+						productName =  itemInvRet.getName();
+						productQbListID = itemInvRet.getListID();
+					} else if (object instanceof ItemNonInventoryRet) {
+						ItemNonInventoryRet itemInvRet = (ItemNonInventoryRet) object;
+						productName =  itemInvRet.getName();
+						productQbListID = itemInvRet.getListID();
+					}else {
+						logger.info(object.getClass() +" not supported");
+						//throw new Exception("Not supported");
+						supported = false;
+					}
+					logger.info("Processing " + productName + " " + productQbListID + " for tenant.");
+					productName = productName == null ? null : productName.replaceAll(":", "-").replaceAll("&", "and");
+					productQbListID = productQbListID == null ? null : productQbListID.replaceAll(":", "-");
+					if (supported) {
+						MozuProduct mozuProduct = new MozuProduct();
+						mozuProduct.setProductCode(productName);
+						mozuProduct.setQbProductListID(productQbListID);
+						mozuProduct.setProductName(productName);
+						saveAllProductInEntityList(mozuProduct, tenantId);
+						logger.debug("Saved product through refresh all: "+ productName);
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
-			if (supported) {
-				MozuProduct mozuProduct = new MozuProduct();
-				mozuProduct.setProductCode(productName);
-				mozuProduct.setQbProductListID(productQbListID);
-				mozuProduct.setProductName(productName);
-				saveAllProductInEntityList(mozuProduct, tenantId);
-				logger.debug("Saved product through refresh all: "+ productName);
-			}
-		}
+		
 	}
 	
 	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)

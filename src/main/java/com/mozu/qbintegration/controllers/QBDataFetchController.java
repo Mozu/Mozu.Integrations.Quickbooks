@@ -4,6 +4,7 @@
 package com.mozu.qbintegration.controllers;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -208,8 +209,9 @@ public class QBDataFetchController {
 	JsonNode getProductCodes(@RequestParam(value = "tenantId", required = true) Integer tenantId,
 			@RequestParam(value = "productCodeTerm", required = true) String productCodeTerm) throws Exception {
 		
+		String productCodeTermEnc = URLEncoder.encode(productCodeTerm, "UTF-8");
 		List<JsonNode> productData = entityHandler.getEntityCollection(
-				tenantId, entityHandler.getProductEntityName(), "productCode cont " + productCodeTerm, "productCode", 200);
+				tenantId, entityHandler.getProductEntityName(), "productCode cont " + productCodeTermEnc, "productCode", 200);
 		
 		ArrayNode productCodes = mapper.createArrayNode();
 		if(!productData.isEmpty()) {
@@ -219,6 +221,18 @@ public class QBDataFetchController {
 		}
 		
 		return productCodes;
+	}
+	
+	@RequestMapping(value = "getProductRefreshStatus", method = RequestMethod.GET)
+	public @ResponseBody
+	JsonNode getProductRefreshStatus(@RequestParam(value = "tenantId", required = true) Integer tenantId) throws Exception {
+		//Akshay - for now, just get the status. Later, additional fields like job start time etc. can be pulled.
+		boolean isInMemTaskRunning = queueManagerService.getInMemProcessingTask(tenantId, "Product");
+		
+		ObjectNode taskRunningNode = mapper.createObjectNode();
+		taskRunningNode.put("jobStatus", isInMemTaskRunning);
+		
+		return taskRunningNode;
 	}
 	
 }
