@@ -16,7 +16,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 @Service
 public class XMLService {
 
-	private static final String QBXML_PREFIX = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+	private static final String QBXML_PREFIX = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
 			+ "<?qbxml version=\"13.0\"?>";
 
 	protected JAXBContext contextObj = null;

@@ -111,8 +111,10 @@ public class OrderStateHandler {
 		}
 		
 		//boolean processResult = false;
-		if (StringUtils.isNotEmpty(qbResponse))
-			processCurrentStep(tenantId, order, custAcct, currentStep,qbResponse);
+		if (StringUtils.isNotEmpty(qbResponse)) {
+			processCurrentStep(tenantId, order, custAcct, currentStep,
+					qbResponse);
+		}
 		
 		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, action); //Need to incorporate reponse from QB
 		
