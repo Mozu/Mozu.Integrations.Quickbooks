@@ -29,6 +29,7 @@ import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.QBSession;
 import com.mozu.qbintegration.model.WorkTaskLog;
+import com.mozu.qbintegration.model.WorkTaskStatus;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -254,8 +255,9 @@ public class QuickbooksServiceEndPoint {
 			
 		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
-			queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), "ERROR");
-			//throw ex;
+			orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
+			//Delete this task. Retry will open a new task.
+			queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), WorkTaskStatus.COMPLETED);
 		}
 
 		ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
