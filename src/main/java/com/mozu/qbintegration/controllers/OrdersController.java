@@ -88,7 +88,6 @@ public class OrdersController {
 	public String index(HttpServletRequest httpRequest,	HttpServletResponse httpResponse, ModelMap modelMap) throws Exception {
 
 		String body = IOUtils.toString(httpRequest.getInputStream());
-
 		
 		String decodedBody = URLDecoder.decode(body, "ISO-8859-1");
 		URI params = new URI("?" + decodedBody);
@@ -193,7 +192,9 @@ public class OrdersController {
 		
 		int dispStartIdx = Integer.parseInt(iDisplayStart);
 		int dispLength = Integer.parseInt(iDisplayLength);
-		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", dispStartIdx, dispLength);
+		//EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", dispStartIdx, dispLength);
+		//Akshay - get all tasks currently in queue. Even error so we know things are failing.
+		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate", dispStartIdx, dispLength);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		OrderQueueDataTable dataTable = new OrderQueueDataTable();
 		if(collection.getItems().size() > 0) {

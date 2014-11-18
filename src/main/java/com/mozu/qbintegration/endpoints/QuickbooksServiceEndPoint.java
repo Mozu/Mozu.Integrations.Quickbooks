@@ -201,19 +201,32 @@ public class QuickbooksServiceEndPoint {
 	@ResponsePayload
 	public ReceiveResponseXMLResponse receiveResponseXML(ReceiveResponseXML responseXML) throws Exception {
 
-		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Message - "+responseXML.getMessage());
-		logger.info("receive Response XML : "+responseXML.getTicket()+" - Task Response - "+responseXML.getResponse().substring(0, 100)+"...");
 		Integer tenantId = getTenantId(responseXML.getTicket());
 		WorkTask workTask = queueManagerService.getActiveTask(tenantId);
-
-		if (workTask == null) { // nothing to do but work is not complete so
-								// come back
-			ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
-			responseToResponse.setReceiveResponseXMLResult(0);
-			return responseToResponse;
-		}
-
+		
 		try {
+			logger.info("receive Response XML : " + responseXML.getTicket()
+					+ " - Task Message - " + responseXML.getMessage());
+			
+			logger.info("receive Response XML : " + responseXML.getTicket()
+					+ " - Task Response - "
+					+ responseXML.getResponse() != null && responseXML.getResponse().length() > 100 ? 
+							responseXML.getResponse().substring(0, 100) : responseXML.getResponse() + "...");
+			
+	
+			if (workTask == null) { // nothing to do but work is not complete so
+									// come back
+				ReceiveResponseXMLResponse responseToResponse = new ReceiveResponseXMLResponse();
+				responseToResponse.setReceiveResponseXMLResult(0);
+				return responseToResponse;
+			}
+			
+			if(responseXML.getResponse() == null || "".equals(responseXML.getResponse())) {
+				throw new Exception("Response from quickbooks is blank. " +
+						"Something has gone wrong with the request processing for tenant: " + tenantId + 
+						", worktask id: " + workTask.getId());
+			}
+		
 			switch(workTask.getType().toLowerCase()) {
 				case "order":
 					try{
