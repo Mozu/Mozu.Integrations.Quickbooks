@@ -219,13 +219,14 @@ public class CustomerHandler {
 
 		boolean isTaxState = false;
 		GeneralSettings generalSettings = quickbooksService.getSettingsFromEntityList(tenantId);
-		for (String state: generalSettings.getTaxableStates()) {
-		    if (qbXMLShipAddressType.getState().equalsIgnoreCase(state)) {
-		        isTaxState=true;
-		        break;
-		    }
+		if (generalSettings.getTaxableStates() != null) {
+			for (String state: generalSettings.getTaxableStates()) {
+			    if (qbXMLShipAddressType.getState().equalsIgnoreCase(state)) {
+			        isTaxState=true;
+			        break;
+			    }
+			}
 		}
-		
 		if (isTaxState) {
 			salesTaxCodeRef.setFullName("Tax");
 		} else {

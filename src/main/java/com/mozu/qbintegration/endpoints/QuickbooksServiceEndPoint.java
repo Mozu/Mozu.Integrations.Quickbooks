@@ -176,11 +176,13 @@ public class QuickbooksServiceEndPoint {
 	public SendRequestXMLResponse sendRequestXML(SendRequestXML requestXML)	throws Exception {
 
 		// Get the tenantID
+		WorkTask workTask = null;
+		Integer tenantId = null;
 		try {
 			logger.info("request XML : "+requestXML.getTicket());
-			Integer tenantId = getTenantId(requestXML.getTicket());
+			tenantId = getTenantId(requestXML.getTicket());
 			
-			WorkTask workTask = queueManagerService.getNext(tenantId);
+			workTask = queueManagerService.getNext(tenantId);
 	
 			SendRequestXMLResponse response = new SendRequestXMLResponse();
 			if (workTask != null) {
@@ -194,6 +196,8 @@ public class QuickbooksServiceEndPoint {
 			return response;
 		} catch (Exception exc) {
 			logger.error(exc.getMessage(), exc);
+			if (tenantId != null && workTask != null)
+				queueManagerService.updateTask(tenantId, workTask.getId(), workTask.getCurrentStep(), WorkTaskStatus.ERROR);
 			throw exc;
 		}
 	}
