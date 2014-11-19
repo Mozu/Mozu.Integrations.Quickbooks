@@ -68,6 +68,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.TxnDelRsType;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
+import com.mozu.qbintegration.utils.QBDataValidationUtil;
 
 @Component
 public class OrderHandler {
@@ -609,10 +610,21 @@ public class OrderHandler {
 	
 	private BillAddress getBillAddress(Address address) {
 		BillAddress billAddress = new BillAddress();
-		billAddress.setAddr1(address.getAddress1());
-		billAddress.setAddr2(address.getAddress2());
-		billAddress.setAddr3(address.getAddress3());
-		billAddress.setAddr4(address.getAddress4());
+		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
+		QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
+				billAddress, address.getAddress1());
+		//billAddress.setAddr1(address.getAddress1());
+		//prevent addr2 set up above from getting spoiled
+		if(!StringUtils.isEmpty(address.getAddress2())) {
+			billAddress.setAddr2(address.getAddress2());
+		}
+		if(!StringUtils.isEmpty(address.getAddress3())) {
+			billAddress.setAddr3(address.getAddress3());
+		}
+		if(!StringUtils.isEmpty(address.getAddress4())) {
+			billAddress.setAddr4(address.getAddress4());
+		}
+		
 		billAddress.setCity(address.getCityOrTown());
 		billAddress.setState(address.getStateOrProvince());
 		billAddress.setCountry(address.getCountryCode());
@@ -623,10 +635,21 @@ public class OrderHandler {
 	
 	private ShipAddress getShipAddress(Address address) {
 		ShipAddress shipAddress = new ShipAddress();
-		shipAddress.setAddr1(address.getAddress1());
-		shipAddress.setAddr2(address.getAddress2());
-		shipAddress.setAddr3(address.getAddress3());
-		shipAddress.setAddr4(address.getAddress4());
+		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
+		QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
+				shipAddress, address.getAddress1());
+		//shipAddress.setAddr1(address.getAddress1());
+		//prevent addr2 set up above from getting spoiled
+		if(!StringUtils.isEmpty(address.getAddress2())) {
+			shipAddress.setAddr2(address.getAddress2());
+		}
+		if(!StringUtils.isEmpty(address.getAddress3())) {
+			shipAddress.setAddr3(address.getAddress3());
+		}
+		if(!StringUtils.isEmpty(address.getAddress4())) {
+			shipAddress.setAddr4(address.getAddress4());
+		}
+		
 		shipAddress.setCity(address.getCityOrTown());
 		shipAddress.setState(address.getStateOrProvince());
 		shipAddress.setCountry(address.getCountryCode());

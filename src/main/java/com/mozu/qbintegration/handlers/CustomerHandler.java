@@ -33,6 +33,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.TermsRef;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
+import com.mozu.qbintegration.utils.QBDataValidationUtil;
 
 @Component
 public class CustomerHandler {
@@ -173,7 +174,9 @@ public class CustomerHandler {
 			
 			
 			if (isPrimaryBilling) {
-				qbXMLBillAddressType.setAddr1(contact.getAddress().getAddress1());
+				//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
+				QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
+						qbXMLBillAddressType, contact.getAddress().getAddress1());
 				qbXMLBillAddressType.setCity(contact.getAddress().getCityOrTown());
 				qbXMLBillAddressType.setState(contact.getAddress().getStateOrProvince());
 				qbXMLBillAddressType.setCountry(contact.getAddress().getCountryCode());
@@ -182,7 +185,9 @@ public class CustomerHandler {
 			}
 			
 			if (isPrimaryShipping) {
-				qbXMLShipAddressType.setAddr1(contact.getAddress().getAddress1());
+				//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
+				QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
+						qbXMLShipAddressType, contact.getAddress().getAddress1()); 
 				qbXMLShipAddressType.setCity(contact.getAddress().getCityOrTown());
 				qbXMLShipAddressType.setState(contact.getAddress().getStateOrProvince());
 				qbXMLShipAddressType.setCountry(contact.getAddress().getCountryCode());
@@ -193,7 +198,9 @@ public class CustomerHandler {
 
 		if (!isPrimaryShipping) {
 			CustomerContact cc = cust.getContacts().get(0);
-			qbXMLShipAddressType.setAddr1(cc.getAddress().getAddress1());
+			//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
+			QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
+					qbXMLShipAddressType, cc.getAddress().getAddress1());
 			qbXMLShipAddressType.setCity(cc.getAddress().getCityOrTown());
 			qbXMLShipAddressType.setState(cc.getAddress().getStateOrProvince());
 			qbXMLShipAddressType.setCountry(cc.getAddress().getCountryCode());
@@ -203,7 +210,9 @@ public class CustomerHandler {
 
 		if (!isPrimaryBilling) {
 			CustomerContact cc = cust.getContacts().get(0);
-			qbXMLBillAddressType.setAddr1(cc.getAddress().getAddress1());
+			//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
+			QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
+					qbXMLBillAddressType, cc.getAddress().getAddress1());
 			qbXMLBillAddressType.setCity(cc.getAddress().getCityOrTown());
 			qbXMLBillAddressType.setState(cc.getAddress().getStateOrProvince());
 			qbXMLBillAddressType.setCountry(cc.getAddress().getCountryCode());
