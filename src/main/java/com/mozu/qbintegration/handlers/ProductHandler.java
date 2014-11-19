@@ -51,6 +51,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.PrefVendorRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
@@ -425,6 +426,13 @@ public class ProductHandler {
 		inventoryAdd.setPurchaseDesc(productToQuickbooks.getItemPurchaseDesc());
 		inventoryAdd.setPurchaseCost(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemPurchaseCost())));
+		
+		//Akshay 19-nov-2014 - pref vendor add - was never added I guess
+		if(!StringUtils.isEmpty(productToQuickbooks.getSelectedVendor())) {
+			PrefVendorRef prefVendor = new PrefVendorRef();
+			prefVendor.setFullName(productToQuickbooks.getSelectedVendor());
+			inventoryAdd.setPrefVendorRef(prefVendor);
+		}
 
 		return xmlHelper.getMarshalledValue(qbxml);
 	}
