@@ -484,12 +484,11 @@ public class OrderHandler {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
-			if (payment.getPaymentType().equalsIgnoreCase("check") || payment.getPaymentType().equalsIgnoreCase("storecredit")) {
-				paymentRef.setFullName(payment.getPaymentType());
-			} 
-			else {
+			
+			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType()))
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			}
+			else
+				paymentRef.setFullName(payment.getPaymentType());
 		}
 		
 		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
