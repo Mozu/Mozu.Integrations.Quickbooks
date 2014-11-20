@@ -394,13 +394,23 @@ var homeViewModel = function() {
 								self.showDownload(true);
 						}
 								
-						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );
+
 						self.mozuPayments.push(new mozuPayment("Amex", "American Express") );
-						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
+						self.mozuPayments.push(new mozuPayment("Delta", "Delta"));
+						self.mozuPayments.push(new mozuPayment("Diners", "Diners"));
+						self.mozuPayments.push(new mozuPayment("Electron", "Electron"));
+						self.mozuPayments.push(new mozuPayment("FirePay", "FirePay"));
+						self.mozuPayments.push(new mozuPayment("JCB", "JCB"));
+						self.mozuPayments.push(new mozuPayment("Laser", "Laser"));
+						self.mozuPayments.push(new mozuPayment("Maestro", "Maestro"));
+						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
+						self.mozuPayments.push(new mozuPayment("PaypalExpress", "PaypalExpress"));
+						self.mozuPayments.push(new mozuPayment("Solo", "Solo"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
-						self.mozuPayments.push(new mozuPayment("PaypalExpress", "PayPal Express"));
+						self.mozuPayments.push(new mozuPayment("Switch", "Switch"));
+						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );						
 						
 						self.dataTypes.push(new dataType("account", "Accounts"));
 						self.dataTypes.push(new dataType("vendor", "Vendors"));
