@@ -547,7 +547,7 @@ public class ProductHandler {
 			}
 			
 			String taxCode = null;
-			if (item.getItemTaxTotal() > 0.0) 
+			if (item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) 
 				taxCode = "Tax";
 			else
 				taxCode = "Non";
