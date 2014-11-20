@@ -128,7 +128,7 @@ var dataType = function(id,name) {
 
 ko.extenders.numeric = function(target, precision) {
     //create a writable computed observable to intercept writes to our observable
-    var result = ko.pureComputed({
+    var result = ko.computed({
         read: target,  //always return the original observable's value
         write: function(newValue) {
             var current = target(),
