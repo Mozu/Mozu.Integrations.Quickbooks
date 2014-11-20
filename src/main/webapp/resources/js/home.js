@@ -128,7 +128,7 @@ var dataType = function(id,name) {
 
 ko.extenders.numeric = function(target, precision) {
     //create a writable computed observable to intercept writes to our observable
-    var result = ko.pureComputed({
+    var result = ko.computed({
         read: target,  //always return the original observable's value
         write: function(newValue) {
             var current = target(),
@@ -400,6 +400,7 @@ var homeViewModel = function() {
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
+						self.mozuPayments.push(new mozuPayment("PaypalExpress", "PayPal Express"));
 						
 						self.dataTypes.push(new dataType("account", "Accounts"));
 						self.dataTypes.push(new dataType("vendor", "Vendors"));

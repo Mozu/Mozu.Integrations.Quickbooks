@@ -484,7 +484,8 @@ public class OrderHandler {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
-			if (payment.getPaymentType().equalsIgnoreCase("check") || payment.getPaymentType().equalsIgnoreCase("storecredit")) {
+			if (payment.getPaymentType().equalsIgnoreCase("check") || payment.getPaymentType().equalsIgnoreCase("storecredit")
+					|| "paypalexpress".equalsIgnoreCase(payment.getPaymentType())) { //Akshay 20-Nov-2014 added paypal express.
 				paymentRef.setFullName(payment.getPaymentType());
 			} 
 			else {
