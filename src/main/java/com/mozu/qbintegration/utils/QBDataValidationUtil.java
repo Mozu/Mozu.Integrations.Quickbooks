@@ -21,6 +21,10 @@ public final class QBDataValidationUtil {
 	 */
 	public static final Integer QB_ADDR_FIELD_SIZE = 41;
 	
+	public static final String SPACE_SEPARATOR = " ";
+
+	private static final String DELIMITER = "- -";
+	
 	/**
 	 * Populate multiple address lines based on mozu address line 1 length.
 	 * 
@@ -30,17 +34,31 @@ public final class QBDataValidationUtil {
 	public static void populateQBBillToAddrFromMozuAddr(BillAddress qbXMLBillAddressType,
 			String mozuAddrLine1) {
 		if(!StringUtils.isEmpty(mozuAddrLine1)) {
+			
+			String readyToUseStr = getAddressSplitOnSpace(mozuAddrLine1, QB_ADDR_FIELD_SIZE);
+			String[] lineSplit = readyToUseStr.split(DELIMITER);
+			
 			//usual scenario
-			qbXMLBillAddressType.setAddr1(getAddressSlice(
-					mozuAddrLine1, 0, QB_ADDR_FIELD_SIZE));
-			qbXMLBillAddressType.setAddr2(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE, QB_ADDR_FIELD_SIZE * 2));
-			qbXMLBillAddressType.setAddr3(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 2, QB_ADDR_FIELD_SIZE * 3));
-			qbXMLBillAddressType.setAddr4(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 3, QB_ADDR_FIELD_SIZE * 4));
-			qbXMLBillAddressType.setAddr5(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 4, QB_ADDR_FIELD_SIZE * 5));
+			if(lineSplit.length > 0) {
+				qbXMLBillAddressType.setAddr1(lineSplit[0]);
+			}
+			
+			if(lineSplit.length > 1) {
+				qbXMLBillAddressType.setAddr2(lineSplit[1]);
+			}
+			
+			if(lineSplit.length > 2) {
+				qbXMLBillAddressType.setAddr3(lineSplit[2]);
+			}
+			
+			if(lineSplit.length > 3) {
+				qbXMLBillAddressType.setAddr4(lineSplit[3]);
+			}
+			
+			if(lineSplit.length > 4) {
+				qbXMLBillAddressType.setAddr5(lineSplit[4]);
+			}
+			
 		}
 	}
 	
@@ -53,29 +71,55 @@ public final class QBDataValidationUtil {
 	public static void populateQBShipToAddrFromMozuAddr(ShipAddress qbXMLShipAddressType,
 			String mozuAddrLine1) {
 		if(!StringUtils.isEmpty(mozuAddrLine1)) {
+			
+			String readyToUseStr = getAddressSplitOnSpace(mozuAddrLine1, QB_ADDR_FIELD_SIZE);
+			String[] lineSplit = readyToUseStr.split(DELIMITER);
+			
 			//usual scenario
-			qbXMLShipAddressType.setAddr1(getAddressSlice(
-					mozuAddrLine1, 0, QB_ADDR_FIELD_SIZE));
-			qbXMLShipAddressType.setAddr2(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE, QB_ADDR_FIELD_SIZE * 2));
-			qbXMLShipAddressType.setAddr3(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 2, QB_ADDR_FIELD_SIZE * 3));
-			qbXMLShipAddressType.setAddr4(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 3, QB_ADDR_FIELD_SIZE * 4));
-			qbXMLShipAddressType.setAddr5(getAddressSlice(
-					mozuAddrLine1, QB_ADDR_FIELD_SIZE * 4, QB_ADDR_FIELD_SIZE * 5));
+			if(lineSplit.length > 0) { //Akshay - so would like to use reflection and make this in a loop
+				qbXMLShipAddressType.setAddr1(lineSplit[0]);
+			}
+			
+			if(lineSplit.length > 1) {
+				qbXMLShipAddressType.setAddr2(lineSplit[1]);
+			}
+			
+			if(lineSplit.length > 2) {
+				qbXMLShipAddressType.setAddr3(lineSplit[2]);
+			}
+			
+			if(lineSplit.length > 3) {
+				qbXMLShipAddressType.setAddr4(lineSplit[3]);
+			}
+			
+			if(lineSplit.length > 4) {
+				qbXMLShipAddressType.setAddr5(lineSplit[4]);
+			}
+			
 		}
 	}
 
-	private static String getAddressSlice(String mozuAddrLine1,
-			Integer startIndex, Integer endIndex) {
-		if (mozuAddrLine1.length() <= startIndex) {
-			return null;
-		} else {
-			Integer mozuAddrLength = mozuAddrLine1.length();
-			return mozuAddrLine1.substring(startIndex, 
-					mozuAddrLength < endIndex ? mozuAddrLength : endIndex);
-		}
+	public static String getAddressSplitOnSpace(String input, int maxLineLength) {
+	    String[] tokens = input.split(SPACE_SEPARATOR);
+	    StringBuilder output = new StringBuilder(input.length());
+	    int lineLen = 0;
+	    for (int i = 0; i < tokens.length; i++) {
+	        String word = tokens[i];
+
+	        if (lineLen + (SPACE_SEPARATOR + word).length() > maxLineLength) {
+	            if (i > 0) {
+	                output.append(DELIMITER); //don't think anyone uses double cap in address.
+	            }
+	            lineLen = 0;
+	        }
+	        if (i < tokens.length - 1 && (lineLen + (word + SPACE_SEPARATOR).length() + tokens[i + 1].length() <=
+	                maxLineLength)) {
+	            word += SPACE_SEPARATOR;
+	        }
+	        output.append(word);
+	        lineLen += word.length();
+	    }
+	    return output.toString();
 	}
 
 }
