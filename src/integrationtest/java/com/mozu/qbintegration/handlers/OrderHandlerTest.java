@@ -33,8 +33,8 @@ public class OrderHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 4647;
-		orderId = "0545d5b378bf8a23740d26d300001227";
+		tenantId = 4519;
+		orderId = "asdfasdfasdf";
 	}
 
 	@After
