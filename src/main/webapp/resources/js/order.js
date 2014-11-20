@@ -82,6 +82,7 @@ homeViewModel.prototype.getOrdersCancelled = function() {
 
 homeViewModel.prototype.getOrdersUpdated = function() {
 	var self = this;
+	$(".selectAllUpdates")[0].checked = false;
 	var $table = $('#orderUpdatedTable').dataTable({
 		"bProcessing" : true,
 		"bServerSide" : true,
@@ -98,8 +99,7 @@ homeViewModel.prototype.getOrdersUpdated = function() {
 	            	   "bSortable": false,
 	            	   "mRender": function (data, type, full) {			
 	            		   return '<input type="checkbox" id="allOrdersCheckbox' + data 
-	            		   		+ '" name="allOrdersCheckbox" value ="'+ data +'"' + 
-	            		   		' data-bind="click: maintainCBStateInArray"/>';
+	            		   		+ '" name="allOrdersCheckbox" class="updatedCheck" value ="'+ data +'">';
 	            	   }
 		            },
 		            {
@@ -145,6 +145,7 @@ homeViewModel.prototype.getOrdersUpdated = function() {
 
 homeViewModel.prototype.getOrderConflicts = function() {
 	var self = this;
+	$(".selectAllConflicts")[0].checked = false;
 	var $table = $('#orderConflictsTable').dataTable({
 		"bProcessing" : true,
 		"bServerSide" : true,
@@ -159,7 +160,7 @@ homeViewModel.prototype.getOrderConflicts = function() {
         	   "bSearchable": false,
         	   "bSortable": false,
         	   "mRender": function (data, type, full) {			
-        		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" />';
+        		   return '<input type="checkbox" id="allOrderConflictCheckbox' + data + '" name="allOrderConflictCheckbox" value ="'+ data +'" class="conflictCheck" />';
         	   }
 		    },
 		    {
@@ -356,3 +357,11 @@ homeViewModel.prototype.getAllProductsFromQB = function() {
 	});
 	
 };
+
+
+function selectAll(cls, sourceCls) {
+	var checked = $('.'+sourceCls)[0].checked;
+    $('.'+cls).each(function() { 
+        this.checked = checked;                 
+    });
+}
