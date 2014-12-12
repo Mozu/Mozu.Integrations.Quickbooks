@@ -586,11 +586,11 @@ public class ProductHandler {
 		if (order.getTaxTotal() > 0.0)
 			taxCode = "Tax";
 		
-		if (order.getShippingTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
+		if (order.getShippingSubTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
 			mzItem.setQbItemCode(shippingProductCode);
-			mzItem.setAmount(order.getShippingSubTotal());
+			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
 			mzItem.setMisc(true);
 			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
