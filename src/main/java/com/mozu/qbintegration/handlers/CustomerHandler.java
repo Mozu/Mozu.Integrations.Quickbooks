@@ -176,7 +176,7 @@ public class CustomerHandler {
 			if (isPrimaryBilling) {
 				//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
 				QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
-						qbXMLBillAddressType, contact.getAddress().getAddress1());
+						qbXMLBillAddressType, contact.getAddress());
 				qbXMLBillAddressType.setCity(contact.getAddress().getCityOrTown());
 				qbXMLBillAddressType.setState(contact.getAddress().getStateOrProvince());
 				qbXMLBillAddressType.setCountry(contact.getAddress().getCountryCode());
@@ -187,7 +187,7 @@ public class CustomerHandler {
 			if (isPrimaryShipping) {
 				//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
 				QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
-						qbXMLShipAddressType, contact.getAddress().getAddress1()); 
+						qbXMLShipAddressType, contact.getAddress()); 
 				qbXMLShipAddressType.setCity(contact.getAddress().getCityOrTown());
 				qbXMLShipAddressType.setState(contact.getAddress().getStateOrProvince());
 				qbXMLShipAddressType.setCountry(contact.getAddress().getCountryCode());
@@ -200,7 +200,7 @@ public class CustomerHandler {
 			CustomerContact cc = cust.getContacts().get(0);
 			//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
 			QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
-					qbXMLShipAddressType, cc.getAddress().getAddress1());
+					qbXMLShipAddressType, cc.getAddress());
 			qbXMLShipAddressType.setCity(cc.getAddress().getCityOrTown());
 			qbXMLShipAddressType.setState(cc.getAddress().getStateOrProvince());
 			qbXMLShipAddressType.setCountry(cc.getAddress().getCountryCode());
@@ -212,7 +212,7 @@ public class CustomerHandler {
 			CustomerContact cc = cust.getContacts().get(0);
 			//Akshay 19-nov-14 - fix to cover data length difference between qb and mozu
 			QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
-					qbXMLBillAddressType, cc.getAddress().getAddress1());
+					qbXMLBillAddressType, cc.getAddress());
 			qbXMLBillAddressType.setCity(cc.getAddress().getCityOrTown());
 			qbXMLBillAddressType.setState(cc.getAddress().getStateOrProvince());
 			qbXMLBillAddressType.setCountry(cc.getAddress().getCountryCode());

@@ -610,19 +610,12 @@ public class OrderHandler {
 	private BillAddress getBillAddress(Address address) {
 		BillAddress billAddress = new BillAddress();
 		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
+		//Akshay 12-Dec-2014 - per request, need to join all 4 mozu addresses and then slice them up.
 		QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
-				billAddress, address.getAddress1());
+				billAddress, address);
 		//billAddress.setAddr1(address.getAddress1());
 		//prevent addr2 set up above from getting spoiled
-		if(!StringUtils.isEmpty(address.getAddress2())) {
-			billAddress.setAddr2(address.getAddress2());
-		}
-		if(!StringUtils.isEmpty(address.getAddress3())) {
-			billAddress.setAddr3(address.getAddress3());
-		}
-		if(!StringUtils.isEmpty(address.getAddress4())) {
-			billAddress.setAddr4(address.getAddress4());
-		}
+		//Akshay 12-Dec-2014 -- removed address 2, 3 and 4 setting since now those get set in above method
 		
 		billAddress.setCity(address.getCityOrTown());
 		billAddress.setState(address.getStateOrProvince());
@@ -636,18 +629,10 @@ public class OrderHandler {
 		ShipAddress shipAddress = new ShipAddress();
 		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
 		QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
-				shipAddress, address.getAddress1());
+				shipAddress, address);
 		//shipAddress.setAddr1(address.getAddress1());
 		//prevent addr2 set up above from getting spoiled
-		if(!StringUtils.isEmpty(address.getAddress2())) {
-			shipAddress.setAddr2(address.getAddress2());
-		}
-		if(!StringUtils.isEmpty(address.getAddress3())) {
-			shipAddress.setAddr3(address.getAddress3());
-		}
-		if(!StringUtils.isEmpty(address.getAddress4())) {
-			shipAddress.setAddr4(address.getAddress4());
-		}
+		//Akshay 12-Dec-2014 -- removed address 2, 3 and 4 setting since now those get set in above method
 		
 		shipAddress.setCity(address.getCityOrTown());
 		shipAddress.setState(address.getStateOrProvince());

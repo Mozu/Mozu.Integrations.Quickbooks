@@ -5,12 +5,14 @@ package com.mozu.qbintegration.utils;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.mozu.api.contracts.core.Address;
 import com.mozu.qbintegration.model.qbmodel.allgen.BillAddress;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
 
 /**
  * Util class for any current or future data related trimming/slicing
  * operations between mozu and quickbooks. 
+ * 
  * @author Akshay
  *
  */
@@ -29,13 +31,14 @@ public final class QBDataValidationUtil {
 	 * Populate multiple address lines based on mozu address line 1 length.
 	 * 
 	 * @param qbXMLBillAddressType
-	 * @param mozuAddrLine1
+	 * @param mozuAddressLines
 	 */
 	public static void populateQBBillToAddrFromMozuAddr(BillAddress qbXMLBillAddressType,
-			String mozuAddrLine1) {
-		if(!StringUtils.isEmpty(mozuAddrLine1)) {
+			Address mozuBillAddress) {
+		String mozuAddressLines = getConcatMozuAddress(mozuBillAddress);
+		if(!StringUtils.isEmpty(mozuAddressLines)) {
 			
-			String readyToUseStr = getAddressSplitOnSpace(mozuAddrLine1, QB_ADDR_FIELD_SIZE);
+			String readyToUseStr = getAddressSplitOnSpace(mozuAddressLines, QB_ADDR_FIELD_SIZE);
 			String[] lineSplit = readyToUseStr.split(DELIMITER);
 			
 			//usual scenario
@@ -69,10 +72,11 @@ public final class QBDataValidationUtil {
 	 * @param mozuAddrLine1
 	 */
 	public static void populateQBShipToAddrFromMozuAddr(ShipAddress qbXMLShipAddressType,
-			String mozuAddrLine1) {
-		if(!StringUtils.isEmpty(mozuAddrLine1)) {
+			Address mozuShipAddress) {
+		String mozuAddressLines = getConcatMozuAddress(mozuShipAddress);
+		if(!StringUtils.isEmpty(mozuAddressLines)) {
 			
-			String readyToUseStr = getAddressSplitOnSpace(mozuAddrLine1, QB_ADDR_FIELD_SIZE);
+			String readyToUseStr = getAddressSplitOnSpace(mozuAddressLines, QB_ADDR_FIELD_SIZE);
 			String[] lineSplit = readyToUseStr.split(DELIMITER);
 			
 			//usual scenario
@@ -120,6 +124,29 @@ public final class QBDataValidationUtil {
 	        lineLen += word.length();
 	    }
 	    return output.toString();
+	}
+	
+	/**
+	 * util to get mozu addresses separated by space, only if those are not null or empty
+	 * 
+	 * @param address
+	 * @return join of all 4 mozu addresses based on values
+	 */
+	public static String getConcatMozuAddress (Address address) {
+		StringBuilder concatMozuAddr = new StringBuilder();
+		if(!StringUtils.isEmpty(address.getAddress1())) {
+			concatMozuAddr.append(address.getAddress1()).append(SPACE_SEPARATOR);
+		}
+		if(!StringUtils.isEmpty(address.getAddress2())) {
+			concatMozuAddr.append(address.getAddress2()).append(SPACE_SEPARATOR);
+		}
+		if(!StringUtils.isEmpty(address.getAddress3())) {
+			concatMozuAddr.append(address.getAddress3()).append(SPACE_SEPARATOR);
+		}
+		if(!StringUtils.isEmpty(address.getAddress4())) {
+			concatMozuAddr.append(address.getAddress4()).append(SPACE_SEPARATOR);
+		}
+		return concatMozuAddr.toString().trim();
 	}
 
 }
