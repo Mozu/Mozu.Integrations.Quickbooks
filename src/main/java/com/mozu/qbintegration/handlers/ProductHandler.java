@@ -51,6 +51,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemPaymentRet;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.ItemServiceRet;
+import com.mozu.qbintegration.model.qbmodel.allgen.PrefVendorRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
@@ -425,6 +426,13 @@ public class ProductHandler {
 		inventoryAdd.setPurchaseDesc(productToQuickbooks.getItemPurchaseDesc());
 		inventoryAdd.setPurchaseCost(numberFormat.format(Double
 				.valueOf(productToQuickbooks.getItemPurchaseCost())));
+		
+		//Akshay 19-nov-2014 - pref vendor add - was never added I guess
+		if(!StringUtils.isEmpty(productToQuickbooks.getSelectedVendor())) {
+			PrefVendorRef prefVendor = new PrefVendorRef();
+			prefVendor.setFullName(productToQuickbooks.getSelectedVendor());
+			inventoryAdd.setPrefVendorRef(prefVendor);
+		}
 
 		return xmlHelper.getMarshalledValue(qbxml);
 	}
@@ -539,7 +547,7 @@ public class ProductHandler {
 			}
 			
 			String taxCode = null;
-			if (item.getItemTaxTotal() > 0.0) 
+			if (item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) 
 				taxCode = "Tax";
 			else
 				taxCode = "Non";
@@ -578,11 +586,11 @@ public class ProductHandler {
 		if (order.getTaxTotal() > 0.0)
 			taxCode = "Tax";
 		
-		if (order.getShippingTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
+		if (order.getShippingSubTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getShippingProductCode());
 			mzItem.setQbItemCode(shippingProductCode);
-			mzItem.setAmount(order.getShippingSubTotal());
+			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
 			mzItem.setMisc(true);
 			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);

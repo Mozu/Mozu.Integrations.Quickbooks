@@ -99,9 +99,9 @@ var qbItem = function(itemNumber) {
 	var self = this;
     self.itemNameNumber = ko.observable(itemNumber);
     self.itemPurchaseDesc = ko.observable("");
-    self.itemPurchaseCost = ko.observable("");
+    self.itemPurchaseCost = ko.observable().extend({ numeric: 2 });
     self.itemSalesDesc = ko.observable("");
-    self.itemSalesPrice = ko.observable("");
+    self.itemSalesPrice = ko.observable().extend({ numeric: 2 });
     self.itemManuPartNum = ko.observable("");
     self.selectedChoice = ko.observable();
     self.itemTaxCode = ko.observable();
@@ -125,6 +125,35 @@ var dataType = function(id,name) {
 	this.name = ko.observable(name);
 }
 
+
+ko.extenders.numeric = function(target, precision) {
+    //create a writable computed observable to intercept writes to our observable
+    var result = ko.computed({
+        read: target,  //always return the original observable's value
+        write: function(newValue) {
+            var current = target(),
+                roundingMultiplier = Math.pow(10, precision),
+                newValueAsNum = isNaN(newValue) ? 0 : parseFloat(+newValue),
+                valueToWrite = Math.round(newValueAsNum * roundingMultiplier) / roundingMultiplier;
+ 
+            //only write if it changed
+            if (valueToWrite !== current) {
+                target(valueToWrite);
+            } else {
+                //if the rounded value is the same, but a different value was written, force a notification for the current field
+                if (newValue !== current) {
+                    target.notifySubscribers(valueToWrite);
+                }
+            }
+        }
+    }).extend({ notify: 'always' });
+ 
+    //initialize with current value to make sure it is rounded appropriately
+    result(target());
+ 
+    //return the new computed observable
+    return result;
+};
 
 
 var homeViewModel = function() {
@@ -365,12 +394,23 @@ var homeViewModel = function() {
 								self.showDownload(true);
 						}
 								
-						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );
+
 						self.mozuPayments.push(new mozuPayment("Amex", "American Express") );
-						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
 						self.mozuPayments.push(new mozuPayment("Check", "Check"));
 						self.mozuPayments.push(new mozuPayment("Discover", "Discover"));
+						self.mozuPayments.push(new mozuPayment("Delta", "Delta"));
+						self.mozuPayments.push(new mozuPayment("Diners", "Diners"));
+						self.mozuPayments.push(new mozuPayment("Electron", "Electron"));
+						self.mozuPayments.push(new mozuPayment("FirePay", "FirePay"));
+						self.mozuPayments.push(new mozuPayment("JCB", "JCB"));
+						self.mozuPayments.push(new mozuPayment("Laser", "Laser"));
+						self.mozuPayments.push(new mozuPayment("Maestro", "Maestro"));
+						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
+						self.mozuPayments.push(new mozuPayment("PaypalExpress", "PaypalExpress"));
+						self.mozuPayments.push(new mozuPayment("Solo", "Solo"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
+						self.mozuPayments.push(new mozuPayment("Switch", "Switch"));
+						self.mozuPayments.push(new mozuPayment("Visa", "Visa") );						
 						
 						self.dataTypes.push(new dataType("account", "Accounts"));
 						self.dataTypes.push(new dataType("vendor", "Vendors"));

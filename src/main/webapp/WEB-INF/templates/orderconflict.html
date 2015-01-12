@@ -21,7 +21,7 @@
 										<thead>
 											<tr>
 												<th>
-													<input type="checkbox" />
+													<input type="checkbox" class="selectAllConflicts" onClick="selectAll('conflictCheck', 'selectAllConflicts')" />
 												</th>
 												<th><p th:text="#{label.order}"></p></th>
 												<th><p th:text="#{label.customerName}"></p></th>
@@ -104,7 +104,7 @@
 							<input type="text" data-bind="value: itemToFix.itemNameNumber" class="tab-field"></input>
 							<label class="tab-field-label" for="field">Description on Purchase Transactions:</label>
 							<input type="text" data-bind="value: itemToFix.itemPurchaseDesc" class="tab-field" ></input>
-							<label class="tab-field-label" for="field">Cost:</label>
+							<label class="tab-field-label" for="field">Cost :</label>
 							<input type="text" data-bind="value: itemToFix.itemPurchaseCost" class="tab-field" ></input>
 							<label class="tab-field-label" for="field">Sales Information:</label>
 							<input type="text" data-bind="value: itemToFix.itemSalesDesc" class="tab-field" ></input>
@@ -122,7 +122,7 @@
 							<label class="tab-field-label" for="field">Income Account:</label>
 							<select data-bind="options: availableAccounts, value: itemToFix.itemIncomeAccount, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
 							<label class="tab-field-label" for="field">Preferred Vendor:</label>
-							<select data-bind="options: availableVendors, value: itemToFix.selectedVendor, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
+							<select data-bind="options: availableVendors, optionsCaption: 'Please select a vendor', value: itemToFix.selectedVendor, optionsText: 'fullName', optionsValue: 'fullName'"  class="dropdown"></select>
 						</div>
 					</div>
 					<div>
