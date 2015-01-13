@@ -44,6 +44,8 @@
 			                 <span class="link" id="cancelsTab" data-bind="click: getOrdersCancelled" data-toggle="tab" data-tab-id="cancelledDivTab">Cancels</span>
 			                  &nbsp;|&nbsp;
 			                 <span class="link" id="queueTab" data-bind="click: getOrdersQueue" data-toggle="tab" data-tab-id="orderQueueDivTab">Pending</span>
+			                  &nbsp;|&nbsp;
+			                 <span class="link" id="errorTab" data-bind="click: getErroredOrders" data-toggle="tab" data-tab-id="errorOrderDivTab">Error</span>
 							<a class="help-icon-link" style="margin-top:0px;" href="http://mozu.github.io/IntegrationDocuments/QuickBooks/Mozu-QuickBooks-App.htm" target="_helpTab"> 
 							    <img class="help-icon" src="images/help-icon.png" alt="Help"></img>
 							</a>
@@ -67,6 +69,9 @@
 					</div>
 					<div class="tab-section template" style="display: none" id="orderQueueDivTab">
 						<div th:include="orderqueue :: content"></div>
+					</div>
+					<div class="tab-section template" style="display: none" id="errorOrderDivTab">
+						<div th:include="erroredorder :: content"></div>
 					</div>
 				</div>
 				<input type="hidden" id="tenantIdHdn" th:value="${tenantId}"></input>
