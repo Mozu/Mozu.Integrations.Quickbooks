@@ -191,6 +191,9 @@ public class ProductHandler {
 						mozuProduct.setProductCode(productName);
 						mozuProduct.setQbProductListID(productQbListID);
 						mozuProduct.setProductName(productName);
+						//Akshay fix for GFT payment type. All products to have respective QB item type
+						mozuProduct.setProductType(object.getClass().getSimpleName());
+						
 						saveAllProductInEntityList(mozuProduct, tenantId);
 						logger.debug("Saved product through refresh all: "+ productName);
 					}
@@ -507,6 +510,7 @@ public class ProductHandler {
 		String qbDiscProductCode = null;
 		String shippingProductCode = null;
 		String giftCardProductCode = null;
+		String adjustProductCode = null; // Akshay - fix for Adjustments
 		
 		GeneralSettings settings = quickbooksService
 				.getSettingsFromEntityList(tenantId);
@@ -521,9 +525,14 @@ public class ProductHandler {
 			if (StringUtils.isNotEmpty(settings.getGiftCardProductCode()))
 				giftCardProductCode = getQBId(tenantId,	settings.getGiftCardProductCode());
 			
+			if (StringUtils.isNotEmpty(settings.getAdjustProductCode()))
+				adjustProductCode = getQBId(tenantId, settings.getAdjustProductCode());
+			
 		}
 		
 		double qbDiscount = 0.0; // this sums up all item discounts
+		double adjustment = 0.0; //Akshay - to track adjustment
+		
 		for(OrderItem item : order.getItems()) {
 			
 			String productCode = null;
@@ -602,10 +611,10 @@ public class ProductHandler {
 			}
 		}
 		
+		//Akshay modified - do not add adjustments to discounts. We will track under separate product
 		if (order.getAdjustment() != null
-				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			qbDiscount += -(order.getAdjustment().getAmount());
-			
+				&& StringUtils.isNotEmpty(settings.getAdjustProductCode())) {
+			adjustment += (order.getAdjustment().getAmount());
 		}
 		
 		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && order.getShippingDiscounts() != null) {
@@ -614,9 +623,10 @@ public class ProductHandler {
 			}
 		}
 
+		//Akshay modified - do not add adjustments to discounts. We will track under separate product
 		if (order.getShippingAdjustment() != null
-				&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			qbDiscount += -(order.getShippingAdjustment().getAmount());
+				&& StringUtils.isNotEmpty(settings.getAdjustProductCode())) {			
+			adjustment += (order.getShippingAdjustment().getAmount());
 		}
 		
 		if (qbDiscount != 0.0) {
@@ -624,6 +634,17 @@ public class ProductHandler {
 			mzItem.setProductCode(settings.getDiscountProductCode());
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
+			mzItem.setMisc(true);
+			mzItem.setTaxCode(taxCode);
+			productCodes.add(mzItem);
+		}
+		
+		//Akshay - now add to the productCodes array
+		if (adjustment != 0.0) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode(settings.getAdjustProductCode());
+			mzItem.setQbItemCode(adjustProductCode);
+			mzItem.setAmount(adjustment);
 			mzItem.setMisc(true);
 			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
