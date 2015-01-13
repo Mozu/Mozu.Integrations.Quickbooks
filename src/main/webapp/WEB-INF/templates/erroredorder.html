@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+</head>
+<body>
+
+	<div th:fragment="content">
+
+
+		<table width="100%">
+			<tr>
+				<td>
+					<table id="erroredOrdersTable" class="display" cellspacing="0"	width="100%">
+						<thead>
+							<tr>
+								<th><p>Create Date</p></th>
+								<th><p>Status</p></th>
+					            <th><p>Type</p></th>
+					            <th><p>Action</p></th>
+					            <th><p>Current Step</p></th>					
+					            <th><p>Id</p></th>
+							</tr>
+						</thead>
+					</table>
+				</td>
+			</tr>
+		</table>
+
+	</div>
+</body>
+
+</html>

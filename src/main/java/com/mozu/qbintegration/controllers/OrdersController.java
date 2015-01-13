@@ -188,13 +188,14 @@ public class OrdersController {
 	String getOrdersQueue(HttpServletRequest httpRequest,
 			@RequestParam(value = "iDisplayStart") String iDisplayStart,
 			@RequestParam(value = "iDisplayLength") String iDisplayLength,
-			@RequestParam(value = "tenantId") Integer tenantId) throws Exception {	
+			@RequestParam(value = "tenantId") Integer tenantId,
+			@RequestParam(value = "status") String status) throws Exception {	
 		
 		int dispStartIdx = Integer.parseInt(iDisplayStart);
 		int dispLength = Integer.parseInt(iDisplayLength);
 		//EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", dispStartIdx, dispLength);
 		//Akshay - get all tasks currently in queue. Even error so we know things are failing.
-		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), null, "createDate", dispStartIdx, dispLength);
+		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status eq "+status, "createDate", dispStartIdx, dispLength);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		OrderQueueDataTable dataTable = new OrderQueueDataTable();
 		if(collection.getItems().size() > 0) {
@@ -233,7 +234,7 @@ public class OrdersController {
 		try {
 			value = mapper.writeValueAsString(conflictDetails);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 			value = "";
 		}
 		return value;
