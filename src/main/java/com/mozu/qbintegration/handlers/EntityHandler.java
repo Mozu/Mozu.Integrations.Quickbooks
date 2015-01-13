@@ -189,6 +189,7 @@ public class EntityHandler {
 		entityList.setIdProperty(getIndexedProperty("productCode", "string"));
 		entityList.setIndexA(getIndexedProperty("qbProdustListID", "string"));
 		entityList.setIndexB(getIndexedProperty("productName", "string"));
+		entityList.setIndexC(getIndexedProperty("productType", "string"));//Akshay 08-Jan-2014 - add product type from QB
 		entityList.setIsVisibleInStorefront(Boolean.TRUE);
 		entityList.setIsLocaleSpecific(false);
 		entityList.setIsSandboxDataCloningSupported(Boolean.TRUE);

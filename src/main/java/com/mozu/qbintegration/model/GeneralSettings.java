@@ -31,6 +31,9 @@ public class GeneralSettings {
 	
 	private String giftCardProductCode;
 	
+	//Akshay - for adjustment product
+	private String adjustProductCode;
+	
 	private String orderSalesTaxCode;
 	
 	private String orderNonSalesTaxCode;
@@ -217,5 +220,19 @@ public class GeneralSettings {
     public void setTaxableStates(List<String> taxableStates) {
         this.taxableStates = taxableStates;
     }
+
+	/**
+	 * @return the adjustProductCode
+	 */
+	public String getAdjustProductCode() {
+		return adjustProductCode;
+	}
+
+	/**
+	 * @param adjustProductCode the adjustProductCode to set
+	 */
+	public void setAdjustProductCode(String adjustProductCode) {
+		this.adjustProductCode = adjustProductCode;
+	}
 }
 
