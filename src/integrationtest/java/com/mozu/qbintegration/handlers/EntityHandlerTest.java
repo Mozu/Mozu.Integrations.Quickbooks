@@ -80,9 +80,9 @@ public class EntityHandlerTest {
 //			runCleanup(entityHandler.getOrderPostedEntityName(), "enteredTime");
 //			runCleanup(entityHandler.getOrderCancelledEntityName(), "enteredTime");
 //			runCleanup(entityHandler.getLookupEntity(), "id");
-//			runCleanup(entityHandler.getLookupEntity(), "mozuId");
+			runCleanup(entityHandler.getLookupEntity(), "mozuId");
 //			runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
-			runCleanup(entityHandler.getProductEntityName(), "productCode");
+//			runCleanup(entityHandler.getProductEntityName(), "productCode");
 			*/
 		} catch(Exception exc) {
 			fail(exc.getMessage());
@@ -109,16 +109,15 @@ public class EntityHandlerTest {
 		try {
 			EntityListResource entityListResource = new EntityListResource(new MozuApiContext(tenantId));
 			
-//			entityListResource.deleteEntityList(entityHandler.getCustomerEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getOrderConflictEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getOrderEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getOrderUpdatedEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getProdctAddEntity());
-//			entityListResource.deleteEntityList(entityHandler.getTaskqueueEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
-//			entityListResource.deleteEntityList(entityHandler.getLookupEntity());
-//			entityListResource.deleteEntityList(entityHandler.getMappingEntity());
-//			entityListResource.deleteEntityList(entityHandler.getProductEntityName());
+			entityListResource.deleteEntityList(entityHandler.getCustomerEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderConflictEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderEntityName());
+			entityListResource.deleteEntityList(entityHandler.getOrderUpdatedEntityName());
+			entityListResource.deleteEntityList(entityHandler.getProdctAddEntity());
+			entityListResource.deleteEntityList(entityHandler.getTaskqueueEntityName());
+			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
+			entityListResource.deleteEntityList(entityHandler.getLookupEntity());
+			entityListResource.deleteEntityList(entityHandler.getMappingEntity());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
