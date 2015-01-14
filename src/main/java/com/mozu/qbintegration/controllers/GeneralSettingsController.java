@@ -16,6 +16,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -48,6 +50,8 @@ public class GeneralSettingsController implements ServletContextAware {
 	@Autowired
 	private EncryptDecryptHandler encryptDecryptHandler;
 	
+	private static final Logger logger = LoggerFactory
+			.getLogger(GeneralSettingsController.class);
 
 	
 	@Value("${webserviceName}")
@@ -126,7 +130,8 @@ public class GeneralSettingsController implements ServletContextAware {
 
 			fileContent = writer.toString();
 		} catch (JAXBException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
+			throw e;
 		}
 		JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(false);
 		ObjectNode node = jsonNodeFactory.objectNode();
@@ -161,7 +166,9 @@ public class GeneralSettingsController implements ServletContextAware {
 			out.write(fileContent);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			logger.error(e.getMessage(), e);
+			throw e;
 		} finally {
 			out.flush();
 			out.close();
