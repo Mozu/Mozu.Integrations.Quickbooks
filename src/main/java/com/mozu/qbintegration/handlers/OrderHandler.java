@@ -490,21 +490,21 @@ public class OrderHandler {
 	
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
-		boolean isStoreCreditPayment = false; //Set to true if paid through StoreCredit. Return null in that case so no paymentref is set.
+		
+		int paymentSize = order.getPayments().size(); //Any size > 1 would force not having storecredit as paymenttype.
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
 			
 			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType())) {
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			} else if (payment.getBillingInfo() != null && "storecredit".equalsIgnoreCase(payment.getBillingInfo().getPaymentType())) {
-				isStoreCreditPayment = true;
+			} else if (paymentSize > 1 && payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit")) { 
+				//Since if any of others exist, we need to show them, NOT storecredit.
+				continue; //just go to next payment or exit
 			} else {
-				paymentRef.setFullName(payment.getPaymentType());
+				paymentRef.setFullName(payment.getPaymentType()); //entire storecredit is covered here.
 			}
 		}
-		if(isStoreCreditPayment) { //So we do not set any payment method ref above.
-			paymentRef = null; //so we return null at the end. avoiding multiple return statements
-		}
+
 		if (null != paymentRef && StringUtils.isNotEmpty(paymentRef.getFullName())) {
 			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
 			if (mapping != null) {
