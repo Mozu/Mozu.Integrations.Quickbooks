@@ -45,7 +45,7 @@ public class EntityHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tenantId = 5872;
+		tenantId = 9142;
 	}
 
 	@After
@@ -74,7 +74,7 @@ public class EntityHandlerTest {
 //			runCleanup(entityHandler.getLookupEntity(), "id");
 //			runCleanup(entityHandler.getOrderPostedEntityName(), "enteredTime");
 //			runCleanup(entityHandler.getOrderCancelledEntityName(), "enteredTime");
-			runCleanup(entityHandler.getLookupEntity(), "id");
+//			runCleanup(entityHandler.getLookupEntity(), "id");
 //			runCleanup(entityHandler.getLookupEntity(), "mozuId");
 //			runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
 			runCleanup(entityHandler.getProductEntityName(), "productCode");
@@ -113,7 +113,7 @@ public class EntityHandlerTest {
 //			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
 //			entityListResource.deleteEntityList(entityHandler.getLookupEntity());
 //			entityListResource.deleteEntityList(entityHandler.getMappingEntity());
-			entityListResource.deleteEntityList(entityHandler.getProductEntityName());
+//			entityListResource.deleteEntityList(entityHandler.getProductEntityName());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

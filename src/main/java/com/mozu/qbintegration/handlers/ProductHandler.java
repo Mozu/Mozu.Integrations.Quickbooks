@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mozu.api.MozuApiContext;
+import com.mozu.api.contracts.commerceruntime.commerce.CommerceUnitPrice;
 import com.mozu.api.contracts.commerceruntime.discounts.AppliedDiscount;
 import com.mozu.api.contracts.commerceruntime.discounts.AppliedLineItemProductDiscount;
 import com.mozu.api.contracts.commerceruntime.discounts.ShippingDiscount;
@@ -66,6 +67,9 @@ public class ProductHandler {
 	private static final Logger logger = LoggerFactory
 			.getLogger(ProductHandler.class);
 	private static ObjectMapper mapper = JsonUtils.initObjectMapper();
+	
+	private static final String QB_ID = "qbProdustListID";
+	private static final String PROD_TYPE = "productType";
 
 	@Autowired
 	EntityHandler entityHandler;
@@ -79,7 +83,7 @@ public class ProductHandler {
     @Autowired
     XMLService xmlHelper;
     
-	public String getQBId(Integer tenantId, String productCode)
+	public String getQBProductValue(Integer tenantId, String productCode, String valueToFind)
 			throws Exception {
 		
 		String qbListID = null;
@@ -87,7 +91,7 @@ public class ProductHandler {
 				entityHandler.getProductEntityName(), productCode);
 		if (node == null)
 			return qbListID;
-		JsonNode result = node.findValue("qbProdustListID");
+		JsonNode result = node.findValue(valueToFind);
 		if (result != null) {
 			qbListID = result.asText();
 		}
@@ -192,6 +196,7 @@ public class ProductHandler {
 						mozuProduct.setQbProductListID(productQbListID);
 						mozuProduct.setProductName(productName);
 						//Akshay fix for GFT payment type. All products to have respective QB item type
+
 						mozuProduct.setProductType(object.getClass().getSimpleName());
 						
 						saveAllProductInEntityList(mozuProduct, tenantId);
@@ -259,7 +264,7 @@ public class ProductHandler {
 			product.setProductCode(invAddResponse.getItemInventoryRet()
 					.getFullName());
 			product.setName(invAddResponse.getItemInventoryRet().getName());
-			saveProductInEntityList(item, itemListId, tenantId);
+			saveProductInEntityList(item, itemListId, null, tenantId);
 	
 			logger.debug("Added new product to quickbooks: "
 					+ invAddResponse.getItemInventoryRet().getName());
@@ -273,7 +278,7 @@ public class ProductHandler {
 	}
 	
 	private void saveProductInEntityList(OrderItem orderItem,
-			String qbProdustListID, Integer tenantId) {
+			String qbProdustListID, String productType, Integer tenantId) {
 
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode custNode = nodeFactory.objectNode();
@@ -281,6 +286,7 @@ public class ProductHandler {
 		custNode.put("productCode", orderItem.getProduct().getProductCode());
 		custNode.put("qbProdustListID", qbProdustListID);
 		custNode.put("productName", orderItem.getProduct().getName());
+		custNode.put("productType", productType);
 
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
@@ -313,6 +319,7 @@ public class ProductHandler {
 		prodNode.put("productCode", product.getProductCode());
 		prodNode.put("qbProdustListID", product.getQbProductListID());
 		prodNode.put("productName", product.getProductName());
+		prodNode.put("productType", product.getProductType()); //Akshay - added to save additional product type
 
 		OrderItem orderItem = new OrderItem();
 		Product productItem = new Product();
@@ -320,7 +327,7 @@ public class ProductHandler {
 
 		orderItem.setProduct(productItem);
 
-		String qbListID = getQBId(tenantId, product.getProductCode());
+		String qbListID = getQBProductValue(tenantId, product.getProductCode(), QB_ID);
 
 		// Add the mapping entry
 		JsonNode rtnEntry = null;
@@ -357,7 +364,11 @@ public class ProductHandler {
 		
 		if(!items.isEmpty()) {
 			String qbProdustListID = ((JsonNode) items.get(0)).get("qbProdustListID").asText();
-			saveProductInEntityList(orderItem, qbProdustListID, tenantId);
+			JsonNode prodTypeNode = ((JsonNode) items.get(0)).get("productType");
+			String productType = prodTypeNode == null ? null : 
+				prodTypeNode.asText();
+			//saveProductInEntityList(orderItem, qbProdustListID, tenantId);
+			saveProductInEntityList(orderItem, qbProdustListID, productType, tenantId);
 			
 			logger.debug((new StringBuilder())
 					.append("Saved mapping of a not found item ")
@@ -517,16 +528,16 @@ public class ProductHandler {
 
 		if (queryQBProduct) {
 			if (StringUtils.isNotEmpty(settings.getDiscountProductCode()))
-				qbDiscProductCode = getQBId(tenantId, settings.getDiscountProductCode());
+				qbDiscProductCode = getQBProductValue(tenantId, settings.getDiscountProductCode(), QB_ID);
 
 			if (StringUtils.isNotEmpty(settings.getShippingProductCode()))
-				shippingProductCode = getQBId(tenantId,	settings.getShippingProductCode());
+				shippingProductCode = getQBProductValue(tenantId,	settings.getShippingProductCode(), QB_ID);
 			
 			if (StringUtils.isNotEmpty(settings.getGiftCardProductCode()))
-				giftCardProductCode = getQBId(tenantId,	settings.getGiftCardProductCode());
+				giftCardProductCode = getQBProductValue(tenantId,	settings.getGiftCardProductCode(), QB_ID);
 			
 			if (StringUtils.isNotEmpty(settings.getAdjustProductCode()))
-				adjustProductCode = getQBId(tenantId, settings.getAdjustProductCode());
+				adjustProductCode = getQBProductValue(tenantId, settings.getAdjustProductCode(), QB_ID);
 			
 		}
 		
@@ -547,12 +558,23 @@ public class ProductHandler {
 			mzItem.setProductCode(productCode);
 			mzItem.setDescription(item.getProduct().getName());
 			if (queryQBProduct)
-				mzItem.setQbItemCode(this.getQBId(tenantId, productCode));
+				mzItem.setQbItemCode(this.getQBProductValue(tenantId, productCode, QB_ID));
 			
+			//Akshay - set amount to -ve if product is of type ItemNonInventoryRet
+			boolean isNonInventoryRet = "ItemNonInventoryRet".equalsIgnoreCase(getQBProductValue(tenantId, productCode, PROD_TYPE));
+			CommerceUnitPrice unitPrice = item.getUnitPrice();
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				mzItem.setAmount(item.getUnitPrice().getSaleAmount());
+				if (isNonInventoryRet) {
+					mzItem.setAmount(-unitPrice.getSaleAmount()); //Set amount as -ve
+				} else {
+					mzItem.setAmount(unitPrice.getSaleAmount());
+				}
 			} else {
-				mzItem.setAmount(item.getUnitPrice().getListAmount());
+				if (isNonInventoryRet) {
+					mzItem.setAmount(-unitPrice.getListAmount()); //Set amount as -ve
+				} else {
+					mzItem.setAmount(unitPrice.getListAmount());
+				}
 			}
 			
 			String taxCode = null;
@@ -575,7 +597,7 @@ public class ProductHandler {
 
 					mzItem.setProductCode(bProduct.getProductCode());
 					if (queryQBProduct)
-						mzItem.setQbItemCode(getQBId(tenantId,bProduct.getProductCode()));
+						mzItem.setQbItemCode(getQBProductValue(tenantId,bProduct.getProductCode(), QB_ID));
 					mzItem.setDescription(bProduct.getName());
 					mzItem.setAmount(0.0);
 					mzItem.setTaxCode(taxCode);
@@ -657,7 +679,16 @@ public class ProductHandler {
 					MozuOrderItem mzItem = new MozuOrderItem();
 					mzItem.setProductCode(settings.getGiftCardProductCode());
 					mzItem.setQbItemCode(giftCardProductCode);
-					mzItem.setAmount(payment.getAmountCollected());
+					
+					//Akshay -- now if GFT or any gift product per say is created as a non inventory part, set the amount negative
+					// Just like how we are setting unit price for OrderItems above.
+					boolean isNonInventoryRet = "ItemNonInventoryRet".
+							equalsIgnoreCase(getQBProductValue(tenantId, settings.getGiftCardProductCode(), PROD_TYPE));
+					if(isNonInventoryRet) {
+						mzItem.setAmount(-payment.getAmountCollected()); //Set the amount as negative.
+					} else {
+						mzItem.setAmount(payment.getAmountCollected());
+					}
 					mzItem.setMisc(true);
 					mzItem.setDescription(payment.getBillingInfo().getStoreCreditCode());
 					//mzItem.setTaxCode("Non");
@@ -668,5 +699,6 @@ public class ProductHandler {
 		
 		return productCodes;
 	}
+
 }
 

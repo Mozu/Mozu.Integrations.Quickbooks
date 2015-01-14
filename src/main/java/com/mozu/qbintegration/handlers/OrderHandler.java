@@ -347,7 +347,10 @@ public class OrderHandler {
 		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
 			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		
-		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptAdd.setPaymentMethodRef(paymentMethod);
+		}
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
@@ -423,7 +426,12 @@ public class OrderHandler {
 			salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
-		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
+		
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptmod.setPaymentMethodRef(paymentMethod);
+		}
+		
 		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
@@ -482,16 +490,22 @@ public class OrderHandler {
 	
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
+		boolean isStoreCreditPayment = false; //Set to true if paid through StoreCredit. Return null in that case so no paymentref is set.
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
 			
-			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType()))
+			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType())) {
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			else
+			} else if (payment.getBillingInfo() != null && "storecredit".equalsIgnoreCase(payment.getBillingInfo().getPaymentType())) {
+				isStoreCreditPayment = true;
+			} else {
 				paymentRef.setFullName(payment.getPaymentType());
+			}
 		}
-		
-		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
+		if(isStoreCreditPayment) { //So we do not set any payment method ref above.
+			paymentRef = null; //so we return null at the end. avoiding multiple return statements
+		}
+		if (null != paymentRef && StringUtils.isNotEmpty(paymentRef.getFullName())) {
 			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
 			if (mapping != null) {
 				paymentRef.setFullName(mapping.getQbData().getFullName());
