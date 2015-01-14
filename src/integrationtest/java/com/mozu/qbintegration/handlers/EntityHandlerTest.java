@@ -118,6 +118,7 @@ public class EntityHandlerTest {
 			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
 			entityListResource.deleteEntityList(entityHandler.getLookupEntity());
 			entityListResource.deleteEntityList(entityHandler.getMappingEntity());
+			entityListResource.deleteEntityList(entityHandler.getProductEntityName());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
