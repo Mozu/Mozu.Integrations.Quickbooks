@@ -66,7 +66,7 @@ public class EntityHandlerTest {
 	public void cleanupEntity() {
 
 		try {
-			//runCleanup(entityHandler.getOrderEntityName(), "refNumber");
+//			runCleanup(entityHandler.getOrderEntityName(), "refNumber");
 			runCleanup(entityHandler.getTaskqueueEntityName(), "id");
 			/*runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
 			runCleanup(entityHandler.getOrderConflictEntityName(), "id");
@@ -118,6 +118,7 @@ public class EntityHandlerTest {
 			entityListResource.deleteEntityList(entityHandler.getTaskqueueLogEntityName());
 			entityListResource.deleteEntityList(entityHandler.getLookupEntity());
 			entityListResource.deleteEntityList(entityHandler.getMappingEntity());
+			entityListResource.deleteEntityList(entityHandler.getProductEntityName());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

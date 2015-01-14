@@ -347,7 +347,10 @@ public class OrderHandler {
 		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
 			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		
-		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptAdd.setPaymentMethodRef(paymentMethod);
+		}
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
@@ -423,7 +426,12 @@ public class OrderHandler {
 			salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
-		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
+		
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptmod.setPaymentMethodRef(paymentMethod);
+		}
+		
 		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
@@ -482,16 +490,22 @@ public class OrderHandler {
 	
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
+		
+		int paymentSize = order.getPayments().size(); //Any size > 1 would force not having storecredit as paymenttype.
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
 			
-			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType()))
+			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType())) {
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			else
-				paymentRef.setFullName(payment.getPaymentType());
+			} else if (paymentSize > 1 && payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit")) { 
+				//Since if any of others exist, we need to show them, NOT storecredit.
+				continue; //just go to next payment or exit
+			} else {
+				paymentRef.setFullName(payment.getPaymentType()); //entire storecredit is covered here.
+			}
 		}
-		
-		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
+
+		if (null != paymentRef && StringUtils.isNotEmpty(paymentRef.getFullName())) {
 			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
 			if (mapping != null) {
 				paymentRef.setFullName(mapping.getQbData().getFullName());
