@@ -9,7 +9,7 @@ homeViewModel.prototype.getOrdersQueue = function() {
 		"bFilter" : false,
 		"bSort" : false,
 		"bInfo" : false,
-		"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val(),
+		"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val()+"&status=PENDING",
 		"aoColumns" : [
 			            {    
 		            	   "mData": "createDate",
@@ -37,6 +37,43 @@ homeViewModel.prototype.getOrdersQueue = function() {
 	$table.fnDraw();
 };
 
+
+homeViewModel.prototype.getErroredOrders = function() {
+	var self = this;
+	var $table = $('#erroredOrdersTable').dataTable({
+		"bProcessing" : true,
+		"bServerSide" : true,
+		"bDestroy"	: true,
+		"bFilter" : false,
+		"bSort" : false,
+		"bInfo" : false,
+		"sAjaxSource" : "Orders/getOrdersQueue?tenantId=" + $("#tenantIdHdn").val()+"&status=ERROR",
+		"aoColumns" : [
+			            {    
+		            	   "mData": "createDate",
+		            	   "mRender": function (data, type, row) {
+						    	return moment(data).format('YYYY-MM-DD HH:mm:ss');
+							}
+			            },
+			            {
+							"mData" : "status"
+						}, 
+						{
+							"mData" : "type"
+						}, 
+						{
+							"mData" : "action"
+						},
+						{
+							"mData" : "currentStep"
+						},
+						{
+							"mData" : "id"
+						}
+		            ]
+		});
+	$table.fnDraw();
+};
 
 homeViewModel.prototype.getOrdersCancelled = function() {
 	var self = this;

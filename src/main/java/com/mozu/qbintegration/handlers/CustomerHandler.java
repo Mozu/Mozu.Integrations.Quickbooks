@@ -76,7 +76,7 @@ public class CustomerHandler {
 		return qbListID;
 	}
 	
-	public void saveCustInEntityList(CustomerAccount custAcct,String customerListId, Integer tenantId) {
+	public void saveCustInEntityList(CustomerAccount custAcct,String customerListId, Integer tenantId) throws Exception {
 
 		JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
 		ObjectNode custNode = nodeFactory.objectNode();
@@ -96,9 +96,10 @@ public class CustomerHandler {
 			else
 				rtnEntry = entityResource.updateEntity(custNode, mapName,custAcct.getEmailAddress() );
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 			logger.error("Error saving customer in entity list: "
 					+ custAcct.getEmailAddress());
+			throw e;
 		}
 		logger.debug("Retrieved entity: " + rtnEntry);
 		logger.debug("Returning");
