@@ -492,17 +492,29 @@ public class OrderHandler {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
 		
 		int paymentSize = order.getPayments().size(); //Any size > 1 would force not having storecredit as paymenttype.
+		boolean areAllStoreCreditPayments = true; //for a condition where there are multiple store credit payments
+		String storeCreditPaymentName = null; // To store mozu name for StoreCredit since it might in future.
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
 			
 			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType())) {
+				
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			} else if (paymentSize > 1 && payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit")) { 
+				areAllStoreCreditPayments = false; //at least 1 non store credit payment.
+				
+			} else if (payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit")) { 
 				//Since if any of others exist, we need to show them, NOT storecredit.
+				storeCreditPaymentName = payment.getPaymentType();
 				continue; //just go to next payment or exit
 			} else {
 				paymentRef.setFullName(payment.getPaymentType()); //entire storecredit is covered here.
+				areAllStoreCreditPayments = false; //at least 1 non store credit payment
 			}
+		}
+		
+		//If all payments are storecredit, set storecredit
+		if(areAllStoreCreditPayments) {
+			paymentRef.setFullName(storeCreditPaymentName);
 		}
 
 		if (null != paymentRef && StringUtils.isNotEmpty(paymentRef.getFullName())) {
