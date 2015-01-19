@@ -657,7 +657,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(qbDiscount);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
