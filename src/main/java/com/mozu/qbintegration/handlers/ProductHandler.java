@@ -662,7 +662,7 @@ public class ProductHandler {
 		}
 		
 		//Akshay - now add to the productCodes array
-		if (adjustment != 0.0) {
+		if (adjustment != 0.0 && !StringUtils.isEmpty(adjustProductCode)) {
 			MozuOrderItem mzItem = new MozuOrderItem();
 			mzItem.setProductCode(settings.getAdjustProductCode());
 			mzItem.setQbItemCode(adjustProductCode);
