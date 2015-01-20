@@ -350,6 +350,16 @@ public class OrderStateHandler {
 		deleteConfictEntities(tenantId, orderId);
 	}
 	
+	private void deletePendingOrders(Integer tenantId, String orderId) throws Exception {
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "id eq "+orderId);
+		
+		for(JsonNode jNode : nodes) {
+			String id =  jNode.findValue("id").asText();
+			entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
+		}
+		//deleteConfictEntities(tenantId, orderId);
+	}
+	
 	private void deleteConfictEntities(Integer tenantId, String orderId) throws Exception {
 		List<JsonNode> conflictNodes = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderConflictDetailEntityName(), "orderId eq "+orderId, null, 200);
 		for(JsonNode conflictNode : conflictNodes) {
@@ -378,8 +388,7 @@ public class OrderStateHandler {
 			transitionState(entityId, tenantId, null, "Delete");
 			return true;
 		} else {
-			//throw new Exception("Did not find an order with id: " + entityId + " in POSTED or CONFLICT status. " +
-				//	"Tenant id: " + tenantId + ". So nothing to Cancel.");
+			deletePendingOrders(tenantId, entityId);
 			return false;
 		}
 		

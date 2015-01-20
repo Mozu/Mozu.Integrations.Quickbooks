@@ -347,7 +347,10 @@ public class OrderHandler {
 		if (order.getFulfillmentInfo() != null && order.getFulfillmentInfo().getFulfillmentContact() != null && order.getFulfillmentInfo().getFulfillmentContact().getAddress() != null)
 			salesReceiptAdd.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		
-		salesReceiptAdd.setPaymentMethodRef(getPayment(tenantId, order) );
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptAdd.setPaymentMethodRef(paymentMethod);
+		}
 		
 		salesReceiptAdd.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
 		
@@ -423,7 +426,12 @@ public class OrderHandler {
 			salesReceiptmod.setBillAddress(getBillAddress(order.getBillingInfo().getBillingContact().getAddress()));
 		salesReceiptmod.setShipAddress(getShipAddress(order.getFulfillmentInfo().getFulfillmentContact().getAddress()));
 		salesReceiptmod.setItemSalesTaxRef(getItemSalesTaxRef(order.getTaxTotal(), setting) );
-		salesReceiptmod.setPaymentMethodRef( getPayment(tenantId, order) );
+		
+		PaymentMethodRef paymentMethod = getPayment(tenantId, order);
+		if(null != paymentMethod) {
+			salesReceiptmod.setPaymentMethodRef(paymentMethod);
+		}
+		
 		salesReceiptModRqType.setSalesReceiptMod(salesReceiptmod);
 		
 		NumberFormat numberFormat = new DecimalFormat("#.00");
@@ -482,16 +490,34 @@ public class OrderHandler {
 	
 	private PaymentMethodRef getPayment(Integer tenantId, Order order) throws Exception {
 		PaymentMethodRef paymentRef = new PaymentMethodRef();
+		
+		int paymentSize = order.getPayments().size(); //Any size > 1 would force not having storecredit as paymenttype.
+		boolean areAllStoreCreditPayments = true; //for a condition where there are multiple store credit payments
+		String storeCreditPaymentName = null; // To store mozu name for StoreCredit since it might in future.
 		for(Payment payment : order.getPayments()) {
 			if (payment.getStatus().equalsIgnoreCase("voided")) continue;
 			
-			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType()))
+			if (payment.getBillingInfo().getCard() != null && !StringUtils.isEmpty(payment.getBillingInfo().getCard().getPaymentOrCardType())) {
+				
 				paymentRef.setFullName(payment.getBillingInfo().getCard().getPaymentOrCardType());
-			else
-				paymentRef.setFullName(payment.getPaymentType());
+				areAllStoreCreditPayments = false; //at least 1 non store credit payment.
+				
+			} else if (payment.getBillingInfo().getPaymentType().equalsIgnoreCase("storecredit")) { 
+				//Since if any of others exist, we need to show them, NOT storecredit.
+				storeCreditPaymentName = payment.getPaymentType();
+				continue; //just go to next payment or exit
+			} else {
+				paymentRef.setFullName(payment.getPaymentType()); //entire storecredit is covered here.
+				areAllStoreCreditPayments = false; //at least 1 non store credit payment
+			}
 		}
 		
-		if (StringUtils.isNotEmpty(paymentRef.getFullName())) {
+		//If all payments are storecredit, set storecredit
+		if(areAllStoreCreditPayments) {
+			paymentRef.setFullName(storeCreditPaymentName);
+		}
+
+		if (null != paymentRef && StringUtils.isNotEmpty(paymentRef.getFullName())) {
 			DataMapping mapping = qbDataHandler.getMapping(tenantId, paymentRef.getFullName(), "payment");
 			if (mapping != null) {
 				paymentRef.setFullName(mapping.getQbData().getFullName());
@@ -610,19 +636,12 @@ public class OrderHandler {
 	private BillAddress getBillAddress(Address address) {
 		BillAddress billAddress = new BillAddress();
 		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
+		//Akshay 12-Dec-2014 - per request, need to join all 4 mozu addresses and then slice them up.
 		QBDataValidationUtil.populateQBBillToAddrFromMozuAddr(
-				billAddress, address.getAddress1());
+				billAddress, address);
 		//billAddress.setAddr1(address.getAddress1());
 		//prevent addr2 set up above from getting spoiled
-		if(!StringUtils.isEmpty(address.getAddress2())) {
-			billAddress.setAddr2(address.getAddress2());
-		}
-		if(!StringUtils.isEmpty(address.getAddress3())) {
-			billAddress.setAddr3(address.getAddress3());
-		}
-		if(!StringUtils.isEmpty(address.getAddress4())) {
-			billAddress.setAddr4(address.getAddress4());
-		}
+		//Akshay 12-Dec-2014 -- removed address 2, 3 and 4 setting since now those get set in above method
 		
 		billAddress.setCity(address.getCityOrTown());
 		billAddress.setState(address.getStateOrProvince());
@@ -636,18 +655,10 @@ public class OrderHandler {
 		ShipAddress shipAddress = new ShipAddress();
 		//Akshay 19-Nov-2014 - Just trim addr line 1 to 
 		QBDataValidationUtil.populateQBShipToAddrFromMozuAddr(
-				shipAddress, address.getAddress1());
+				shipAddress, address);
 		//shipAddress.setAddr1(address.getAddress1());
 		//prevent addr2 set up above from getting spoiled
-		if(!StringUtils.isEmpty(address.getAddress2())) {
-			shipAddress.setAddr2(address.getAddress2());
-		}
-		if(!StringUtils.isEmpty(address.getAddress3())) {
-			shipAddress.setAddr3(address.getAddress3());
-		}
-		if(!StringUtils.isEmpty(address.getAddress4())) {
-			shipAddress.setAddr4(address.getAddress4());
-		}
+		//Akshay 12-Dec-2014 -- removed address 2, 3 and 4 setting since now those get set in above method
 		
 		shipAddress.setCity(address.getCityOrTown());
 		shipAddress.setState(address.getStateOrProvince());

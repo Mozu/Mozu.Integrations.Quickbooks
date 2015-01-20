@@ -96,7 +96,8 @@ public class QBDataFetchController {
 		try {
 			value = mapper.writeValueAsString(mozuProductDetails);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
+			throw new RuntimeException(e);
 		}
 		return value;
 	}
