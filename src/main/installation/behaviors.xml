@@ -1,0 +1,12 @@
+<Behaviors xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://developer.mozu.com/v1">
+  <Behavior>Customer Read</Behavior>
+  <Behavior>Tenant Read</Behavior>
+  <Behavior>General Settings Read</Behavior>
+  <Behavior>Order Settings Read</Behavior>
+  <Behavior>Order Read</Behavior>
+  <Behavior>Application Status Read</Behavior>
+  <Behavior>Application Status Update</Behavior>
+  <Behavior>Create EntityList Definition</Behavior>
+  <Behavior>Update EntityList Definition</Behavior>
+  <Behavior>Delete EntityList Definition</Behavior>
+</Behaviors>

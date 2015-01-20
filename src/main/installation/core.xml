@@ -1,0 +1,9 @@
+<Core xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://developer.mozu.com/v1">
+  <DevAccountNamespace>a0842dd</DevAccountNamespace>
+  <Name>Mozu Quickbooks Application</Name>
+  <AppId>quickbooks</AppId>
+  <Version>1.0.1</Version>
+  <SharedSecret>fdb11e72cd3345409f48628eeaa27159</SharedSecret>
+  <MozuApiVersion>1.11.14247.0</MozuApiVersion>
+  <Description />
+</Core>
