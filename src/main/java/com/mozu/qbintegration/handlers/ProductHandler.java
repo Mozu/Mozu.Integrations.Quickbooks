@@ -560,21 +560,11 @@ public class ProductHandler {
 			if (queryQBProduct)
 				mzItem.setQbItemCode(this.getQBProductValue(tenantId, productCode, QB_ID));
 			
-			//Akshay - set amount to -ve if product is of type ItemNonInventoryRet
-			boolean isNonInventoryRet = "ItemNonInventoryRet".equalsIgnoreCase(getQBProductValue(tenantId, productCode, PROD_TYPE));
 			CommerceUnitPrice unitPrice = item.getUnitPrice();
 			if(item.getUnitPrice().getSaleAmount() != null) {
-				if (isNonInventoryRet) {
-					mzItem.setAmount(-unitPrice.getSaleAmount()); //Set amount as -ve
-				} else {
-					mzItem.setAmount(unitPrice.getSaleAmount());
-				}
+				mzItem.setAmount(unitPrice.getSaleAmount());
 			} else {
-				if (isNonInventoryRet) {
-					mzItem.setAmount(-unitPrice.getListAmount()); //Set amount as -ve
-				} else {
-					mzItem.setAmount(unitPrice.getListAmount());
-				}
+				mzItem.setAmount(unitPrice.getListAmount());
 			}
 			
 			String taxCode = null;
