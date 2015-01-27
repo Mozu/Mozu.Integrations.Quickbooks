@@ -203,7 +203,8 @@ public class ProductHandler {
 						logger.debug("Saved product through refresh all: "+ productName);
 					}
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					logger.error(ex.getMessage(), ex);
+					throw ex;
 				}
 			}
 		
@@ -522,6 +523,8 @@ public class ProductHandler {
 		String shippingProductCode = null;
 		String giftCardProductCode = null;
 		String adjustProductCode = null; // Akshay - fix for Adjustments
+		String shippingDiscountProductCode = null;
+		String shippingAdjustmentProductCode = null;
 		
 		GeneralSettings settings = quickbooksService
 				.getSettingsFromEntityList(tenantId);
@@ -539,11 +542,18 @@ public class ProductHandler {
 			if (StringUtils.isNotEmpty(settings.getAdjustProductCode()))
 				adjustProductCode = getQBProductValue(tenantId, settings.getAdjustProductCode(), QB_ID);
 			
+			if (StringUtils.isNotEmpty(settings.getShippingAdjustProductCode()))
+				shippingAdjustmentProductCode = getQBProductValue(tenantId, settings.getShippingAdjustProductCode(), QB_ID);
+			
+			if (StringUtils.isNotEmpty(settings.getShippingDiscountProductCode()))
+				shippingDiscountProductCode = getQBProductValue(tenantId, settings.getShippingDiscountProductCode(), QB_ID);
 		}
 		
-		double qbDiscount = 0.0; // this sums up all item discounts
-		double adjustment = 0.0; //Akshay - to track adjustment
-		
+		double orderDiscount = 0.0; // this sums up all item discounts
+		double orderAdjustment = 0.0; //Akshay - to track adjustment
+		double shippingDiscount = 0.0;
+		double shippingAdjustment = 0.0;
+				
 		for(OrderItem item : order.getItems()) {
 			
 			String productCode = null;
@@ -598,7 +608,7 @@ public class ProductHandler {
 			
 			if (item.getDiscountTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
-					qbDiscount += discount.getImpact();
+					orderDiscount += discount.getImpact();
 				}
 			}
 		}
@@ -617,50 +627,73 @@ public class ProductHandler {
 			productCodes.add(mzItem);
 		}
 		
-		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { //Akshay 10-Oct-2014 -- add order level disc
+		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { 
 			for (AppliedDiscount disc: order.getOrderDiscounts()) {
-				qbDiscount += disc.getImpact();
+				if (!disc.getExcluded())
+					orderDiscount += disc.getImpact();
 			}
 		}
 		
-		//Akshay modified - do not add adjustments to discounts. We will track under separate product
+		//Order level adjustments
 		if (order.getAdjustment() != null
 				&& StringUtils.isNotEmpty(settings.getAdjustProductCode())) {
-			adjustment += (order.getAdjustment().getAmount());
+			orderAdjustment += (order.getAdjustment().getAmount());
+			
+			if (orderAdjustment != 0.0) {
+				MozuOrderItem mzItem = new MozuOrderItem();
+				mzItem.setProductCode(settings.getAdjustProductCode());
+				mzItem.setQbItemCode(adjustProductCode);
+				mzItem.setAmount(orderAdjustment);
+				mzItem.setMisc(true);
+				mzItem.setTaxCode(taxCode);
+				productCodes.add(mzItem);
+			}
 		}
 		
-		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && order.getShippingDiscounts() != null) {
+		//Shipping discount
+		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && 
+				order.getShippingDiscounts() != null 
+				&& StringUtils.isNotEmpty(settings.getShippingDiscountProductCode())) {
 			for(ShippingDiscount discount : order.getShippingDiscounts()) {
-				qbDiscount += discount.getDiscount().getImpact();
+				if (!discount.getDiscount().getExcluded())
+					shippingDiscount += discount.getDiscount().getImpact();
+			}
+			if (shippingDiscount != 0.0) {
+				MozuOrderItem mzItem = new MozuOrderItem();
+				mzItem.setProductCode(settings.getShippingDiscountProductCode());
+				mzItem.setQbItemCode(shippingDiscountProductCode);
+				mzItem.setAmount(shippingDiscount);
+				mzItem.setMisc(true);
+				mzItem.setTaxCode("Non");
+				productCodes.add(mzItem);
 			}
 		}
 
-		//Akshay modified - do not add adjustments to discounts. We will track under separate product
+		//Shipping adjustment
 		if (order.getShippingAdjustment() != null
-				&& StringUtils.isNotEmpty(settings.getAdjustProductCode())) {			
-			adjustment += (order.getShippingAdjustment().getAmount());
-		}
-		
-		if (qbDiscount != 0.0) {
+				&& StringUtils.isNotEmpty(settings.getShippingAdjustProductCode())) {			
+			shippingAdjustment += (order.getShippingAdjustment().getAmount());
+			
 			MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getDiscountProductCode());
-			mzItem.setQbItemCode(qbDiscProductCode);
-			mzItem.setAmount(qbDiscount);
+			mzItem.setProductCode(settings.getShippingAdjustProductCode());
+			mzItem.setQbItemCode(shippingAdjustmentProductCode);
+			mzItem.setAmount(shippingAdjustment);
 			mzItem.setMisc(true);
 			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
-		//Akshay - now add to the productCodes array
-		if (adjustment != 0.0 && !StringUtils.isEmpty(adjustProductCode)) {
+		if (orderDiscount != 0.0 && StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getAdjustProductCode());
-			mzItem.setQbItemCode(adjustProductCode);
-			mzItem.setAmount(adjustment);
+			mzItem.setProductCode(settings.getDiscountProductCode());
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(orderDiscount);
 			mzItem.setMisc(true);
 			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
+		
+		
 		
 		//Get store credit product
 		if (StringUtils.isNoneEmpty(settings.getGiftCardProductCode())) {

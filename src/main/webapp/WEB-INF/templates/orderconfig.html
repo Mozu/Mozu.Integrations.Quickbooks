@@ -66,14 +66,18 @@
 		<div class="row">
 			<div class="tab-full-column">
 				<div class="tab-full-column">
+					<label class="tab-field-label" th:text="#{label.giftCardProductCode}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.giftCardProductCode"></input>
 					<label class="tab-field-label" th:text="#{label.shipping}"></label>
 					<input type="text" id="wsUrl" class="tab-field" data-bind="value : settings.shippingProductCode"  ></input>
 					<label class="tab-field-label" th:text="#{label.discount}"></label>
 					<input type="text"  class="tab-field" data-bind="value : settings.discountProductCode"></input>
-					<label class="tab-field-label" th:text="#{label.giftCardProductCode}"></label>
-					<input type="text"  class="tab-field" data-bind="value : settings.giftCardProductCode"></input>
 					<label class="tab-field-label" th:text="#{label.adjustProductCode}"></label>
 					<input type="text"  class="tab-field" data-bind="value : settings.adjustProductCode"></input>
+					<label class="tab-field-label" th:text="#{label.shippingDiscount}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.shipingDiscountProductCode"></input>
+					<label class="tab-field-label" th:text="#{label.shippingAdjustment}"></label>
+					<input type="text"  class="tab-field" data-bind="value : settings.shippingAdjustProductCode"></input>
 				</div>	
 			</div>
 		</div>

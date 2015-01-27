@@ -31,6 +31,10 @@ public class GeneralSettings {
 	
 	private String giftCardProductCode;
 	
+	private String shippingDiscountProductCode;
+	
+	private String shippingAdjustProductCode;
+	
 	//Akshay - for adjustment product
 	private String adjustProductCode;
 	
@@ -234,5 +238,23 @@ public class GeneralSettings {
 	public void setAdjustProductCode(String adjustProductCode) {
 		this.adjustProductCode = adjustProductCode;
 	}
+
+	public String getShippingDiscountProductCode() {
+		return shippingDiscountProductCode;
+	}
+
+	public void setShippingDiscountProductCode(String shippingDiscountProductCode) {
+		this.shippingDiscountProductCode = shippingDiscountProductCode;
+	}
+
+	public String getShippingAdjustProductCode() {
+		return shippingAdjustProductCode;
+	}
+
+	public void setShippingAdjustProductCode(String shippingAdjustProductCode) {
+		this.shippingAdjustProductCode = shippingAdjustProductCode;
+	}
+	
+	
 }
 

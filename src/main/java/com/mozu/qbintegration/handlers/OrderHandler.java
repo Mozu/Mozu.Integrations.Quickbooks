@@ -440,7 +440,8 @@ public class OrderHandler {
 			TxnLineID txnLineId = new TxnLineID();
 			if( salesReceiptRet.getOrderLines() != null) {
 				for(QuickBooksSavedOrderLine qbItem: salesReceiptRet.getOrderLines()) {
-					if(item.getProductCode().equalsIgnoreCase(qbItem.getFullName())) {
+					if((item.getProductCode().equalsIgnoreCase(qbItem.getFullName()) && item.getTotalAmount() == 0.0 && item.getTotalAmount() == qbItem.getAmount())
+						|| (item.getProductCode().equalsIgnoreCase(qbItem.getFullName()) && item.getTotalAmount() != 0.0) ) {
 						txnLineId.setValue(qbItem.getTxnLineId());
 					}
 				}

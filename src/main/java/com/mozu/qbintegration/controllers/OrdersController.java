@@ -193,9 +193,15 @@ public class OrdersController {
 		
 		int dispStartIdx = Integer.parseInt(iDisplayStart);
 		int dispLength = Integer.parseInt(iDisplayLength);
-		//EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(),"status ne ERROR", "createDate", dispStartIdx, dispLength);
-		//Akshay - get all tasks currently in queue. Even error so we know things are failing.
-		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), "status eq "+status, "createDate", dispStartIdx, dispLength);
+		
+		String filter = "(Status eq "+status;
+		
+		if (status.equals("PENDING"))
+			filter += " or Status eq PROCESSING";
+		
+		filter += ")";
+		
+		EntityCollection collection =  entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), filter, "createDate", dispStartIdx, dispLength);
 		List<WorkTask> workTasks = new ArrayList<WorkTask>();
 		OrderQueueDataTable dataTable = new OrderQueueDataTable();
 		if(collection.getItems().size() > 0) {
