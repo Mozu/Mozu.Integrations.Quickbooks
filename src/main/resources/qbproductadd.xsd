@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema attributeFormDefault="unqualified"
+	elementFormDefault="qualified" version="1.0"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="QBXML" type="QBXMLType" />
+	<xsd:complexType name="QBXMLType">
+		<xsd:sequence>
+			<xsd:element name="QBXMLMsgsRq" type="QBXMLMsgsRqType" />
+			<xsd:element name="QBXMLMsgsRs" type="QBXMLMsgsRsType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="QBXMLMsgsRsType">
+		<xsd:sequence>
+			<xsd:element name="ItemInventoryAddRs" type="ItemInventoryAddRsType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ItemInventoryAddRsType">
+		<xsd:sequence>
+			<xsd:element name="ItemInventoryRet" type="ItemInventoryRetType" />
+			<xsd:element name="ErrorRecovery" type="ErrorRecoveryType" />
+		</xsd:sequence>
+		<xsd:attribute name="statusCode" type="xsd:string" />
+		<xsd:attribute name="statusSeverity" type="xsd:string" />
+		<xsd:attribute name="statusMessage" type="xsd:string" />
+	</xsd:complexType>
+	<xsd:complexType name="ErrorRecoveryType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="OwnerID" type="xsd:string" />
+			<xsd:element name="TxnID" type="xsd:string" />
+			<xsd:element name="TxnNumber" type="xsd:string" />
+			<xsd:element name="EditSequence" type="xsd:string" />
+			<xsd:element name="ExternalGUID" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ItemInventoryRetType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="TimeCreated" type="xsd:string" />
+			<xsd:element name="TimeModified" type="xsd:string" />
+			<xsd:element name="EditSequence" type="xsd:string" />
+			<xsd:element name="Name" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+			<xsd:element name="BarCodeValue" type="xsd:string" />
+			<xsd:element name="IsActive" type="xsd:string" />
+			<xsd:element name="ClassRef" type="ClassRefType" />
+			<xsd:element name="ParentRef" type="ParentRefType" />
+			<xsd:element name="Sublevel" type="xsd:string" />
+			<xsd:element name="ManufacturerPartNumber" type="xsd:string" />
+			<xsd:element name="UnitOfMeasureSetRef" type="UnitOfMeasureSetRefType" />
+			<xsd:element name="SalesTaxCodeRef" type="SalesTaxCodeRefType" />
+			<xsd:element name="SalesDesc" type="xsd:string" />
+			<xsd:element name="SalesPrice" type="xsd:string" />
+			<xsd:element name="IncomeAccountRef" type="IncomeAccountRefType" />
+			<xsd:element name="PurchaseDesc" type="xsd:string" />
+			<xsd:element name="PurchaseCost" type="xsd:string" />
+			<xsd:element name="COGSAccountRef" type="COGSAccountRefType" />
+			<xsd:element name="PrefVendorRef" type="PrefVendorRefType" />
+			<xsd:element name="AssetAccountRef" type="AssetAccountRefType" />
+			<xsd:element name="ReorderPoint" type="xsd:string" />
+			<xsd:element name="Max" type="xsd:string" />
+			<xsd:element name="QuantityOnHand" type="xsd:string" />
+			<xsd:element name="AverageCost" type="xsd:string" />
+			<xsd:element name="QuantityOnOrder" type="xsd:string" />
+			<xsd:element name="QuantityOnSalesOrder" type="xsd:string" />
+			<xsd:element name="ExternalGUID" type="xsd:string" />
+			<xsd:element name="DataExtRet" type="DataExtRetType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DataExtRetType">
+		<xsd:sequence>
+			<xsd:element name="OwnerID" type="xsd:string" />
+			<xsd:element name="DataExtName" type="xsd:string" />
+			<xsd:element name="DataExtType" type="xsd:string" />
+			<xsd:element name="DataExtValue" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AssetAccountRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PrefVendorRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="COGSAccountRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="IncomeAccountRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SalesTaxCodeRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UnitOfMeasureSetRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ParentRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ClassRefType">
+		<xsd:sequence>
+			<xsd:element name="ListID" type="xsd:string" />
+			<xsd:element name="FullName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="QBXMLMsgsRqType">
+		<xsd:sequence>
+			<xsd:element name="ItemInventoryAddRq" type="ItemInventoryAddRqType" />
+		</xsd:sequence>
+		<xsd:attribute name="onError" type="xsd:string" />
+	</xsd:complexType>
+	<xsd:complexType name="ItemInventoryAddRqType">
+		<xsd:sequence>
+			<xsd:element name="ItemInventoryAdd" type="ItemInventoryAddType" />
+			<xsd:element name="IncludeRetElement" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ItemInventoryAddType">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" />
+			<xsd:element name="BarCode" type="BarCodeType" />
+			<xsd:element name="IsActive" type="xsd:string" />
+			<xsd:element name="ClassRef" type="ClassRefType" />
+			<xsd:element name="ParentRef" type="ParentRefType" />
+			<xsd:element name="ManufacturerPartNumber" type="xsd:string" />
+			<xsd:element name="UnitOfMeasureSetRef" type="UnitOfMeasureSetRefType" />
+			<xsd:element name="SalesTaxCodeRef" type="SalesTaxCodeRefType" />
+			<xsd:element name="SalesDesc" type="xsd:string" />
+			<xsd:element name="SalesPrice" type="xsd:string" />
+			<xsd:element name="IncomeAccountRef" type="IncomeAccountRefType" />
+			<xsd:element name="PurchaseDesc" type="xsd:string" />
+			<xsd:element name="PurchaseCost" type="xsd:string" />
+			<xsd:element name="COGSAccountRef" type="COGSAccountRefType" />
+			<xsd:element name="PrefVendorRef" type="PrefVendorRefType" />
+			<xsd:element name="AssetAccountRef" type="AssetAccountRefType" />
+			<xsd:element name="ReorderPoint" type="xsd:string" />
+			<xsd:element name="Max" type="xsd:string" />
+			<xsd:element name="QuantityOnHand" type="xsd:string" />
+			<xsd:element name="TotalValue" type="xsd:string" />
+			<xsd:element name="InventoryDate" type="xsd:string" />
+			<xsd:element name="ExternalGUID" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="BarCodeType">
+		<xsd:sequence>
+			<xsd:element name="BarCodeValue" type="xsd:string" />
+			<xsd:element name="AssignEvenIfUsed" type="xsd:string" />
+			<xsd:element name="AllowOverride" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

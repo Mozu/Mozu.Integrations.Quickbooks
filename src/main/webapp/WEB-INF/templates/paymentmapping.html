@@ -1,0 +1,60 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.paymentMapping}" class="label-bold"></label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="tab-full-column">
+				 <select class="dropdown" data-bind="options: mozuPayments,optionsText: 'name', value: selectedMozuPayment" style="float:none;min-width:30px;"></select>
+                       
+                  <select class="dropdown" data-bind="options: qbPaymentMethods, optionsText: 'fullName', value: selectedQBPayment" style="float:none;min-width:30px;"></select>
+				 <button data-bind="click: mapPayment" class="mz-Button secondary">Add</button>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="tab-full-column">
+				<button class="mz-Button secondary" data-bind="click: initiateRefresh.bind($data,'paymentmethod')">Refresh Payment Methods</button>
+				<p class="tab-checkbox-label-p" style="max-width:95%">
+				    If Payment methods are missing from Quickboks, you can click on the above button to resynchronize Payment Methods between Mozu and Quickbooks.
+				</p>
+			</div>
+		</div>
+		
+		<div class="tab-divider"></div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.existingmappings}" class="label-bold"></label>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<div class="comparecontainer" style="width:100%">
+				    <div class="compareheading">
+				         <div class="compare-col">Mozu Payment Method</div>
+                         <div class="compare-col">Quickbooks Payment Method</div>
+                         <div class="compare-col"></div>
+				    </div>
+				    <div style="display:table-row-group;" data-bind="foreach: paymentMappings">
+					    <div class="compare-table-row">
+					         <div class="compare-col" data-bind="text: mzData().name"></div>
+					         <div class="compare-col" data-bind="text: qbData().fullName"></div>
+                             <div class="compare-col"><div style="width:100%;margin:auto;"><a data-bind="click: $parent.unmapPayment" style="cursor:pointer;">Remove</a></div></div>
+					    </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

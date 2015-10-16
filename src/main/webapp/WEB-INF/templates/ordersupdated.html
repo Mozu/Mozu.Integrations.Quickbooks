@@ -1,0 +1,168 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:include="header :: header"></div>
+</head>
+<body>
+
+	<div th:fragment="content">
+		<div id="ordUpdated">
+			<div class="row">
+				<div class="tab-full-column">
+					<div style="width:300px; text-align:left;margin:auto; margin-bottom:-25px;">
+						<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB.bind($data,'update')" style="float:none;">Post</button>
+						<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB.bind($data,'archive')" style="float:none;">Archive</button>
+					</div>
+					<table width="100%">
+						<tr>
+							<td>
+								<table id="orderUpdatedTable" class="display">
+									<thead>
+										<tr>
+											<th><input type="checkbox" class="selectAllUpdates" onClick="selectAll('updatedCheck', 'selectAllUpdates')"/></th>
+											<th><p th:text="#{label.order}"></p></th>
+											<th><p th:text="#{label.customerName}"></p></th>
+											<th><p th:text="#{label.createdDate}"></p></th>
+											<th><p th:text="#{label.updatedDate}"></p></th>
+											<th><p th:text="#{label.amount}"></p></th>
+											<th><p th:text="#{label.action}"></p></th>
+										</tr>
+									</thead>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			
+			
+			
+		</div>
+		
+		<!-- Compare div -->
+		<div id="ordUpdateDetails" style="display: none;">
+			<div class="row" >
+				<div class="tab-full-column">
+					<a href="javascript:void(0);" onclick="javascript:showOrderCompare();"> Back </a> 
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="tab-first-column">
+					<div class="comparecontainer" data-bind="with: compare.postedOrder">
+					    <div class="compareheading">
+					         <div class="compare-col">Posted Order</div>
+					    </div>
+						
+						<div class="compare-table-row">
+							 <div class="compare-col">
+						 		<div class="tab-first-column">
+						 			<div>Shipping Address:</div>
+						 			<div data-bind="with: shipAddress"> 
+						 					<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+								    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+								    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+								    </div>
+						 		</div>
+						 		<div class="tab-second-column">
+						 			<div>Billing Address</div>
+					 				<div data-bind="with: billAddress">
+					 				 	<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+							    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+							    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+					 				</div>
+						 		</div>
+						 		 
+							 </div>
+						</div>		    
+						
+						<div class="compare-table-row" style="margin-bottom:20px;">
+							<div class="compare-col"></div>
+						</div>	
+						
+						<div class="compare-table-row">
+							<div class="compare-col">
+							 	 <div class="compareheading">
+							         <div class="compare-col"  style="width:85%;padding:5px;">Line Item</div>
+							         <div class="compare-col" style="width:10%;padding:5px;">Qty</div>
+							         <div class="compare-col" style="width:100%;padding:5px;">Amount</div>
+							    </div>
+							    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+								    <div class="compare-table-row">
+								    	<div class="compare-col" data-bind="text: fullName"></div>
+								    	<div class="compare-col" data-bind="text: quantity"></div>
+								    	<div class="compare-col" data-bind="money: amount"></div>
+								    </div>
+							    </div>
+							    <div class="compare-table-row">
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" data-bind="money: totalAmount"></div>
+								    </div>
+							</div>		 
+						</div>	
+					</div>
+				</div>
+				<div class="tab-second-column">
+					<div class="comparecontainer" data-bind="with: compare.updatedOrder">
+					    <div class="compareheading">
+					         <div class="compare-col">Updated Order</div>
+					    </div>
+					    <div class="compare-table-row">
+							 <div class="compare-col">
+						 		<div class="tab-first-column">
+						 			<div>Shipping Address:</div>
+						 			<div data-bind="with: shipAddress"> 
+						 					<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+								    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+								    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+								    </div>
+						 		</div>
+						 		<div class="tab-second-column">
+						 			<div>Billing Address</div>
+					 				<div data-bind="with: billAddress">
+					 				 	<span data-bind="text: addr1"></span>, <span data-bind="text: addr2"></span>,
+							    		<span data-bind="text: city"></span>, <span data-bind="text: state"></span>, 
+							    		<span data-bind="text: postalCode"></span>, <span data-bind="text: country"></span>
+					 				</div>
+						 		</div>
+						 		 
+							 </div>
+						</div>		    
+						
+						<div class="compare-table-row" style="margin-bottom:20px;">
+							<div class="compare-col"></div>
+						</div>	
+						
+						<div class="compare-table-row">
+							<div class="compare-col">
+							 	 <div class="compareheading">
+							         <div class="compare-col"  style="width:85%;padding:5px;">Line Item</div>
+							         <div class="compare-col" style="width:10%;padding:5px;">Qty</div>
+							         <div class="compare-col" style="width:100%;padding:5px;">Amount</div>
+							    </div>
+							    <div style="display:table-row-group;" data-bind="foreach: orderLines">
+								    <div class="compare-table-row">
+								    	<div class="compare-col" data-bind="text: fullName"></div>
+								    	<div class="compare-col" data-bind="text: quantity"></div>
+								    	<div class="compare-col" data-bind="money: amount"></div>
+								    </div>
+							    </div>
+							    <div class="compare-table-row">
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" ></div>
+								    	<div class="compare-col" data-bind="money: totalAmount"></div>
+								    </div>
+							</div>		 
+						</div>
+					    
+					    
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+</body>
+
+</html>

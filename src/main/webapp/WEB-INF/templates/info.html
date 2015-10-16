@@ -1,0 +1,39 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div th:fragment="content">
+		<div class="row">
+			<div class="tab-full-column">
+				<div style="margin-left: 10px;">
+					<p th:text="#{label.appdescription}"></p>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div style="margin-top:10%"></div>
+		</div>
+		
+		<div class="row">
+			<div class="tab-first-column">
+				<div class="well-info text-center">
+					
+					<img src="images/qblogo.jpg" ></img>
+					<div
+						style="font-size: 15px; font-weight: bold; color: #333333; line-height: 17px;"
+						class="mozulogo"><label th:text="#{label.appname}"></label> by</div>
+					<div style="font-size: 12px; color: #333333; line-height: 15px;">
+						Version
+						<ins data-bind="text: buildVersion"></ins>
+					</div>
+					<div style="font-size: 12px; color: #333333; line-height: 15px;">Mozu SDK 1.11.4</div>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+
+

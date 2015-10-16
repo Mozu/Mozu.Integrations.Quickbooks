@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="content">
+	
+		<div class="row">
+			<div class="tab-full-column">
+				<label th:text="#{label.accountmanagement}" class="label-bold"></label>
+			</div>
+		</div>
+		<div class="tab-divider"></div>
+		
+		<div class="row">
+			<div class="tab-full-column">
+				<label class="tab-field-label" th:text="#{label.URL}"></label>
+				<input type="text" id="wsUrl" class="tab-field" readonly="true" data-bind="value : settings.wsURL" style="width:100%" ></input>
+				<label class="tab-field-label" th:text="#{label.username}"></label>
+				<input type="text" class="tab-field" id="qbUsername" data-bind="value : settings.qbAccount"></input>
+				<label class="tab-field-label"  th:text="#{label.password}"></label>
+				<input type="text" readonly="true" class="tab-field" id="qbPassword" data-bind="value : settings.qbPassword" placeholder="Generated on save"></input>
+				<label class="tab-field-label"  th:text="#{label.qbwFile}"></label>
+				<input type="text" class="tab-field" data-bind="value : settings.qbwFile" placeholder="Location of QBW file(c:\...\company.qbw)"></input>
+				
+			</div>
+
+		</div>
+		
+		<div class="row" data-bind="visible:  showDownload">
+			<div class="tab-first-column">
+				<form action="api/config/download" method="post" id="downloadForm">
+					<input type="hidden" id="qwcfilestr" name="qwcfilestr" data-bind="value: qwcFileContent"></input> 
+				</form>
+
+				<button class="mz-button secondary" data-bind="click: download" id="downloadBtn">Download QWC file</button>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

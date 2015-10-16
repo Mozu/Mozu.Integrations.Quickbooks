@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema attributeFormDefault="unqualified" elementFormDefault="qualified" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="QBXML" type="QBXMLType" />
+  <xsd:complexType name="QBXMLType">
+    <xsd:sequence>
+      <xsd:element name="QBXMLMsgsRq" type="QBXMLMsgsRqType" />
+      <xsd:element name="QBXMLMsgsRs" type="QBXMLMsgsRsType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="QBXMLMsgsRsType">
+    <xsd:sequence>
+      <xsd:element name="CustomerQueryRs" type="CustomerQueryRsType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CustomerQueryRsType">
+    <xsd:sequence>
+      <xsd:element name="CustomerRet" type="CustomerRetType" />
+    </xsd:sequence>
+    <xsd:attribute name="statusCode" type="xsd:string" />
+    <xsd:attribute name="statusSeverity" type="xsd:string" />
+    <xsd:attribute name="statusMessage" type="xsd:string" />
+    <xsd:attribute name="retCount" type="xsd:string" />
+    <xsd:attribute name="iteratorRemainingCount" type="xsd:string" />
+    <xsd:attribute name="iteratorID" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="CustomerRetType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="TimeCreated" type="xsd:string" />
+      <xsd:element name="TimeModified" type="xsd:string" />
+      <xsd:element name="EditSequence" type="xsd:string" />
+      <xsd:element name="Name" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+      <xsd:element name="IsActive" type="xsd:string" />
+      <xsd:element name="ClassRef" type="ClassRefType" />
+      <xsd:element name="ParentRef" type="ParentRefType" />
+      <xsd:element name="Sublevel" type="xsd:string" />
+      <xsd:element name="CompanyName" type="xsd:string" />
+      <xsd:element name="Salutation" type="xsd:string" />
+      <xsd:element name="FirstName" type="xsd:string" />
+      <xsd:element name="MiddleName" type="xsd:string" />
+      <xsd:element name="LastName" type="xsd:string" />
+      <xsd:element name="JobTitle" type="xsd:string" />
+      <xsd:element name="BillAddress" type="BillAddressType" />
+      <xsd:element name="BillAddressBlock" type="BillAddressBlockType" />
+      <xsd:element name="ShipAddress" type="ShipAddressType" />
+      <xsd:element name="ShipAddressBlock" type="ShipAddressBlockType" />
+      <xsd:element name="ShipToAddress" type="ShipToAddressType" />
+      <xsd:element name="Phone" type="xsd:string" />
+      <xsd:element name="AltPhone" type="xsd:string" />
+      <xsd:element name="Fax" type="xsd:string" />
+      <xsd:element name="Email" type="xsd:string" />
+      <xsd:element name="Cc" type="xsd:string" />
+      <xsd:element name="Contact" type="xsd:string" />
+      <xsd:element name="AltContact" type="xsd:string" />
+      <xsd:element name="AdditionalContactRef" type="AdditionalContactRefType" />
+      <xsd:element name="ContactsRet" type="ContactsRetType" />
+      <xsd:element name="CustomerTypeRef" type="CustomerTypeRefType" />
+      <xsd:element name="TermsRef" type="TermsRefType" />
+      <xsd:element name="SalesRepRef" type="SalesRepRefType" />
+      <xsd:element name="Balance" type="xsd:string" />
+      <xsd:element name="TotalBalance" type="xsd:string" />
+      <xsd:element name="SalesTaxCodeRef" type="SalesTaxCodeRefType" />
+      <xsd:element name="ItemSalesTaxRef" type="ItemSalesTaxRefType" />
+      <xsd:element name="ResaleNumber" type="xsd:string" />
+      <xsd:element name="AccountNumber" type="xsd:string" />
+      <xsd:element name="CreditLimit" type="xsd:string" />
+      <xsd:element name="PreferredPaymentMethodRef" type="PreferredPaymentMethodRefType" />
+      <xsd:element name="CreditCardInfo" type="CreditCardInfoType" />
+      <xsd:element name="JobStatus" type="xsd:string" />
+      <xsd:element name="JobStartDate" type="xsd:string" />
+      <xsd:element name="JobProjectedEndDate" type="xsd:string" />
+      <xsd:element name="JobEndDate" type="xsd:string" />
+      <xsd:element name="JobDesc" type="xsd:string" />
+      <xsd:element name="JobTypeRef" type="JobTypeRefType" />
+      <xsd:element name="Notes" type="xsd:string" />
+      <xsd:element name="AdditionalNotesRet" type="AdditionalNotesRetType" />
+      <xsd:element name="PreferredDeliveryMethod" type="xsd:string" />
+      <xsd:element name="PriceLevelRef" type="PriceLevelRefType" />
+      <xsd:element name="ExternalGUID" type="xsd:string" />
+      <xsd:element name="CurrencyRef" type="CurrencyRefType" />
+      <xsd:element name="DataExtRet" type="DataExtRetType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="DataExtRetType">
+    <xsd:sequence>
+      <xsd:element name="OwnerID" type="xsd:string" />
+      <xsd:element name="DataExtName" type="xsd:string" />
+      <xsd:element name="DataExtType" type="xsd:string" />
+      <xsd:element name="DataExtValue" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CurrencyRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="PriceLevelRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="AdditionalNotesRetType">
+    <xsd:sequence>
+      <xsd:element name="NoteID" type="xsd:string" />
+      <xsd:element name="Date" type="xsd:string" />
+      <xsd:element name="Note" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="JobTypeRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CreditCardInfoType">
+    <xsd:sequence>
+      <xsd:element name="CreditCardNumber" type="xsd:string" />
+      <xsd:element name="ExpirationMonth" type="xsd:string" />
+      <xsd:element name="ExpirationYear" type="xsd:string" />
+      <xsd:element name="NameOnCard" type="xsd:string" />
+      <xsd:element name="CreditCardAddress" type="xsd:string" />
+      <xsd:element name="CreditCardPostalCode" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="PreferredPaymentMethodRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ItemSalesTaxRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="SalesTaxCodeRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="SalesRepRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="TermsRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CustomerTypeRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ContactsRetType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="TimeCreated" type="xsd:string" />
+      <xsd:element name="TimeModified" type="xsd:string" />
+      <xsd:element name="EditSequence" type="xsd:string" />
+      <xsd:element name="Contact" type="xsd:string" />
+      <xsd:element name="Salutation" type="xsd:string" />
+      <xsd:element name="FirstName" type="xsd:string" />
+      <xsd:element name="MiddleName" type="xsd:string" />
+      <xsd:element name="LastName" type="xsd:string" />
+      <xsd:element name="JobTitle" type="xsd:string" />
+      <xsd:element name="AdditionalContactRef" type="AdditionalContactRefType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="AdditionalContactRefType">
+    <xsd:sequence>
+      <xsd:element name="ContactName" type="xsd:string" />
+      <xsd:element name="ContactValue" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="ShipToAddressType">
+    <xsd:sequence>
+      <xsd:element name="Name" type="xsd:string" />
+      <xsd:element name="Addr1" type="xsd:string" />
+      <xsd:element name="Addr2" type="xsd:string" />
+      <xsd:element name="Addr3" type="xsd:string" />
+      <xsd:element name="Addr4" type="xsd:string" />
+      <xsd:element name="Addr5" type="xsd:string" />
+      <xsd:element name="City" type="xsd:string" />
+      <xsd:element name="State" type="xsd:string" />
+      <xsd:element name="PostalCode" type="xsd:string" />
+      <xsd:element name="Country" type="xsd:string" />
+      <xsd:element name="Note" type="xsd:string" />
+      <xsd:element name="DefaultShipTo" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ShipAddressBlockType">
+    <xsd:sequence>
+      <xsd:element name="Addr1" type="xsd:string" />
+      <xsd:element name="Addr2" type="xsd:string" />
+      <xsd:element name="Addr3" type="xsd:string" />
+      <xsd:element name="Addr4" type="xsd:string" />
+      <xsd:element name="Addr5" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ShipAddressType">
+    <xsd:sequence>
+      <xsd:element name="Addr1" type="xsd:string" />
+      <xsd:element name="Addr2" type="xsd:string" />
+      <xsd:element name="Addr3" type="xsd:string" />
+      <xsd:element name="Addr4" type="xsd:string" />
+      <xsd:element name="Addr5" type="xsd:string" />
+      <xsd:element name="City" type="xsd:string" />
+      <xsd:element name="State" type="xsd:string" />
+      <xsd:element name="PostalCode" type="xsd:string" />
+      <xsd:element name="Country" type="xsd:string" />
+      <xsd:element name="Note" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="BillAddressBlockType">
+    <xsd:sequence>
+      <xsd:element name="Addr1" type="xsd:string" />
+      <xsd:element name="Addr2" type="xsd:string" />
+      <xsd:element name="Addr3" type="xsd:string" />
+      <xsd:element name="Addr4" type="xsd:string" />
+      <xsd:element name="Addr5" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="BillAddressType">
+    <xsd:sequence>
+      <xsd:element name="Addr1" type="xsd:string" />
+      <xsd:element name="Addr2" type="xsd:string" />
+      <xsd:element name="Addr3" type="xsd:string" />
+      <xsd:element name="Addr4" type="xsd:string" />
+      <xsd:element name="Addr5" type="xsd:string" />
+      <xsd:element name="City" type="xsd:string" />
+      <xsd:element name="State" type="xsd:string" />
+      <xsd:element name="PostalCode" type="xsd:string" />
+      <xsd:element name="Country" type="xsd:string" />
+      <xsd:element name="Note" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ParentRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ClassRefType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="QBXMLMsgsRqType">
+    <xsd:sequence>
+      <xsd:element name="CustomerQueryRq" type="CustomerQueryRqType" />
+    </xsd:sequence>
+    <xsd:attribute name="onError" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="CustomerQueryRqType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+      <xsd:element name="MaxReturned" type="xsd:string" />
+      <xsd:element name="ActiveStatus" type="xsd:string" />
+      <xsd:element name="FromModifiedDate" type="xsd:string" />
+      <xsd:element name="ToModifiedDate" type="xsd:string" />
+      <xsd:element name="NameFilter" type="NameFilterType" />
+      <xsd:element name="NameRangeFilter" type="NameRangeFilterType" />
+      <xsd:element name="TotalBalanceFilter" type="TotalBalanceFilterType" />
+      <xsd:element name="CurrencyFilter" type="CurrencyFilterType" />
+      <xsd:element name="ClassFilter" type="ClassFilterType" />
+      <xsd:element name="IncludeRetElement" type="xsd:string" />
+      <xsd:element name="OwnerID" type="xsd:string" />
+    </xsd:sequence>
+    <xsd:attribute name="metaData" type="xsd:string" />
+    <xsd:attribute name="iterator" type="xsd:string" />
+    <xsd:attribute name="iteratorID" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="ClassFilterType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+      <xsd:element name="ListIDWithChildren" type="xsd:string" />
+      <xsd:element name="FullNameWithChildren" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CurrencyFilterType">
+    <xsd:sequence>
+      <xsd:element name="ListID" type="xsd:string" />
+      <xsd:element name="FullName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="TotalBalanceFilterType">
+    <xsd:sequence>
+      <xsd:element name="Operator" type="xsd:string" />
+      <xsd:element name="Amount" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="NameRangeFilterType">
+    <xsd:sequence>
+      <xsd:element name="FromName" type="xsd:string" />
+      <xsd:element name="ToName" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="NameFilterType">
+    <xsd:sequence>
+      <xsd:element name="MatchCriterion" type="xsd:string" />
+      <xsd:element name="Name" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
