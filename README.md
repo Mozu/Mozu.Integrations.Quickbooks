@@ -1,14 +1,14 @@
 Quickbooks-Integration
 ======================
 
-This application is an extension of Mozu.  It integrates orders and customers with Quickbooks.  It is a java solution that is deployed as a war file into your favorite container or application server.
+This application is an extension of Mozu.  It integrates orders and customers with Quickbooks via tne Quickbooks webconnector.  Here is a good technical overview of the architeture, http://wiki.consolibyte.com/wiki/doku.php/quickbooks_web_connector.  This application is a java solution that is deployed as a war file into your favorite container or application server.
 
 # Requirements
 Windows to host:
 Quickbooks
 Quickbooks webconnector
 
->= Java 1.7
+At least Java 1.7
 Web application server (e.g. tomcat, jboss, etc)
 
 # Building and installing the application
