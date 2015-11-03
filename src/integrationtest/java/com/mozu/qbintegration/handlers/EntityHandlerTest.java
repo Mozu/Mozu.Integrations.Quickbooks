@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.mzdb.EntityCollection;
-import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.qbintegration.service.QuickbooksService;
 
@@ -107,18 +106,6 @@ public class EntityHandlerTest {
 		}
 	}
 	
-	private void show(String entityName) throws Exception {
-		EntityResource entityResource = new EntityResource(mozuContext);
-		
-		EntityCollection entities = entityResource.getEntities(entityName, 200, 0, null, null, null);
-		
-		logger.info("Listing all " + entityName);
-		
-		for (JsonNode entity : entities.getItems()) {
-			logger.info(entity.asText());
-		}
-	}
-	
 	//@Test
 	public void deleteEntities() {
 		try {
@@ -138,17 +125,4 @@ public class EntityHandlerTest {
 			fail(e.getMessage());
 		}
 	}
-	
-	@Test
-	public void showEntities() {
-		try {
-		show(entityHandler.getTaskqueueEntityName());
-		show(entityHandler.getCustomerEntityName());
-		}catch (Exception e) {
-			fail(e.getMessage());
-		}
-		
-		
-	}
-	
 }

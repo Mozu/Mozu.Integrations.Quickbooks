@@ -679,7 +679,13 @@ public class OrderHandler {
 		orderDetail.setId(order.getId());
 		orderDetail.setOrderNumber(order.getOrderNumber());
 		orderDetail.setCustomerEmail(order.getEmail());
-		orderDetail.setOrderDate(String.valueOf(order.getAcceptedDate().toDate().getTime()));
+		
+		if (order.getAcceptedDate() != null) {
+			orderDetail.setOrderDate(String.valueOf(order.getAcceptedDate().toDate().getTime()));
+		} else if (order.getCancelledDate() != null) {
+			orderDetail.setOrderDate(String.valueOf(order.getCancelledDate().toDate().getTime()));
+		}
+		
 		orderDetail.setUpdatedDate(String.valueOf(order.getAuditInfo().getUpdateDate().toDate().getTime()));
 		orderDetail.setAmount(order.getTotal());
 		return orderDetail;
