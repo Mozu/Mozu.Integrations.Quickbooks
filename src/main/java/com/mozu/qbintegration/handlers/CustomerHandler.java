@@ -1,5 +1,7 @@
 package com.mozu.qbintegration.handlers;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -30,7 +32,6 @@ import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXMLMsgsRq;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesTaxCodeRef;
 import com.mozu.qbintegration.model.qbmodel.allgen.ShipAddress;
-import com.mozu.qbintegration.model.qbmodel.allgen.TermsRef;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.utils.QBDataValidationUtil;
@@ -64,7 +65,7 @@ public class CustomerHandler {
 	public String getQbCustomerId(Integer tenantId, String emailAddress) throws Exception {
 		String qbListID = null;
 		
-		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), emailAddress);
+		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), URLEncoder.encode(emailAddress, StandardCharsets.UTF_8.name()));
 		
 		if (entity != null) {
 			JsonNode result = entity.findValue("custQBListID");
@@ -149,10 +150,7 @@ public class CustomerHandler {
 		qbXMCustomerAddType.setMiddleName("");
 		
 		qbXMCustomerAddType.setName(cust.getFirstName() + " "+ cust.getLastName());
-		//Akshay 11-Oct-2014 Use email for full name
-		//qbXMCustomerAddType.setName(cust.getEmailAddress());
 		
-		//
 		qbXMCustomerAddType.setEmail(cust.getEmailAddress());
 		qbXMCustomerAddType.setContact("Self");
 
@@ -225,7 +223,7 @@ public class CustomerHandler {
 			qbXMCustomerAddType.setPhone(cust.getContacts().get(0).getPhoneNumbers().getHome());
 			qbXMCustomerAddType.setAltPhone(cust.getContacts().get(0).getPhoneNumbers().getWork());
 		}
-		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();;
+		SalesTaxCodeRef salesTaxCodeRef = new SalesTaxCodeRef();
 
 		boolean isTaxState = false;
 		GeneralSettings generalSettings = quickbooksService.getSettingsFromEntityList(tenantId);
@@ -258,7 +256,7 @@ public class CustomerHandler {
 
 	
 	public QBResponse processCustomerQuery(int tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
-		QBXML response = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
+		QBXML response = xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerQueryRsType custQueryResponse = (CustomerQueryRsType) response.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																				.get(0);
@@ -284,7 +282,7 @@ public class CustomerHandler {
 	}
 	
 	public QBResponse processCustomerAdd(Integer tenantId,CustomerAccount custAcct, String responseXml) throws Exception {
-		QBXML custAddResp = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
+		QBXML custAddResp = xmlHelper.getUnmarshalledValue(responseXml);
 		CustomerAddRsType custAddResponse = (CustomerAddRsType) custAddResp.getQBXMLMsgsRs()
 																			.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
 																			.get(0);

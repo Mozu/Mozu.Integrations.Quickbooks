@@ -10,8 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -114,7 +112,7 @@ public class ProductHandler {
 			@Override
 			public void run() {
 				try {
-					QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
+					QBXML itemSearchEle = xmlHelper.getUnmarshalledValue(qbTaskResponse);
 					ItemQueryRsType itemSearchResponse = (ItemQueryRsType) itemSearchEle
 							.getQBXMLMsgsRs()
 							.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -212,7 +210,7 @@ public class ProductHandler {
 	
 	public QBResponse processItemQuery(Integer tenantId, String qbTaskResponse)
 			throws Exception {
-		QBXML itemSearchEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemSearchEle = xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		List<Object> results = itemSearchEle.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs();
 		//boolean foundAllItems = true;
@@ -241,7 +239,7 @@ public class ProductHandler {
 	
 	public void processItemAdd(Integer tenantId, WorkTask workTask,
 			String qbTaskResponse) throws Exception {
-		QBXML itemAddEle = (QBXML) xmlHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML itemAddEle = xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		ItemInventoryAddRsType invAddResponse = (ItemInventoryAddRsType) itemAddEle
 				.getQBXMLMsgsRs()
@@ -623,7 +621,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingProductCode);
 			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
 			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
+			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
 		
@@ -664,7 +662,7 @@ public class ProductHandler {
 				mzItem.setQbItemCode(shippingDiscountProductCode);
 				mzItem.setAmount(shippingDiscount);
 				mzItem.setMisc(true);
-				mzItem.setTaxCode("Non");
+				mzItem.setTaxCode(taxCode);
 				productCodes.add(mzItem);
 			}
 		}
@@ -679,7 +677,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingAdjustmentProductCode);
 			mzItem.setAmount(shippingAdjustment);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
+			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
 		

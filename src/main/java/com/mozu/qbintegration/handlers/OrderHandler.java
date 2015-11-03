@@ -109,7 +109,7 @@ public class OrderHandler {
 
 
 	public QBResponse processOrderAdd(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
-		QBXML orderAddResp = (QBXML)  xmlHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML orderAddResp = xmlHelper.getUnmarshalledValue(qbTaskResponse);
 		SalesReceiptAddRsType salesOrderResponse = (SalesReceiptAddRsType) orderAddResp
 				.getQBXMLMsgsRs()
 				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -141,7 +141,7 @@ public class OrderHandler {
 	}
 	
 	public QBResponse processOrderUpdate(Integer tenantId, String orderId, String qbTaskResponse) throws Exception {
-		QBXML orderModResp = (QBXML)  xmlHelper.getUnmarshalledValue(qbTaskResponse);
+		QBXML orderModResp = xmlHelper.getUnmarshalledValue(qbTaskResponse);
 
 		SalesReceiptModRsType orderModRsType = (SalesReceiptModRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -172,7 +172,7 @@ public class OrderHandler {
 	
 	public QBResponse processOrderQuery(int tenantId, String orderId, String response) throws Exception {
 		
-		QBXML orderModResp = (QBXML)  xmlHelper.getUnmarshalledValue(response);
+		QBXML orderModResp = xmlHelper.getUnmarshalledValue(response);
 
 		SalesReceiptQueryRsType  orderQueryRsType = (SalesReceiptQueryRsType) orderModResp.getQBXMLMsgsRs()
 																				.getHostQueryRsOrCompanyQueryRsOrCompanyActivityQueryRs()
@@ -560,7 +560,7 @@ public class OrderHandler {
 	 */
 	public QBResponse processOrderDelete(Integer tenantId, String orderId,
 			String responseXml) throws Exception {
-		QBXML deleteTxResp = (QBXML) xmlHelper.getUnmarshalledValue(responseXml);
+		QBXML deleteTxResp = xmlHelper.getUnmarshalledValue(responseXml);
 
 		TxnDelRsType deleteTxRespType = (TxnDelRsType) deleteTxResp
 				.getQBXMLMsgsRs()

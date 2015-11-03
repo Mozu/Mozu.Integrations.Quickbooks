@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.event.Event;
+import com.mozu.qbintegration.events.impl.OrderEventHandlerImpl;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/root-context.xml", "file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })

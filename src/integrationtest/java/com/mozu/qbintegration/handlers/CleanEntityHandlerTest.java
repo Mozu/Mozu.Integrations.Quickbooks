@@ -2,6 +2,7 @@ package com.mozu.qbintegration.handlers;
 
 import static org.junit.Assert.*;
 
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -15,19 +16,24 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mozu.api.ApiContext;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.platform.EntityListResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
+import com.mozu.api.utils.JsonUtils;
+import com.mozu.qbintegration.model.OrderStates;
+import com.mozu.qbintegration.model.WorkTaskStatus;
 import com.mozu.qbintegration.service.QuickbooksService;
+import com.mozu.qbintegration.tasks.WorkTask;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/quickbooks/servlet-context.xml" })
-public class EntityHandlerTest {
+@ContextConfiguration(locations= {"file:src/integrationtest/resources/servlet-context.xml" })
+public class CleanEntityHandlerTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(EntityHandlerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(CleanEntityHandlerTest.class);
 	
 	@Autowired
 	QuickbooksService quickbooksService;
@@ -108,6 +114,7 @@ public class EntityHandlerTest {
 	}
 	
 	private void show(String entityName) throws Exception {
+		final ObjectMapper mapper = JsonUtils.initObjectMapper();
 		EntityResource entityResource = new EntityResource(mozuContext);
 		
 		EntityCollection entities = entityResource.getEntities(entityName, 200, 0, null, null, null);
@@ -115,7 +122,8 @@ public class EntityHandlerTest {
 		logger.info("Listing all " + entityName);
 		
 		for (JsonNode entity : entities.getItems()) {
-			logger.info(entity.asText());
+			Object object = mapper.treeToValue(entity, Object.class);
+			logger.info(mapper.writeValueAsString(object));
 		}
 	}
 	
@@ -142,13 +150,27 @@ public class EntityHandlerTest {
 	@Test
 	public void showEntities() {
 		try {
-		show(entityHandler.getTaskqueueEntityName());
-		show(entityHandler.getCustomerEntityName());
+			show(entityHandler.getTaskqueueEntityName());
+			show(entityHandler.getCustomerEntityName());
 		}catch (Exception e) {
 			fail(e.getMessage());
+		}	
+	}
+	
+	@Test
+	public void addTask() {
+		WorkTask task = new WorkTask();
+		task.setId("07342fd45621e1320081e3e200002d9a");
+		task.setCreateDate(DateTime.now());
+		task.setStatus(WorkTaskStatus.PENDING);
+		task.setCurrentStep(OrderStates.CUST_QUERY);
+		task.setType("Order");
+		
+		try {
+			entityHandler.addUpdateEntity(mozuContext.getTenantId(), entityHandler.getTaskqueueEntityName(), task.getId(), task);
+		} catch (Exception e) {
+			fail(e.getMessage());
 		}
-		
-		
 	}
 	
 }

@@ -154,16 +154,18 @@ public class QuickbooksServiceEndPoint {
 			if (nodes.size() == 0) {
 				val.add("none");
 			}
-			else if (StringUtils.isNotEmpty(generalSetting.getQbwFile()))
-				val.add(generalSetting.getQbwFile()); // Pending work to do?
-			else {
-				val.add(""); // Pending work to do?
+			else if (StringUtils.isNotEmpty(generalSetting.getQbwFile())) {
+				val.add(generalSetting.getQbwFile());
 				val.add("");
-				val.add(null);
+				val.add("10");
+			} 
+			else {
+				val.add("");
+				val.add("");
 				val.add("10");
 			}
 		} else {
-			val.add(""); // Pending work to do?
+			val.add("");
 			val.add("nvu");
 		}
 

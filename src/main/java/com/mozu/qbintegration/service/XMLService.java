@@ -9,8 +9,11 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 
+import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAdd;
+import com.mozu.qbintegration.model.qbmodel.allgen.CustomerAddRqType;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 
 @Service
@@ -35,26 +38,57 @@ public class XMLService {
     }
 
     public String getMarshalledValue(QBXML qbxml) throws Exception {
+    	escapeStrings(qbxml);
 		String qbXMLStr = null;
-		try {
-			StringWriter writer = new StringWriter();
-			marshaller.marshal(qbxml, writer);
-			qbXMLStr = QBXML_PREFIX + writer.toString();
-		} catch (Exception e) {
-			throw e;
-		} 
+	
+		StringWriter writer = new StringWriter();
+		marshaller.marshal(qbxml, writer);
+		qbXMLStr = QBXML_PREFIX + writer.toString();
+		writer.close();
+	
 		return qbXMLStr;
 	}
 
-	public Object getUnmarshalledValue(String respFromQB) throws Exception {
-		Object umValue = null;
+	public QBXML getUnmarshalledValue(String respFromQB) throws Exception {
+		QBXML umValue = null;
 		try {
 			Reader r = new StringReader(respFromQB);
-			umValue = unmarshaller.unmarshal(r);
+			umValue = (QBXML)unmarshaller.unmarshal(r);
+			unescapeStrings(umValue);
 		} catch (Exception e) {
 			throw e;
 		}
 
 		return umValue;
+	}
+	
+	
+	/**
+	 * Begin handling non-ascii characters with html entity encoding.
+	 * @param qbxml
+	 */
+	private void escapeStrings(QBXML qbxml) {
+        if (qbxml.getQBXMLMsgsRq() != null) {
+            if (qbxml.getQBXMLMsgsRq().getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq() != null) {
+                for(Object obj : qbxml.getQBXMLMsgsRq().getHostQueryRqOrCompanyQueryRqOrCompanyActivityQueryRq()) {
+                    if (obj instanceof CustomerAddRqType){
+                        if (((CustomerAddRqType)obj).getCustomerAdd() != null) {
+                            CustomerAdd customerAdd = ((CustomerAddRqType)obj).getCustomerAdd();
+                            customerAdd.setFirstName(StringEscapeUtils.escapeHtml(customerAdd.getFirstName()));
+                            customerAdd.setLastName(StringEscapeUtils.escapeHtml(customerAdd.getLastName()));
+                            customerAdd.setEmail(StringEscapeUtils.escapeHtml(customerAdd.getEmail()));
+                        }
+                    }
+                }
+            }
+        }
+	}
+
+	/**
+	 * Begin handling non-ascii characters with html entity decoding.
+	 * @param qbxml
+	 */
+	private void unescapeStrings(QBXML qbxml) {
+	
 	}
 }
