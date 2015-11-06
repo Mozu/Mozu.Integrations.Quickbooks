@@ -2,6 +2,9 @@ package com.mozu.qbintegration.handlers;
 
 import static org.junit.Assert.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -76,10 +79,10 @@ public class CleanEntityHandlerTest {
 		try {
 //			runCleanup(entityHandler.getOrderEntityName(), "refNumber");
 			//runCleanup(entityHandler.getTaskqueueEntityName(), "id");
-			runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
-			runCleanup(entityHandler.getProductEntityName(), "productCode");
+			//runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
+			//unCleanup(entityHandler.getProductEntityName(), "productCode");
 			runCleanup(entityHandler.getLookupEntity(), "id");
-			runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
+			//runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
 			//runCleanup(entityHandler.getOrderConflictEntityName(), "id");
 			//runCleanup(entityHandler.getOrderUpdatedEntityName(), "id");
 //			runCleanup(entityHandler.getOrderEntityName(), "refNumber");
@@ -87,7 +90,7 @@ public class CleanEntityHandlerTest {
 //			runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
 //			runCleanup(entityHandler.getOrderConflictEntityName(), "id");
 //			runCleanup(entityHandler.getOrderUpdatedEntityName(), "id");
-			runCleanup(entityHandler.getLookupEntity(), "id");
+			//runCleanup(entityHandler.getLookupEntity(), "id");
 //			runCleanup(entityHandler.getOrderPostedEntityName(), "enteredTime");
 //			runCleanup(entityHandler.getOrderCancelledEntityName(), "enteredTime");
 			
@@ -151,7 +154,17 @@ public class CleanEntityHandlerTest {
 	public void showEntities() {
 		try {
 			show(entityHandler.getTaskqueueEntityName());
+			show(entityHandler.getOrderEntityName());
 			show(entityHandler.getCustomerEntityName());
+			show(entityHandler.getProductEntityName());
+			show(entityHandler.getSettingEntityName());
+			show(entityHandler.getLookupEntity());
+			
+			JsonNode entity = entityHandler.getEntity(mozuContext.getTenantId(), entityHandler.getCustomerEntityName(), "acorrect+email@mailinator.com");
+			
+			if (entity == null) {
+				fail("Nothing found");
+			}
 		}catch (Exception e) {
 			fail(e.getMessage());
 		}	
@@ -160,7 +173,7 @@ public class CleanEntityHandlerTest {
 	@Test
 	public void addTask() {
 		WorkTask task = new WorkTask();
-		task.setId("07342fd45621e1320081e3e200002d9a");
+		task.setId("073c2ccd5621e133d447590800002d9a");
 		task.setCreateDate(DateTime.now());
 		task.setStatus(WorkTaskStatus.PENDING);
 		task.setCurrentStep(OrderStates.CUST_QUERY);

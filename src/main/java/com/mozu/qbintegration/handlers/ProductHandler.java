@@ -621,7 +621,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingProductCode);
 			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
 			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
@@ -662,7 +662,7 @@ public class ProductHandler {
 				mzItem.setQbItemCode(shippingDiscountProductCode);
 				mzItem.setAmount(shippingDiscount);
 				mzItem.setMisc(true);
-				mzItem.setTaxCode(taxCode);
+				mzItem.setTaxCode("Non");
 				productCodes.add(mzItem);
 			}
 		}
@@ -677,7 +677,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(shippingAdjustmentProductCode);
 			mzItem.setAmount(shippingAdjustment);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		

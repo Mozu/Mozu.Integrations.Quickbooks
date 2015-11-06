@@ -65,7 +65,7 @@ public class CustomerHandler {
 	public String getQbCustomerId(Integer tenantId, String emailAddress) throws Exception {
 		String qbListID = null;
 		
-		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), URLEncoder.encode(emailAddress, StandardCharsets.UTF_8.name()));
+		JsonNode entity = entityHandler.getEntity(tenantId, entityHandler.getCustomerEntityName(), emailAddress);
 		
 		if (entity != null) {
 			JsonNode result = entity.findValue("custQBListID");
