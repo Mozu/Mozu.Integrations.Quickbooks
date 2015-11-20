@@ -28,7 +28,7 @@ The webconnector can be found at http://marketplace.intuit.com/webconnector/.
 3. Click "Create Application" button in right corner.
 4. Enter the name and application id you'd like to use for your application.
 5. There are resources that apply necessary configuration into the application.
-6. Further sandbox configuration can be found at https://mozups.atlassian.net/wiki/pages/viewpage.action?spaceKey=MPS&title=Quickbooks+Setup.
+6. Further sandbox configuration can be found in the Mozu QuickBooks Application Guide.
 7. Update the Mozu properties. This is the application ID and SharedSecret found in the Mozu application definition in the Mozu Dev Center ApplicationId= SharedSecret=
 
 ## Install the application into a Mozu tenant
