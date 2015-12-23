@@ -114,10 +114,10 @@ test {
 uploadArchives {
     repositories {
         mavenDeployer {
-           repository(url: "http://aus02bpnexs001.corp.volusion.com:8080/nexus/content/repositories/releases/") {
+           repository(url: "http://aus02ndmms001.dev.volusion.com:8081/nexus/content/repositories/releases/") {
              authentication(userName: "deployment", password: "deployment123")
            }
-           snapshotRepository(url: "http://aus02bpnexs001.corp.volusion.com:8080/nexus/content/repositories/snapshots/") {
+           snapshotRepository(url: "http://aus02ndmms001.dev.volusion.com:8081/nexus/content/repositories/snapshots/") {
                authentication(userName: "deployment", password: "deployment123")
            }
        }
