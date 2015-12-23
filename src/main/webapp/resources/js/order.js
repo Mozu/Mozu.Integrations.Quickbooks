@@ -256,6 +256,15 @@ homeViewModel.prototype.getOrders = function() {
 		"sAjaxSource" : "Orders/getOrdersFilteredByAction?action=POSTED&tenantId=" + $("#tenantIdHdn").val() + "&siteId=" + $("#siteIdHdn").val(),
 		"aoColumns" : [
 
+       {    
+    	   "mData": "id",
+    	   "bSearchable": false,
+    	   "bSortable": false,
+    	   "mRender": function (data, type, full) {			
+    		   return '<input type="checkbox" id="allOrdersPostedCheckbox' + data 
+    		   		+ '" name="allOrdersPostedCheckbox" class="postedCheck" value ="'+ data +'">';
+    	   }
+        },
 		{
 			"mData" : "orderNumber"
 		}, {
@@ -287,7 +296,7 @@ homeViewModel.prototype.getOrders = function() {
 
 };
 
-//To Post a Retry for an Order in CONFLICT status
+//To Post a Retry for an Order in CONFLICT or POSTED status
 homeViewModel.prototype.postRetryOrderToQB = function(action) {
 	var self = this;
 	//Clear the checkboxes array
@@ -312,12 +321,12 @@ homeViewModel.prototype.postRetryOrderToQB = function(action) {
 };
 
 //To post an updated order to quickbooks
-homeViewModel.prototype.postUpdatedOrderToQB = function(action) {
+homeViewModel.prototype.postUpdatedOrderToQB = function(action, state) {
 	var self = this;
 	//Clear the checkboxes array
 	self.selectedOrdersToUpdate.removeAll();
 	
-	var $allCheckedUpdateBoxes = $('input:checkbox[name=allOrdersCheckbox]:checked');
+	var $allCheckedUpdateBoxes = $('input:checkbox[name=' + (state == 'post') ? 'allOrdersCheckbox' : 'allOrdersPostedCheckbox' + ']:checked');
 	$allCheckedUpdateBoxes.each(function(index) {
 		self.selectedOrdersToUpdate.push($(this).val());
 	});

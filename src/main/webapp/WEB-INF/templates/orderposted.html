@@ -7,26 +7,31 @@
 <body>
 
 	<div th:fragment="content">
-
-
-		<table width="100%">
-			<tr>
-				<td>
-					<table id="orderTable" class="display" cellspacing="0"	width="100%">
-						<thead>
-							<tr>
-								<th><p th:text="#{label.order}"></p></th>
-					            <th><p th:text="#{label.customerName}"></p></th>
-					            <th><p th:text="#{label.createdDate}"></p></th>
-					            <th><p th:text="#{label.updatedDate}"></p></th>					
-					            <th><p th:text="#{label.amount}"></p></th>
-							</tr>
-						</thead>
-					</table>
-				</td>
-			</tr>
-		</table>
-
+		<div class="row">
+			<div class="tab-full-column" >
+				<div style="width:300px; text-align:left;margin:auto; margin-bottom:-25px;">
+					<button class="mz-button primary" data-bind="click: postUpdatedOrderToQB.bind($data,'update')" style="float:none;">Repost</button>
+				</div>
+				<table width="100%">
+					<tr>
+						<td>
+							<table id="orderTable" class="display" cellspacing="0"	width="100%">
+								<thead>
+									<tr>
+										<th><input type="checkbox" class="selectAllPosts" onClick="selectAll('postedCheck', 'selectAllPosts')"/></th>
+										<th><p th:text="#{label.order}"></p></th>
+							            <th><p th:text="#{label.customerName}"></p></th>
+							            <th><p th:text="#{label.createdDate}"></p></th>
+							            <th><p th:text="#{label.updatedDate}"></p></th>					
+							            <th><p th:text="#{label.amount}"></p></th>
+									</tr>
+								</thead>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
 	</div>
 </body>
 
