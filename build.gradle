@@ -1,55 +1,62 @@
+import java.security.*
+import javax.crypto.*
+import javax.crypto.spec.*
+
+buildscript {
+	repositories {
+		mavenCentral()
+		jcenter()
+		maven {
+			url 'https://plugins.gradle.org/m2/'
+		}
+	}
+
+	dependencies {
+		classpath 'org.akhikhl.gretty:gretty:+'
+		classpath 'com.bmuschko:gradle-cargo-plugin:2.2.1'
+	}
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'maven'
 apply plugin: 'war'
-apply plugin: 'jetty'
+apply plugin: 'pmd'
+apply plugin: 'maven-publish'
+apply plugin: 'org.akhikhl.gretty'
+apply plugin: 'com.bmuschko.cargo'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-//tomcatHome='E:/Akshay/quickbooks install/Apache Tomcat 7.0.41'
 archivesBaseName='Quickbooks'
-group='wars'
-httpPort=8002
+group='org.qbwebconnect'
 
-// Dynamically insert TeamCity build number if available
-if (hasProperty("teamcity")) {
-    version = teamcity["build.number"]
-        println "TeamCity build number passed into gradle is " + version
-    }
-    else {
-// Manually insert the version numbers here when building outside of TeamCity
-    version = '0.0.1-LocalBuild'
+tasks.withType(Pmd) {
+	reports {
+		xml.enabled = false
+		html.enabled = true
+	}
 }
 
-war {
-    manifest {
-        attributes 'Implementation-Title': 'Mozu Integration Template Extension', 'Implementation-Version': version
-    }
+def env = project.hasProperty('env') ? project.getProperty('env') : 'uat'
+def configFile = file("$rootDir/gradle/config/buildConfig.groovy")
+def parsedConfig = new ConfigSlurper(env).parse(configFile.toURL())
+
+allprojects {
+	apply from: "$rootDir/gradle/versioning.gradle"
+	ext.config = parsedConfig
 }
 
-jettyRun {
-	reload="automatic"
-	scanIntervalSeconds=2
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.7'
-}
+ext.fullRepoUrl = "$config.binaryRepository.url/$config.binaryRepository.name"
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/groups/staging/"
-    }
-    maven {
-          url "http://aus02bpnexs001.corp.volusion.com:8080/nexus/content/groups/public"
-    }   
+	jcenter()
+    maven { url fullRepoUrl }
 }
 
-configurations.all {
-    // check for updates every build
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+configurations {
+	remoteArchive.extendsFrom runtime
 }
 
 dependencies {
@@ -107,26 +114,127 @@ dependencies {
     
     
     testCompile group: 'junit', name: 'junit', version: '4.+'
+
+	remoteArchive "$project.group:$project.archivesBaseName:$project.version"
+}
+
+pmd {
+	ignoreFailures = true
 }
 
 test {
     systemProperties 'property': 'value'
 }
 
-//task deployToTomcat(type: Copy) {
-//  from war
-//   into "${tomcatHome}/webapps"
-//}
+publishing {
+	publications {
+		webApp(MavenPublication) {
+			artifactId "$project.archivesBaseName"
+			from components.web
+		}
+	}
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-           repository(url: "http://aus02bpnexs001.corp.volusion.com:8080/nexus/content/repositories/releases/") {
-             authentication(userName: "deployment", password: "deployment123")
-           }
-           snapshotRepository(url: "http://aus02bpnexs001.corp.volusion.com:8080/nexus/content/repositories/snapshots/") {
-               authentication(userName: "deployment", password: "deployment123")
-           }
-       }
-    }
+	repositories {
+		maven {
+			url fullRepoUrl
+
+			credentials {
+				username = config.binaryRepository.username
+				password = config.binaryRepository.password
+			}
+		}
+	}
+}
+
+cargoUndeployRemote {
+	onlyIf {
+		String url = "http://" + config.server.hostname + ":" + config.server.port + "/" + config.server.context
+		println 'tomcat url -- ' + url
+
+		url.toURL().openConnection().with {
+			conn -> readTimeout = 10000
+			return responseCode == 200
+		}
+	}
+}
+
+cargo {
+	containerId = 'tomcat7x'
+	port = config.server.port
+
+	deployable {
+		file = file("$buildDir/download/$project.group:$project.archivesBaseName:$project.version")
+		context = config.server.context
+	}
+
+	remote {
+		protocol = 'https'
+		hostname = config.server.hostname
+		username = config.server.username
+		password = config.server.password
+	}
+}
+
+gretty {
+	servletContainer = 'jetty9'
+	httpEnabled = true
+	managedClassReload=true
+	fastReload=true
+	contextPath='/Quickbooks'
+	jvmArgs=['-Dcustom.logging.root=/tmp']
+}
+
+task downloadBinaryArchive(type:Copy) {
+	from configurations.remoteArchive
+	into "$buildDir/download"
+}
+
+task createBuildInfoFile << {
+	def buildInfoFile = new File("$buildDir/build-info.properties")
+	Properties props = new Properties()
+	props.setProperty('version', project.version.toString())
+	props.setProperty('timestamp', project.buildTimestamp)
+	props.store(buildInfoFile.newWriter(), null)
+}
+
+war {
+	dependsOn createBuildInfoFile
+
+	from(buildDir) {
+		include 'build-info.properties'
+		into('WEB-INF/classes')
+	}
+}
+
+cargoDeployRemote.dependsOn downloadBinaryArchive, cargoUndeployRemote
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.9'
+}
+
+// crypto helpers
+def getKey() {
+	if(hasProperty('aes128key')) {
+		return aes128key.decodeBase64()
+	}
+
+	return ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p']
+}
+
+def encode(target) {
+	def cipher = getCipher(Cipher.ENCRYPT_MODE)
+	return cipher.doFinal(target.bytes).encodeBase64()
+}
+
+def decode(target) {
+	def cipher = getCipher(Cipher.DECRYPT_MODE)
+	return new String(cipher.doFinal(target.decodeBase64()))
+}
+
+def getCipher(mode) {
+	def keySpec = new SecretKeySpec(getKey(), 'AES')
+	def cipher = Cipher.getInstance('AES')
+	def keyFactory = SecretKeyFactory.getInstance('AES')
+	cipher.init(mode, keyFactory.generateSecret(keySpec))
+	return cipher
 }
