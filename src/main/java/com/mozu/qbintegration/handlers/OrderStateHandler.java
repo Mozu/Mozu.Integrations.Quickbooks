@@ -153,13 +153,22 @@ public class OrderStateHandler {
 		
 		for(String orderId: orderNumberList) {
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
-			if (node == null) continue;
-			if (action.equalsIgnoreCase("update")) {
-				transitionState(orderId, tenantId, null, "Update");
-				logger.debug("Slotted an order update task for mozu order number: " + orderId);
+			if (node == null) {
+				node = entityHandler.getEntity(tenantId,  entityHandler.getOrderPostedEntityName(), orderId);
+				if (node == null) {
+					continue;
+				} else {
+					//Re-enqueue as an updated order
+					processOrder(orderId, new MozuApiContext(tenantId));
+				}
+			} else {
+				//normal update
+				if (action.equalsIgnoreCase("update")) {
+					transitionState(orderId, tenantId, null, "Update");
+					logger.debug("Slotted an order update task for mozu order number: " + orderId);
+				}
+				entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
 			}
-			entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
-			
 		}
 		
 	}
