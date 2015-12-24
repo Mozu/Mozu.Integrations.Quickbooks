@@ -326,7 +326,7 @@ homeViewModel.prototype.postUpdatedOrderToQB = function(action, state) {
 	//Clear the checkboxes array
 	self.selectedOrdersToUpdate.removeAll();
 	
-	var $allCheckedUpdateBoxes = $('input:checkbox[name=' + (state == 'post') ? 'allOrdersCheckbox' : 'allOrdersPostedCheckbox' + ']:checked');
+	var $allCheckedUpdateBoxes = $('input:checkbox[name=' + ((state == 'post') ? 'allOrdersCheckbox' : 'allOrdersPostedCheckbox') + ']:checked');
 	$allCheckedUpdateBoxes.each(function(index) {
 		self.selectedOrdersToUpdate.push($(this).val());
 	});
