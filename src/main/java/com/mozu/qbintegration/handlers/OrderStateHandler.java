@@ -16,6 +16,7 @@ import com.mozu.api.ApiException;
 import com.mozu.api.MozuApiContext;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.api.contracts.customer.CustomerAccount;
+import com.mozu.api.contracts.mzdb.EntityCollection;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.qbintegration.model.MozuOrderDetail;
@@ -154,7 +155,12 @@ public class OrderStateHandler {
 		for(String orderId: orderNumberList) {
 			JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
 			if (node == null) {
-				node = entityHandler.getEntity(tenantId,  entityHandler.getOrderPostedEntityName(), orderId);
+				EntityCollection entityCollection = entityHandler.getEntityCollection(tenantId, entityHandler.getOrderPostedEntityName(), "id eq " + orderId, null, 0, 1);
+				if (entityCollection != null) {
+					for (JsonNode orderNode : entityCollection.getItems()) {
+						node = orderNode;
+					}
+				}
 				if (node == null) {
 					logger.info("No order found in update or posted entity " + orderId);
 					continue;

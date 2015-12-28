@@ -338,7 +338,11 @@ homeViewModel.prototype.postUpdatedOrderToQB = function(action, state) {
 			data :  ko.mapping.toJSON(self.selectedOrdersToUpdate()),
 			contentType: "application/json; charset=utf-8",
 			success : function(data) {
-				viewModel.getOrdersUpdated();
+				if (state == 'post') {
+					viewModel.getOrdersUpdated();
+				} else {
+					viewModel.getOrders();
+				}
 			}
 		});
 	}
