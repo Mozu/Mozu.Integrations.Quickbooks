@@ -156,6 +156,7 @@ public class OrderStateHandler {
 			if (node == null) {
 				node = entityHandler.getEntity(tenantId,  entityHandler.getOrderPostedEntityName(), orderId);
 				if (node == null) {
+					logger.info("No order found in update or posted entity " + orderId);
 					continue;
 				} else {
 					//Re-enqueue as an updated order
