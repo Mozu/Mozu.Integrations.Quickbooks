@@ -288,7 +288,11 @@ homeViewModel.prototype.getOrders = function() {
 			}
 		},
 
-		]
+		],
+		"fnPreDrawCallback" : function (settings) {
+			$('.postedCheck').prop('checked', false);
+			return true;
+		}
 	});
 	
 
