@@ -115,7 +115,7 @@ dependencies {
     
     testCompile group: 'junit', name: 'junit', version: '4.+'
 
-	remoteArchive "$project.group:$project.archivesBaseName:$project.version"
+	remoteArchive "wars:$project.archivesBaseName:$project.version"
 }
 
 pmd {
@@ -129,6 +129,7 @@ test {
 publishing {
 	publications {
 		webApp(MavenPublication) {
+			groupId "wars"
 			artifactId "$project.archivesBaseName"
 			from components.web
 		}
@@ -163,7 +164,7 @@ cargo {
 	port = config.server.port
 
 	deployable {
-		file = file("$buildDir/download/$project.group:$project.archivesBaseName:$project.version")
+		file = file("$buildDir/download/wars:$project.archivesBaseName:$project.version")
 		context = config.server.context
 	}
 

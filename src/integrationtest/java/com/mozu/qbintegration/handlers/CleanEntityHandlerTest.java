@@ -56,7 +56,8 @@ public class CleanEntityHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		mozuContext = new MozuApiContext(11674);
+		mozuContext = new MozuApiContext(6639);
+		//mozuContext = new MozuApiContext(11674);
 	}
 
 	@After
@@ -79,9 +80,9 @@ public class CleanEntityHandlerTest {
 		try {
 //			runCleanup(entityHandler.getOrderEntityName(), "refNumber");
 			//runCleanup(entityHandler.getTaskqueueEntityName(), "id");
-			//runCleanup(entityHandler.getCustomerEntityName(), "custEmail");
-			//unCleanup(entityHandler.getProductEntityName(), "productCode");
-			runCleanup(entityHandler.getLookupEntity(), "id");
+			runCleanup(entityHandler.getCustomerEntityName(), "custEmail", null);
+			runCleanup(entityHandler.getProductEntityName(), "productCode", null);
+			//runCleanup(entityHandler.getLookupEntity(), "id");
 			//runCleanup(entityHandler.getTaskqueueLogEntityName(), "enteredTime");
 			//runCleanup(entityHandler.getOrderConflictEntityName(), "id");
 			//runCleanup(entityHandler.getOrderUpdatedEntityName(), "id");
@@ -102,16 +103,26 @@ public class CleanEntityHandlerTest {
 		
 	}
 	
-	private void runCleanup(String entityName, String key) throws Exception {
+	private void runCleanup(String entityName, String key, String filter) throws Exception {
 		EntityResource entityResource = new EntityResource(mozuContext);
+		int totalCount = 0;
+		int startIndex = 0;
 		
-		EntityCollection entities = entityResource.getEntities(entityName, 200, 0, null, null, null);
-		
-		for(JsonNode entity : entities.getItems()) {
-			if (entity.has(key)) {
-				String id  = entity.get(key).asText();
-				logger.info("Deleting id:"+id+" from "+entityName);
-				entityResource.deleteEntity(entityName, id);
+		while (totalCount >= startIndex) {
+			EntityCollection entities = entityResource.getEntities(entityName, 200, startIndex, filter, null, null);
+			totalCount = entities.getTotalCount();
+			startIndex += 200;
+			
+			for(JsonNode entity : entities.getItems()) {
+				if (entity.has(key)) {
+					String id  = entity.get(key).asText();
+					logger.info("Deleting id:"+id+" from "+entityName);
+					try {
+					entityResource.deleteEntity(entityName, id);
+					}catch (Exception e) {
+						logger.error("Failed to remove entity", e);
+					}
+				}
 			}
 		}
 	}
@@ -127,6 +138,20 @@ public class CleanEntityHandlerTest {
 		for (JsonNode entity : entities.getItems()) {
 			Object object = mapper.treeToValue(entity, Object.class);
 			logger.info(mapper.writeValueAsString(object));
+		}
+	}
+	
+	@Test
+	public void findObject() throws Exception {
+		final ObjectMapper mapper = JsonUtils.initObjectMapper();
+		EntityResource entityResource = new EntityResource(mozuContext);
+		EntityCollection entityCollection = entityResource.getEntities(entityHandler.getCustomerEntityName(), 200, 0, "custQBListID eq '800116C6-1425056994'", null, null);
+		
+		if (entityCollection != null) {
+			for (JsonNode node : entityCollection.getItems()) {
+				logger.info(mapper.writeValueAsString(node));
+				//entityResource.deleteEntity(entityHandler.getCustomerEntityName(), node.get("custEmail").textValue());
+			}
 		}
 	}
 	
@@ -153,18 +178,18 @@ public class CleanEntityHandlerTest {
 	@Test
 	public void showEntities() {
 		try {
-			show(entityHandler.getTaskqueueEntityName());
-			show(entityHandler.getOrderEntityName());
+			//show(entityHandler.getTaskqueueEntityName());
+			//show(entityHandler.getOrderEntityName());
 			show(entityHandler.getCustomerEntityName());
-			show(entityHandler.getProductEntityName());
-			show(entityHandler.getSettingEntityName());
-			show(entityHandler.getLookupEntity());
+			//show(entityHandler.getProductEntityName());
+			//show(entityHandler.getSettingEntityName());
+			//show(entityHandler.getLookupEntity());
 			
-			JsonNode entity = entityHandler.getEntity(mozuContext.getTenantId(), entityHandler.getCustomerEntityName(), "acorrect+email@mailinator.com");
-			
-			if (entity == null) {
-				fail("Nothing found");
-			}
+//			JsonNode entity = entityHandler.getEntity(mozuContext.getTenantId(), entityHandler.getCustomerEntityName(), "acorrect+email@mailinator.com");
+//			
+//			if (entity == null) {
+//				fail("Nothing found");
+//			}
 		}catch (Exception e) {
 			fail(e.getMessage());
 		}	
