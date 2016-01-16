@@ -648,6 +648,16 @@ public class ProductHandler {
 			}
 		}
 		
+		if (orderDiscount != 0.0 && StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode(settings.getDiscountProductCode());
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(orderDiscount);
+			mzItem.setMisc(true);
+			mzItem.setTaxCode(taxCode);
+			productCodes.add(mzItem);
+		}
+		
 		//Shipping discount
 		if (StringUtils.isNotEmpty(settings.getDiscountProductCode()) && 
 				order.getShippingDiscounts() != null 
@@ -680,18 +690,6 @@ public class ProductHandler {
 			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
-		
-		if (orderDiscount != 0.0 && StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
-			MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getDiscountProductCode());
-			mzItem.setQbItemCode(qbDiscProductCode);
-			mzItem.setAmount(orderDiscount);
-			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
-			productCodes.add(mzItem);
-		}
-		
-		
 		
 		//Get store credit product
 		if (StringUtils.isNoneEmpty(settings.getGiftCardProductCode())) {
