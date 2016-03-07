@@ -5,9 +5,7 @@ package com.mozu.qbintegration.controllers;
 
 import java.net.URI;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.Cookie;
@@ -35,7 +33,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mozu.api.ApiContext;
 import com.mozu.api.Headers;
 import com.mozu.api.MozuApiContext;
@@ -89,8 +86,7 @@ public class OrdersController {
 	public String index(HttpServletRequest httpRequest,	HttpServletResponse httpResponse, ModelMap modelMap) throws Exception {
 
 		String body = IOUtils.toString(httpRequest.getInputStream(), "ISO-8859-1");
-		
-		String decodedBody = URLDecoder.decode(body, "ISO-8859-1");
+	
 		URI params = new URI("?" + body);
 		List<NameValuePair> paramsList = URLEncodedUtils.parse(params, "UTF-8");
 
@@ -107,7 +103,7 @@ public class OrdersController {
 		ApiContext apiContext = new MozuApiContext(tenantId);
 		apiContext.setHeaderDate(dateKey);
 		apiContext.setHmacSha256(msgHash);
-		if (!Crypto.isRequestValid(apiContext, decodedBody)) {
+		if (!Crypto.isRequestValid(apiContext, URLDecoder.decode(body, "ISO-8859-1"))) {
             return "unauthorized";
         }
 	
