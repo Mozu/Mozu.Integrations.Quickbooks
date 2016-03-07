@@ -5,6 +5,7 @@ package com.mozu.qbintegration.controllers;
 
 import java.net.URI;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -87,10 +88,10 @@ public class OrdersController {
 	@RequestMapping(method = RequestMethod.POST)
 	public String index(HttpServletRequest httpRequest,	HttpServletResponse httpResponse, ModelMap modelMap) throws Exception {
 
-		String body = IOUtils.toString(httpRequest.getInputStream());
+		String body = IOUtils.toString(httpRequest.getInputStream(), "ISO-8859-1");
 		
 		String decodedBody = URLDecoder.decode(body, "ISO-8859-1");
-		URI params = new URI("?" + decodedBody);
+		URI params = new URI("?" + body);
 		List<NameValuePair> paramsList = URLEncodedUtils.parse(params, "UTF-8");
 
 		Integer tenantId = Integer.parseInt(getValue(paramsList, Headers.X_VOL_TENANT));
