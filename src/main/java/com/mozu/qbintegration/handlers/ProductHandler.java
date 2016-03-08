@@ -569,11 +569,8 @@ public class ProductHandler {
 				mzItem.setQbItemCode(this.getQBProductValue(tenantId, productCode, QB_ID));
 			
 			CommerceUnitPrice unitPrice = item.getUnitPrice();
-			if(item.getUnitPrice().getSaleAmount() != null) {
-				mzItem.setAmount(unitPrice.getSaleAmount());
-			} else {
-				mzItem.setAmount(unitPrice.getListAmount());
-			}
+			
+			mzItem.setAmount(item.getDiscountedTotal().doubleValue()/item.getQuantity());
 			
 			String taxCode = null;
 			if (item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) 
