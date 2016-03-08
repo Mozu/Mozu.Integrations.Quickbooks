@@ -72,8 +72,8 @@ public class QuickbooksServiceImpl implements QuickbooksService {
 		boolean isUpdate = false;
 
 		try {
-			entityResource.getEntity(mapName, tenantId.toString());
-			isUpdate = true;
+			JsonNode node = entityResource.getEntity(mapName, tenantId.toString());
+			isUpdate = node != null && !node.isNull() ;
 		} catch (ApiException e) {
 			if (!StringUtils.equals(e.getApiError().getErrorCode(),"ITEM_NOT_FOUND")) {
 				logger.error(e.getMessage(),e);
