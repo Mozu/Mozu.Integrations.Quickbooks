@@ -20,7 +20,7 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mozu.api.contracts.commerceruntime.orders.Order;
 import com.mozu.qbintegration.handlers.CustomerHandler;
-import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
+import com.mozu.base.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.OrderHandler;
 import com.mozu.qbintegration.handlers.OrderStateHandler;

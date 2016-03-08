@@ -26,7 +26,7 @@ import com.mozu.api.resources.platform.entitylists.EntityContainerResource;
 import com.mozu.api.resources.platform.entitylists.EntityResource;
 import com.mozu.api.utils.JsonUtils;
 import com.mozu.base.utils.ApplicationUtils;
-import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
+import com.mozu.base.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.handlers.EntityHandler;
 import com.mozu.qbintegration.handlers.QBDataHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
