@@ -5,6 +5,7 @@ apply plugin: 'war'
 apply plugin: 'jetty'
 
 sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 //tomcatHome='E:/Akshay/quickbooks install/Apache Tomcat 7.0.41'
 archivesBaseName='Quickbooks'
