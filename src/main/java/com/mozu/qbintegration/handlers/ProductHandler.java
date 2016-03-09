@@ -612,21 +612,21 @@ public class ProductHandler {
 		if (order.getTaxTotal() > 0.0)
 			taxCode = "Tax";
 		
-		if (order.getShippingSubTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
-			MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getShippingProductCode());
-			mzItem.setQbItemCode(shippingProductCode);
-			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
-			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
-			productCodes.add(mzItem);
-		}
-		
 		if(order.getDiscountTotal() != null && order.getDiscountTotal() > 0.0) { 
 			for (AppliedDiscount disc: order.getOrderDiscounts()) {
 				if (!disc.getExcluded())
 					orderDiscount += disc.getImpact();
 			}
+		}
+		
+		if (orderDiscount != 0.0 && StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+			MozuOrderItem mzItem = new MozuOrderItem();
+			mzItem.setProductCode(settings.getDiscountProductCode());
+			mzItem.setQbItemCode(qbDiscProductCode);
+			mzItem.setAmount(orderDiscount);
+			mzItem.setMisc(true);
+			mzItem.setTaxCode(taxCode);
+			productCodes.add(mzItem);
 		}
 		
 		//Order level adjustments
@@ -645,13 +645,13 @@ public class ProductHandler {
 			}
 		}
 		
-		if (orderDiscount != 0.0 && StringUtils.isNotEmpty(settings.getDiscountProductCode())) {
+		if (order.getShippingSubTotal() > 0.0	&& StringUtils.isNotEmpty(settings.getShippingProductCode())) {
 			MozuOrderItem mzItem = new MozuOrderItem();
-			mzItem.setProductCode(settings.getDiscountProductCode());
-			mzItem.setQbItemCode(qbDiscProductCode);
-			mzItem.setAmount(orderDiscount);
+			mzItem.setProductCode(settings.getShippingProductCode());
+			mzItem.setQbItemCode(shippingProductCode);
+			mzItem.setAmount(order.getShippingSubTotal()+ (order.getShippingTaxTotal() > 0 ? order.getShippingTaxTotal() : 0));
 			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
