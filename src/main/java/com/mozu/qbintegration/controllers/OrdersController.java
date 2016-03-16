@@ -109,8 +109,7 @@ public class OrdersController {
 	
 		httpResponse.addCookie(new Cookie(SECURITY_COOKIE, 
               ConfigurationSecurityInterceptor.encrypt(DateTime.now().toString(), 
-                      AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret(), 
-                      String.valueOf(apiContext.getTenantId()))));
+                      AppAuthenticator.getInstance().getAppAuthInfo().getSharedSecret())));
 		modelMap.addAttribute("tenantId", apiContext.getTenantId());
 		modelMap.addAttribute("selectedTab", tab);
 		return "orders";

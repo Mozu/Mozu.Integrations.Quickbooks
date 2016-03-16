@@ -30,7 +30,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mozu.base.handlers.EncryptDecryptHandler;
+import com.mozu.qbintegration.handlers.EncryptDecryptHandler;
 import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.QuickWebConnector;
 import com.mozu.qbintegration.model.Scheduler;
