@@ -570,10 +570,14 @@ public class ProductHandler {
 			
 			CommerceUnitPrice unitPrice = item.getUnitPrice();
 			
-			mzItem.setAmount(item.getDiscountedTotal().doubleValue()/item.getQuantity());
+			if(item.getUnitPrice().getSaleAmount() != null) {
+		         mzItem.setAmount(unitPrice.getSaleAmount());
+			 } else {
+				 mzItem.setAmount(unitPrice.getListAmount());
+			 }
 			
 			String taxCode = null;
-			if (item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) 
+			if ((item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) || mzItem.getAmount() > 0.0) 
 				taxCode = "Tax";
 			else
 				taxCode = "Non";
