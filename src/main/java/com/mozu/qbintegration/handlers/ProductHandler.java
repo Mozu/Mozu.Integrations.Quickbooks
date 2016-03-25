@@ -577,7 +577,7 @@ public class ProductHandler {
 			 }
 			
 			String taxCode = null;
-			if ((item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) || mzItem.getAmount() > 0.0) 
+			if (item.getItemTaxTotal() != null && item.getItemTaxTotal() > 0.0) 
 				taxCode = "Tax";
 			else
 				taxCode = "Non";
@@ -629,7 +629,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(orderDiscount);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode(taxCode);
+			mzItem.setTaxCode("Non");
 			productCodes.add(mzItem);
 		}
 		
