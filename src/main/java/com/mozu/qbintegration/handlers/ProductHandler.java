@@ -609,6 +609,10 @@ public class ProductHandler {
 				for(AppliedLineItemProductDiscount discount : item.getProductDiscounts()) {
 					orderDiscount += discount.getImpact();
 				}
+				
+				if (mzItem.getTaxCode().equals("Non")) {
+					mzItem.setTaxCode("Tax");
+				}
 			}
 		}
 		
@@ -629,7 +633,7 @@ public class ProductHandler {
 			mzItem.setQbItemCode(qbDiscProductCode);
 			mzItem.setAmount(orderDiscount);
 			mzItem.setMisc(true);
-			mzItem.setTaxCode("Non");
+			mzItem.setTaxCode(taxCode);
 			productCodes.add(mzItem);
 		}
 		
