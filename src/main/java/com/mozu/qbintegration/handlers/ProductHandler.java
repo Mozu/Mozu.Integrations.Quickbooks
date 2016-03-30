@@ -610,7 +610,7 @@ public class ProductHandler {
 					orderDiscount += discount.getImpact();
 				}
 				
-				if (mzItem.getTaxCode().equals("Non")) {
+				if (mzItem.getTaxCode().equals("Non") && order.getTaxTotal() > 0.0) {
 					mzItem.setTaxCode("Tax");
 				}
 			}
