@@ -407,6 +407,7 @@ var homeViewModel = function() {
 						self.mozuPayments.push(new mozuPayment("Maestro", "Maestro"));
 						self.mozuPayments.push(new mozuPayment("MC", "Master Card") );
 						self.mozuPayments.push(new mozuPayment("PaypalExpress", "PaypalExpress"));
+						self.mozuPayments.push(new mozuPayment("PaypalExpress2", "PaypalExpress2"));
 						self.mozuPayments.push(new mozuPayment("Solo", "Solo"));
 						self.mozuPayments.push(new mozuPayment("StoreCredit", "StoreCredit"));
 						self.mozuPayments.push(new mozuPayment("Switch", "Switch"));
