@@ -15,7 +15,9 @@ public interface QueueManagerService {
 	
 	WorkTask addTask(Integer tenantId, String id, String type, String currentStep, String action) throws Exception;
 
-	WorkTask getActiveTask(Integer tenantId) throws Exception; 
+	WorkTask getActiveTask(Integer tenantId) throws Exception;
+	
+	int getActiveTaskCount(Integer tenantId) throws Exception;
 	
 	boolean getInMemProcessingTask(Integer tenantId, String taskType) throws Exception;
 	

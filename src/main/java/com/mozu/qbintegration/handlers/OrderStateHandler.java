@@ -31,6 +31,7 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
+import com.mozu.qbintegration.service.OrderTrackingService;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
@@ -62,6 +63,9 @@ public class OrderStateHandler {
 	
 	@Autowired
 	XMLService xmlHelper;
+	
+	@Autowired
+	OrderTrackingService orderTrackingService;
 
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
@@ -90,7 +94,10 @@ public class OrderStateHandler {
 					MozuOrderDetail orderDetails = orderHandler.getMozuOrderDetail(order);
 					entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetails.getId(), orderDetails);
 				} else  { //Add to queue for processing
-					transitionState(tenantId, order, orderingCust, null, "Add" );
+					if (orderTrackingService.acquireOrder(order.getId())) {
+						transitionState(tenantId, order, orderingCust, null, "Add" );
+						orderTrackingService.releaseOrder(order.getId());
+					}
 				}
 			}
 		}

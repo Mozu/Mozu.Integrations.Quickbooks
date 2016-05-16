@@ -31,6 +31,9 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Autowired
 	EntityHandler entityHandler;
 	
+	@Autowired
+	OrderTrackingService orderTrackingService;
+	
 	/*public final String PROCESSING = "Processing";
 	public final String PENDING = "Pending";
 	public final String COMPLETED = "Completed";*/
@@ -41,14 +44,20 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
 				"status ne ERROR and status ne PROCESS_IN_MEM", "createDate", 1);
 		
-		if (nodes.size() > 0) {
+		if (nodes.size() > 0 && getActiveTaskCount(tenantId) < 1) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 			
-			task.setStatus(WorkTaskStatus.PROCESSING);
-			
-			entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
-
-			return task;
+			if (task.getType().toLowerCase().equals("order")) {
+				if (orderTrackingService.addOrder(task.getId())) {
+					task.setStatus(WorkTaskStatus.PROCESSING);	
+					entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
+					return task;
+				}
+			} else {
+				task.setStatus(WorkTaskStatus.PROCESSING);	
+				entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
+				return task;
+			}
 		}
 		logger.debug("No WorkTask to return from QueueManagerServiceImpl for tenantId: " + tenantId);
 		return null;
@@ -73,13 +82,20 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Override
 	public WorkTask getActiveTask(Integer tenantId) throws Exception {
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
-				"status eq " +WorkTaskStatus.PROCESSING, null, 1);
+				"status eq " +WorkTaskStatus.PROCESSING, "createDate", 1);
 		if (nodes.size() > 0) 
 			return mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 		
 		return null;
 	}
 	
+	@Override
+	public int getActiveTaskCount(Integer tenantId) throws Exception {
+		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
+				"status eq " +WorkTaskStatus.PROCESSING, null, 2);
+		return nodes.size();
+	}
+
 	@Override
 	public boolean getInMemProcessingTask(Integer tenantId, String taskType) throws Exception {
 		boolean isInMemTaskRunning = false;
@@ -95,6 +111,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	public void updateTask(Integer tenantId, String id, String currentStep, String status) throws Exception {
 		if(status.equalsIgnoreCase(WorkTaskStatus.COMPLETED)) {
 			entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), id);
+			orderTrackingService.removeOrder(id);
 			return;
 		} 
 		
@@ -110,7 +127,8 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	public void deleteTask(Integer tenantId, String workTaskId) throws Exception {
 		
 		entityHandler.deleteEntity(tenantId, entityHandler.getTaskqueueEntityName(), workTaskId);
-		logger.debug("Deleted task form queue with ID: " + workTaskId + ", for tenant " + tenantId);
+		orderTrackingService.removeOrder(workTaskId);
+		logger.debug("Deleted task from queue with ID: " + workTaskId + ", for tenant " + tenantId);
 	}
 }
 

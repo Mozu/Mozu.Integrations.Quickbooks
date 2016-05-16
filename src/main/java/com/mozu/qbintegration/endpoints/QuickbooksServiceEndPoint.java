@@ -30,6 +30,7 @@ import com.mozu.qbintegration.model.GeneralSettings;
 import com.mozu.qbintegration.model.QBSession;
 import com.mozu.qbintegration.model.WorkTaskLog;
 import com.mozu.qbintegration.model.WorkTaskStatus;
+import com.mozu.qbintegration.service.OrderTrackingService;
 import com.mozu.qbintegration.service.QueueManagerService;
 import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.tasks.WorkTask;
@@ -92,6 +93,9 @@ public class QuickbooksServiceEndPoint {
 	
 	@Autowired
 	QBDataHandler qbDataHandler;
+	
+	@Autowired
+	OrderTrackingService orderTrackingService;
 	
 	public QuickbooksServiceEndPoint() throws DatatypeConfigurationException {
 
@@ -243,6 +247,7 @@ public class QuickbooksServiceEndPoint {
 						orderStateHandler.addToConflictQueue(tenantId, orderHandler.getOrder(workTask.getId(), tenantId), null, ex.getMessage());
 						throw ex;
 					}
+					orderTrackingService.releaseOrder(workTask.getId());
 					break;
 				case "product":
 					logRequestResponse(tenantId, workTask, responseXML.getResponse());
