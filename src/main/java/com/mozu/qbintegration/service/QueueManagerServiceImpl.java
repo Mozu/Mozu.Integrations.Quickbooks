@@ -40,24 +40,22 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	
 	@Override
 	public WorkTask getNext(int tenantId) throws Exception {
-		//Akshay - added PROCESS_IN_MEM as another status to ignore since processing is still going in memory on those tasks. 
+		// try to complete tasks in processing
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
-				"status ne ERROR and status ne PROCESS_IN_MEM", "createDate", 1);
+				"status eq PROCESSING", "createDate desc", 1);
 		
-		if (nodes.size() > 0 && getActiveTaskCount(tenantId) < 1) {
+		if (nodes.size() == 0) {
+			// otherwise get the next task candidate
+			nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
+				"status ne ERROR and status ne PROCESS_IN_MEM", "createDate desc", 1);
+		}
+		
+		if (nodes.size() > 0) {
 			WorkTask task= mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 			
-			if (task.getType().toLowerCase().equals("order")) {
-				if (orderTrackingService.addOrder(task.getId())) {
-					task.setStatus(WorkTaskStatus.PROCESSING);	
-					entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
-					return task;
-				}
-			} else {
-				task.setStatus(WorkTaskStatus.PROCESSING);	
-				entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
-				return task;
-			}
+			task.setStatus(WorkTaskStatus.PROCESSING);	
+			entityHandler.addUpdateEntity(tenantId,entityHandler.getTaskqueueEntityName(), task.getId(), task);
+			return task;			
 		}
 		logger.debug("No WorkTask to return from QueueManagerServiceImpl for tenantId: " + tenantId);
 		return null;
@@ -82,7 +80,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Override
 	public WorkTask getActiveTask(Integer tenantId) throws Exception {
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
-				"status eq " +WorkTaskStatus.PROCESSING, "createDate", 1);
+				"status eq " +WorkTaskStatus.PROCESSING, "createDate desc", 1);
 		if (nodes.size() > 0) 
 			return mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 		

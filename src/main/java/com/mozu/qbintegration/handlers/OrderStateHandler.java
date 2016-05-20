@@ -31,12 +31,14 @@ import com.mozu.qbintegration.model.qbmodel.allgen.ItemQueryRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.QBXML;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderAddRsType;
 import com.mozu.qbintegration.model.qbmodel.allgen.SalesOrderModRsType;
-import com.mozu.qbintegration.service.OrderTrackingService;
 import com.mozu.qbintegration.service.QueueManagerService;
-import com.mozu.qbintegration.service.QuickbooksService;
 import com.mozu.qbintegration.service.XMLService;
 import com.mozu.qbintegration.tasks.WorkTask;
 
+/**
+ * This class is not thread safe and cannot be used as a singleton bean.
+ *
+ */
 @Component
 public class OrderStateHandler {
 
@@ -50,9 +52,6 @@ public class OrderStateHandler {
 	private QueueManagerService queueManagerService;
 	
 	@Autowired
-	private QuickbooksService quickbooksService;
-	
-	@Autowired
 	private OrderHandler orderHandler;
 	
 	@Autowired
@@ -64,9 +63,6 @@ public class OrderStateHandler {
 	@Autowired
 	XMLService xmlHelper;
 	
-	@Autowired
-	OrderTrackingService orderTrackingService;
-
 	private boolean orderExistsInQB = false;
 	private String conflictReason = null;
 	
@@ -83,7 +79,6 @@ public class OrderStateHandler {
 		Integer tenantId = apiContext.getTenantId();
 		Order order = orderHandler.getOrder(orderId, tenantId);
 		if(order.getAcceptedDate() != null) { //log only if order has been previously submitted (accepted)
-			final CustomerAccount orderingCust = customerHandler.getCustomer(tenantId, order.getCustomerAccountId());
 			
 			//Check if order has been processed, if not put in process Queue
 			boolean isProcessed = isOrderProcessed(tenantId, order.getId());
@@ -93,11 +88,8 @@ public class OrderStateHandler {
 				if (isProcessed && !isOrderInConflict) { //Add to update queue
 					MozuOrderDetail orderDetails = orderHandler.getMozuOrderDetail(order);
 					entityHandler.addUpdateEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderDetails.getId(), orderDetails);
-				} else  { //Add to queue for processing
-					if (orderTrackingService.acquireOrder(order.getId())) {
-						transitionState(tenantId, order, orderingCust, null, "Add" );
-						orderTrackingService.releaseOrder(order.getId());
-					}
+				} else if (!isOrderInConflict) { //Add to queue for processing
+					queueManagerService.addTask(tenantId, order.getId(), "Order", OrderStates.ORDER_QUERY, WorkTaskActions.ADD);
 				}
 			}
 		}
@@ -111,34 +103,35 @@ public class OrderStateHandler {
 	}
 	
 	public void transitionState( Integer tenantId, Order order,CustomerAccount custAcct,String qbResponse, String action) throws Exception {
+		if (qbResponse == null) {
+			throw new IllegalArgumentException("Quickbook order response cannot be null.");
+		}
+		
 		JsonNode node = entityHandler.getEntity(tenantId, entityHandler.getTaskqueueEntityName(), order.getId());
 		String currentStep = StringUtils.EMPTY;
+		String status;
+		
 		if (node != null) {
 			WorkTask task = mapper.readValue(node.toString(), WorkTask.class);
 			currentStep = task.getCurrentStep();
+			status = task.getStatus();
+		} else {
+			throw new IllegalStateException("No task to transition for order " + order.getId());
 		}
 		
-		//boolean processResult = false;
-		if (StringUtils.isNotEmpty(qbResponse)) {
-			processCurrentStep(tenantId, order, custAcct, currentStep,
+		processCurrentStep(tenantId, order, custAcct, currentStep,
 					qbResponse);
-		}
 		
 		String nextStep = getNextStep(tenantId, order, custAcct,currentStep, action); //Need to incorporate reponse from QB
-		
-		if (node == null) {
-			queueManagerService.addTask(tenantId, order.getId(), "Order", nextStep, action);
-		} else {
-			String status = WorkTaskStatus.PROCESSING;
-			if (lastSteps.contains(currentStep.toLowerCase()) && !processStatus.hasError())
-				status = WorkTaskStatus.COMPLETED;
 			
-			if (nextStep.equalsIgnoreCase(OrderStates.CONFLICT)) {
-				addToConflictQueue(tenantId, order, qbResponse, conflictReason);
-				status = WorkTaskStatus.COMPLETED;
-			}
-			queueManagerService.updateTask(tenantId,order.getId(), nextStep, status);
+		if (lastSteps.contains(currentStep.toLowerCase()) && !processStatus.hasError())
+			status = WorkTaskStatus.COMPLETED;
+		
+		if (nextStep.equalsIgnoreCase(OrderStates.CONFLICT)) {
+			addToConflictQueue(tenantId, order, qbResponse, conflictReason);
+			status = WorkTaskStatus.COMPLETED;
 		}
+		queueManagerService.updateTask(tenantId,order.getId(), nextStep, status);
 	}
 	
 	public void retryConflicOrders(Integer tenantId,List<String> orderNumberList, String action) throws Exception {
@@ -149,7 +142,7 @@ public class OrderStateHandler {
 			if (node == null) continue;
 			if (action.equalsIgnoreCase("retry")) {
 				MozuOrderDetail orderDetail = mapper.readValue(node.toString(), MozuOrderDetail.class);
-				transitionState(orderId, tenantId, null, (orderDetail.isExistsInQb() ? "Update" : "Add") );
+				queueManagerService.addTask(tenantId, orderId, "Order", OrderStates.ORDER_QUERY, (orderDetail.isExistsInQb() ? WorkTaskActions.UPDATE : WorkTaskActions.ADD));
 				logger.debug("Slotted conflicted order for retry with order number: " + orderId + " for tenant: " + tenantId);
 			}
 			deleteConfictEntities(tenantId,orderId);
@@ -178,7 +171,7 @@ public class OrderStateHandler {
 			} else {
 				//normal update
 				if (action.equalsIgnoreCase("update")) {
-					transitionState(orderId, tenantId, null, "Update");
+					queueManagerService.addTask(tenantId, orderId, "Order", OrderStates.ORDER_QUERY, WorkTaskActions.UPDATE);
 					logger.debug("Slotted an order update task for mozu order number: " + orderId);
 				}
 				entityHandler.deleteEntity(tenantId, entityHandler.getOrderUpdatedEntityName(), orderId);
@@ -408,7 +401,7 @@ public class OrderStateHandler {
 		}
 
 		if (isProcessed) { //Delete only if it has been successfully posted to QB
-			transitionState(entityId, tenantId, null, "Delete");
+			queueManagerService.addTask(tenantId, entityId, "Order", OrderStates.ORDER_QUERY, WorkTaskActions.DELETE);
 			return true;
 		} else {
 			deletePendingOrders(tenantId, entityId);
