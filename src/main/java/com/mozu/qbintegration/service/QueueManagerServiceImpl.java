@@ -42,7 +42,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	public WorkTask getNext(int tenantId) throws Exception {
 		// try to complete tasks in processing
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
-				"status eq PROCESSING", "createDate desc", 1);
+				"status eq PROCESSING", "createDate", 1);
 		
 		if (nodes.size() == 0) {
 			// otherwise get the next task candidate
@@ -80,7 +80,7 @@ public class QueueManagerServiceImpl implements QueueManagerService {
 	@Override
 	public WorkTask getActiveTask(Integer tenantId) throws Exception {
 		List<JsonNode> nodes = entityHandler.getEntityCollection(tenantId, entityHandler.getTaskqueueEntityName(), 
-				"status eq " +WorkTaskStatus.PROCESSING, "createDate desc", 1);
+				"status eq " +WorkTaskStatus.PROCESSING, "createDate", 1);
 		if (nodes.size() > 0) 
 			return mapper.readValue(nodes.get(0).toString(), WorkTask.class);
 		
