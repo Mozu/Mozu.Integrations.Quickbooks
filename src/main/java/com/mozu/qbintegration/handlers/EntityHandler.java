@@ -83,7 +83,7 @@ public class EntityHandler {
 	public String getTaskqueueEntityName() {
 		return TASKQUEUE_ENTITY + "@" + getNamespace();
 	}
-	
+
 
 	public String getTaskqueueLogEntityName() {
 		return TASKQUEUELOG_ENTITY + "@" + getNamespace();
@@ -154,7 +154,7 @@ public class EntityHandler {
 
 	/**
 	 * Install the customer schema in entity list
-	 * 
+	 *
 	 * @param tenantId
 	 * @throws Exception
 	 */
@@ -177,7 +177,7 @@ public class EntityHandler {
 
 	/**
 	 * Install the product schema in entity list
-	 * 
+	 *
 	 * @param tenantId
 	 * @throws Exception
 	 */
@@ -236,7 +236,7 @@ public class EntityHandler {
 
 	/**
 	 * Install the entity list which will maintain tasks as they are processed
-	 * 
+	 *
 	 * @param tenantId
 	 * @throws Exception
 	 */
@@ -479,7 +479,6 @@ public class EntityHandler {
 			entityResource.insertEntity(taskNode, entityName);
 		} catch (Exception e) {
 			logger.error("Error saving or updating  entity : " + e.getMessage());
-			throw e;
 		}
 	}
 
@@ -537,7 +536,7 @@ public class EntityHandler {
 		EntityResource entityResource = new EntityResource(new MozuApiContext(
 				tenantId));
 		JsonNode entity = null;
-		
+
 		try {
 			entity = entityResource.getEntity(entityName, id);
 		} catch (ApiException e) {
@@ -566,7 +565,7 @@ public class EntityHandler {
 		    return new ArrayList<JsonNode>();
 		}
 	}
-	
+
 	/**
 	 * Get the collection so that we get totalCount and nodes.
 	 * @param tenantId
