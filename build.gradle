@@ -120,12 +120,13 @@ test {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://nexus.corp.volusion.com:8080/nexus/content/repositories/releases/") {
-                authentication(userName: "deployment", password: "deployment123")
-            }
-            snapshotRepository(url: "http://nexus.corp.volusion.com:8080/nexus/content/repositories/snapshots/") {
-                authentication(userName: "deployment", password: "deployment123")
-            }
-        }
+            repository(url: "http://ng-repo.dev.kibocommerce.com:8081/repository/ng-maven-releases/") {
+                authentication(userName: "svc_ngnexus", password: "Hm2ZRP35ghe9j2Ys")
+             }
+            snapshotRepository(url: "http://ng-repo.dev.kibocommerce.com:8081/repository/ng-maven-snapshots/") {
+                authentication(userName: "svc_ngnexus", password: "Hm2ZRP35ghe9j2Ys")
+             }
+       }
     }
 }
+
